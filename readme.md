@@ -165,7 +165,7 @@ class PriorityOrderQueue:
 - **Matplotlib** - Geração de gráficos
 - **Seaborn** - Visualizações estatísticas
 
-O servidor estará disponível em: **http://localhost:5000**
+O servidor estará disponível em: **https://paraiso-gelado.onrender.com/**
 
 ### Credenciais Padrão
 
@@ -178,8 +178,8 @@ O servidor estará disponível em: **http://localhost:5000**
 
 ### Acessando o Sistema
 
-1. **Página de Login**: http://localhost:5000
-2. **Painel Administrativo**: http://localhost:5000/admin (após login)
+1. **Página de Login**: https://paraiso-gelado.onrender.com/
+2. **Painel Administrativo**: https://paraiso-gelado.onrender.com/admin (após login)
 
 ### Navegação
 
