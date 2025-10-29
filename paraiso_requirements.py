@@ -1,0 +1,52 @@
+# ================================================
+# Paraíso Gelado  - DEPENDÊNCIAS PYTHON
+# ================================================
+# Sistema de Gestão de Franquia de Sorveteria
+# Estrutura de Dados Aplicado à Big Data
+# ================================================
+
+# Framework Web
+Flask==3.0.0
+Flask-CORS==4.0.0
+
+# Banco de Dados
+mysql-connector-python==8.2.0
+PyMySQL==1.1.0
+
+# Segurança
+bcrypt==4.1.1
+PyJWT==2.8.0
+
+# Utilitários
+python-dotenv==1.0.0
+requests==2.31.0
+
+# Data Science e Análise (para testes de performance)
+numpy==1.26.2
+pandas==2.1.3
+matplotlib==3.8.2
+seaborn==0.13.0
+
+# Validação de Dados
+jsonschema==4.20.0
+
+# Logging e Monitoramento
+colorlog==6.8.0
+
+# Testes
+pytest==7.4.3
+pytest-cov==4.1.0
+
+# Desenvolvimento
+autopep8==2.0.4
+pylint==3.0.3
+
+# ================================================
+# INSTALAÇÃO:
+# pip install -r paraíso_requirements.txt
+# ================================================
+
+# ================================================
+# VERSÕES PYTHON RECOMENDADAS:
+# Python 3.9+
+# ================================================
