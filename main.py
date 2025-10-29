@@ -778,40 +778,202 @@ def admin_relatorio_vendas():
 
 # ============= ROTAS PÚBLICAS (mantidas do código original) =============
 
+# ==================== ROTAS DA API ====================
+
+# PRODUTOS
 @app.route('/api/produtos', methods=['GET'])
 def get_produtos():
-    """Busca todos os produtos usando AVL Tree"""
-    conn = get_db_connection()
-    if not conn:
-        return jsonify({'error': 'Erro ao conectar ao banco de dados'}), 500
-    
-    cursor = conn.cursor(dictionary=True)
-    cursor.execute("SELECT * FROM produtos WHERE ativo = 1")
-    produtos = cursor.fetchall()
-    
-    # Carregar produtos na árvore AVL
-    for produto in produtos:
-        avl_tree.root = avl_tree.insert(
-            avl_tree.root,
-            produto['id'],
-            produto['nome'],
-            float(produto['preco'])
-        )
-        produto_cache.insert(produto['id'], produto)
-    
-    cursor.close()
-    conn.close()
-    return jsonify(produtos)
+    try:
+        conn = mysql.connector.connect(**DB_CONFIG)
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("""
+            SELECT p.*, c.nome as categoria_nome 
+            FROM produtos p 
+            LEFT JOIN categorias c ON p.categoria_id = c.id
+        """)
+        produtos = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        return jsonify(produtos)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
+@app.route('/api/produtos', methods=['POST'])
+def criar_produto():
+    try:
+        dados = request.json
+        conn = mysql.connector.connect(**DB_CONFIG)
+        cursor = conn.cursor()
+        cursor.execute("""
+            INSERT INTO produtos (nome, descricao, preco, custo, categoria_id, tamanho, ativo, calorias)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+        """, (dados['nome'], dados.get('descricao'), dados['preco'], 
+              dados.get('custo'), dados.get('categoria_id'), 
+              dados.get('tamanho'), dados.get('ativo', 1), dados.get('calorias')))
+        conn.commit()
+        produto_id = cursor.lastrowid
+        cursor.close()
+        conn.close()
+        return jsonify({"id": produto_id, "message": "Produto criado!"}), 201
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+# FUNCIONÁRIOS
+@app.route('/api/funcionarios', methods=['GET'])
+def get_funcionarios():
+    try:
+        conn = mysql.connector.connect(**DB_CONFIG)
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("""
+            SELECT f.*, l.nome as loja_nome 
+            FROM funcionarios f
+            LEFT JOIN lojas l ON f.loja_id = l.id
+        """)
+        funcionarios = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        return jsonify(funcionarios)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/funcionarios', methods=['POST'])
+def criar_funcionario():
+    try:
+        dados = request.json
+        conn = mysql.connector.connect(**DB_CONFIG)
+        cursor = conn.cursor()
+        cursor.execute("""
+            INSERT INTO funcionarios (nome, cpf, cargo, loja_id, salario, ativo)
+            VALUES (%s, %s, %s, %s, %s, %s)
+        """, (dados['nome'], dados['cpf'], dados['cargo'], 
+              dados.get('loja_id'), dados.get('salario'), dados.get('ativo', 1)))
+        conn.commit()
+        funcionario_id = cursor.lastrowid
+        cursor.close()
+        conn.close()
+        return jsonify({"id": funcionario_id, "message": "Funcionário criado!"}), 201
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+# LOJAS
+@app.route('/api/lojas', methods=['GET'])
+def get_lojas():
+    try:
+        conn = mysql.connector.connect(**DB_CONFIG)
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("SELECT * FROM lojas")
+        lojas = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        return jsonify(lojas)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/lojas', methods=['POST'])
+def criar_loja():
+    try:
+        dados = request.json
+        conn = mysql.connector.connect(**DB_CONFIG)
+        cursor = conn.cursor()
+        cursor.execute("""
+            INSERT INTO lojas (nome, endereco, cidade, estado, telefone, ativo)
+            VALUES (%s, %s, %s, %s, %s, %s)
+        """, (dados['nome'], dados.get('endereco'), dados.get('cidade'), 
+              dados.get('estado'), dados.get('telefone'), dados.get('ativo', 1)))
+        conn.commit()
+        loja_id = cursor.lastrowid
+        cursor.close()
+        conn.close()
+        return jsonify({"id": loja_id, "message": "Loja criada!"}), 201
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+# CLIENTES
+@app.route('/api/clientes', methods=['GET'])
+def get_clientes():
+    try:
+        conn = mysql.connector.connect(**DB_CONFIG)
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("SELECT * FROM clientes")
+        clientes = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        return jsonify(clientes)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/clientes', methods=['POST'])
+def criar_cliente():
+    try:
+        dados = request.json
+        conn = mysql.connector.connect(**DB_CONFIG)
+        cursor = conn.cursor()
+        cursor.execute("""
+            INSERT INTO clientes (nome, email, telefone, pontos)
+            VALUES (%s, %s, %s, %s)
+        """, (dados['nome'], dados.get('email'), dados.get('telefone'), dados.get('pontos', 0)))
+        conn.commit()
+        cliente_id = cursor.lastrowid
+        cursor.close()
+        conn.close()
+        return jsonify({"id": cliente_id, "message": "Cliente criado!"}), 201
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+# ESTOQUE
+@app.route('/api/estoque', methods=['GET'])
+def get_estoque():
+    try:
+        conn = mysql.connector.connect(**DB_CONFIG)
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("""
+            SELECT e.*, i.nome as ingrediente_nome, l.nome as loja_nome
+            FROM estoque e
+            LEFT JOIN ingredientes i ON e.ingrediente_id = i.id
+            LEFT JOIN lojas l ON e.loja_id = l.id
+        """)
+        estoque = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        return jsonify(estoque)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+# DASHBOARD - Estatísticas
 @app.route('/api/dashboard', methods=['GET'])
-def dashboard():
-    """Dashboard com estatísticas"""
-    conn = get_db_connection()
-    if not conn:
-        return jsonify({'error': 'Erro ao conectar ao banco de dados'}), 500
-    
-    cursor = conn.cursor(dictionary=True)
-    
+def get_dashboard():
+    try:
+        conn = mysql.connector.connect(**DB_CONFIG)
+        cursor = conn.cursor(dictionary=True)
+        
+        # Total de produtos
+        cursor.execute("SELECT COUNT(*) as total FROM produtos WHERE ativo = 1")
+        total_produtos = cursor.fetchone()['total']
+        
+        # Total de funcionários
+        cursor.execute("SELECT COUNT(*) as total FROM funcionarios WHERE ativo = 1")
+        total_funcionarios = cursor.fetchone()['total']
+        
+        # Total de lojas
+        cursor.execute("SELECT COUNT(*) as total FROM lojas WHERE ativo = 1")
+        total_lojas = cursor.fetchone()['total']
+        
+        # Total de clientes
+        cursor.execute("SELECT COUNT(*) as total FROM clientes")
+        total_clientes = cursor.fetchone()['total']
+        
+        cursor.close()
+        conn.close()
+        
+        return jsonify({
+            "produtos": total_produtos,
+            "funcionarios": total_funcionarios,
+            "lojas": total_lojas,
+            "clientes": total_clientes
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+ 
     # Total de vendas hoje
     cursor.execute("""
         SELECT COUNT(*) as total_pedidos, COALESCE(SUM(total), 0) as receita_total
