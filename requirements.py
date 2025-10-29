@@ -12,6 +12,7 @@ Flask-CORS==4.0.0
 # Banco de Dados
 mysql-connector-python==8.2.0
 PyMySQL==1.1.0
+gunicorn==22.0.0
 
 # Segurança
 bcrypt==4.1.1
