@@ -8,6 +8,7 @@ from collections import deque
 import heapq
 from paraiso_config import Config
 
+# Tenta carregar variáveis de ambiente
 try:
     from dotenv import load_dotenv
     load_dotenv()
@@ -15,6 +16,7 @@ try:
 except Exception as e:
     print(f"⚠️ Usando configurações padrão (erro ao carregar .env: {e})")
 
+# Tenta importar mysql.connector
 try:
     import mysql.connector
 except ImportError:
@@ -227,41 +229,6 @@ def verificar_autenticacao():
 
 # ============= ROTAS PRINCIPAIS =============
 
-# Rota de teste de conexão com banco
-@app.route('/test-db')
-def test_db():
-    try:
-        conn = mysql.connector.connect(**DB_CONFIG)
-        cursor = conn.cursor()
-        cursor.execute("SELECT 1")
-        result = cursor.fetchone()
-        cursor.close()
-        conn.close()
-        return jsonify({
-            "status": "success",
-            "message": "Conexão com banco de dados OK!",
-            "result": result
-        })
-    except Exception as e:
-        return jsonify({
-            "status": "error",
-            "message": str(e),
-            "db_config": {
-                "host": DB_CONFIG.get('host'),
-                "user": DB_CONFIG.get('user'),
-                "database": DB_CONFIG.get('database'),
-                "port": DB_CONFIG.get('port')
-            }
-        }), 500
-
-# Rota de health check
-@app.route('/health')
-def health():
-    return jsonify({
-        "status": "online",
-        "env_loaded": bool(os.getenv('DB_HOST'))
-    })
-
 @app.route('/admin')
 def admin_panel():
     """Painel administrativo"""
@@ -271,6 +238,67 @@ def admin_panel():
 def index():
     """Página de login"""
     return render_template('login.html')
+
+@app.route('/test-db')
+def test_db():
+    """Testa a conexão com o banco de dados e mostra estrutura das tabelas"""
+    try:
+        conn = get_db_connection()
+        if not conn:
+            return jsonify({"status": "error", "message": "Não foi possível conectar ao banco"}), 500
+        
+        cursor = conn.cursor(dictionary=True)
+        
+        # Testa conexão básica
+        cursor.execute("SELECT 1")
+        result = cursor.fetchone()
+        
+        # Mostra estrutura de tabelas importantes
+        tabelas_info = {}
+        
+        for tabela in ['funcionarios', 'lojas', 'estoque', 'ingredientes', 'produtos', 'categorias']:
+            try:
+                cursor.execute(f"DESCRIBE {tabela}")
+                colunas = cursor.fetchall()
+                tabelas_info[tabela] = [col['Field'] for col in colunas]
+                
+                # Conta registros
+                cursor.execute(f"SELECT COUNT(*) as total FROM {tabela}")
+                total = cursor.fetchone()
+                tabelas_info[f"{tabela}_count"] = total['total']
+            except Exception as e:
+                tabelas_info[tabela] = f"Erro: {str(e)}"
+        
+        cursor.close()
+        conn.close()
+        
+        return jsonify({
+            "status": "success",
+            "message": "Conexão com banco de dados OK!",
+            "connection_test": result,
+            "db_config": {
+                "host": DB_CONFIG.get('host'),
+                "user": DB_CONFIG.get('user'),
+                "database": DB_CONFIG.get('database'),
+                "port": DB_CONFIG.get('port')
+            },
+            "tabelas": tabelas_info
+        })
+    except Exception as e:
+        import traceback
+        return jsonify({
+            "status": "error",
+            "message": str(e),
+            "traceback": traceback.format_exc()
+        }), 500
+
+@app.route('/health')
+def health():
+    """Health check"""
+    return jsonify({
+        "status": "online",
+        "env_loaded": bool(os.getenv('DB_HOST'))
+    })
 
 # ============= ROTA DE LOGIN =============
 
@@ -346,575 +374,376 @@ def logout():
     session.clear()
     return jsonify({'success': True, 'message': 'Logout realizado com sucesso'})
 
-# ============= ROTAS ADMIN - DASHBOARD =============
+# ============= ROTAS API SIMPLIFICADAS =============
 
-@app.route('/api/admin/dashboard', methods=['GET'])
-def admin_dashboard():
-    """Retorna dados do dashboard administrativo"""
-    conn = get_db_connection()
-    if not conn:
-        return jsonify({'error': 'Erro ao conectar ao banco de dados'}), 500
-    
-    try:
-        cursor = conn.cursor(dictionary=True)
-        
-        # Vendas hoje
-        cursor.execute("""
-            SELECT 
-                COUNT(*) as total_pedidos, 
-                COALESCE(SUM(total), 0) as receita_total
-            FROM pedidos
-            WHERE DATE(data_hora) = CURDATE() AND status != 'cancelado'
-        """)
-        vendas_hoje = cursor.fetchone()
-        
-        # Clientes ativos (com pedido nos últimos 30 dias)
-        cursor.execute("""
-            SELECT COUNT(DISTINCT cliente_id) as clientes_ativos
-            FROM pedidos
-            WHERE data_hora >= DATE_SUB(NOW(), INTERVAL 30 DAY)
-        """)
-        clientes = cursor.fetchone()
-        
-        # Alertas de estoque
-        cursor.execute("""
-            SELECT COUNT(*) as total_alertas
-            FROM estoque e
-            JOIN ingredientes i ON e.ingrediente_id = i.id
-            WHERE e.quantidade_atual <= i.estoque_minimo
-        """)
-        alertas = cursor.fetchone()
-        
-        # Performance por loja
-        cursor.execute("""
-            SELECT 
-                l.id,
-                l.nome,
-                l.cidade,
-                COUNT(p.id) as total_pedidos,
-                COALESCE(SUM(p.total), 0) as receita,
-                COALESCE(AVG(p.total), 0) as ticket_medio
-            FROM lojas l
-            LEFT JOIN pedidos p ON l.id = p.loja_id 
-                AND DATE(p.data_hora) = CURDATE()
-                AND p.status != 'cancelado'
-            WHERE l.ativo = 1
-            GROUP BY l.id, l.nome, l.cidade
-            ORDER BY receita DESC
-        """)
-        performance_lojas = cursor.fetchall()
-        
-        cursor.close()
-        conn.close()
-        
-        return jsonify({
-            'vendas_hoje': vendas_hoje,
-            'clientes_ativos': clientes['clientes_ativos'],
-            'alertas_estoque': alertas['total_alertas'],
-            'performance_lojas': performance_lojas
-        })
-        
-    except Exception as e:
-        print(f"Erro no dashboard: {e}")
-        return jsonify({'error': str(e)}), 500
-
-# ============= ROTAS ADMIN - PRODUTOS =============
-
-@app.route('/api/admin/produtos', methods=['GET'])
-def admin_get_produtos():
-    """Lista todos os produtos"""
-    conn = get_db_connection()
-    if not conn:
-        return jsonify({'error': 'Erro ao conectar ao banco de dados'}), 500
-    
-    cursor = conn.cursor(dictionary=True)
-    cursor.execute("""
-        SELECT p.*, c.nome as categoria_nome,
-        CASE 
-            WHEN p.custo > 0 THEN ((p.preco - p.custo) / p.custo * 100)
-            ELSE 0 
-        END as margem_percentual
-        FROM produtos p
-        JOIN categorias c ON p.categoria_id = c.id
-        ORDER BY p.nome
-    """)
-    produtos = cursor.fetchall()
-    cursor.close()
-    conn.close()
-    
-    return jsonify(produtos)
-
-@app.route('/api/admin/produtos', methods=['POST'])
-def admin_criar_produto():
-    """Cria novo produto"""
-    try:
-        data = request.json
-        conn = get_db_connection()
-        if not conn:
-            return jsonify({'error': 'Erro ao conectar ao banco de dados'}), 500
-        
-        cursor = conn.cursor()
-        query = """
-            INSERT INTO produtos 
-            (categoria_id, nome, descricao, preco, custo, tamanho, calorias, ativo)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-        """
-        cursor.execute(query, (
-            data['categoria_id'],
-            data['nome'],
-            data.get('descricao', ''),
-            data['preco'],
-            data.get('custo', 0),
-            data['tamanho'],
-            data.get('calorias', 0),
-            data.get('ativo', 1)
-        ))
-        conn.commit()
-        produto_id = cursor.lastrowid
-        cursor.close()
-        conn.close()
-        
-        return jsonify({'success': True, 'id': produto_id, 'message': 'Produto criado com sucesso'})
-    except Exception as e:
-        print(f"Erro ao criar produto: {e}")
-        return jsonify({'success': False, 'error': str(e)}), 500
-
-@app.route('/api/admin/produtos/<int:id>', methods=['DELETE'])
-def admin_excluir_produto(id):
-    """Exclui produto (desativa)"""
-    try:
-        conn = get_db_connection()
-        if not conn:
-            return jsonify({'error': 'Erro ao conectar ao banco de dados'}), 500
-        
-        cursor = conn.cursor()
-        cursor.execute("UPDATE produtos SET ativo = 0 WHERE id = %s", (id,))
-        conn.commit()
-        cursor.close()
-        conn.close()
-        
-        return jsonify({'success': True, 'message': 'Produto removido com sucesso'})
-    except Exception as e:
-        return jsonify({'success': False, 'error': str(e)}), 500
-
-# ============= ROTAS ADMIN - FUNCIONÁRIOS =============
-
-@app.route('/api/admin/funcionarios', methods=['GET'])
-def admin_get_funcionarios():
-    """Lista todos os funcionários"""
-    conn = get_db_connection()
-    if not conn:
-        return jsonify({'error': 'Erro ao conectar ao banco de dados'}), 500
-    
-    cursor = conn.cursor(dictionary=True)
-    cursor.execute("""
-        SELECT f.*, l.nome as loja_nome
-        FROM funcionarios f
-        JOIN lojas l ON f.loja_id = l.id
-        ORDER BY f.nome
-    """)
-    funcionarios = cursor.fetchall()
-    cursor.close()
-    conn.close()
-    
-    return jsonify(funcionarios)
-
-@app.route('/api/admin/funcionarios', methods=['POST'])
-def admin_criar_funcionario():
-    """Cria novo funcionário"""
-    try:
-        data = request.json
-        conn = get_db_connection()
-        if not conn:
-            return jsonify({'error': 'Erro ao conectar ao banco de dados'}), 500
-        
-        cursor = conn.cursor()
-        query = """
-            INSERT INTO funcionarios 
-            (loja_id, nome, cpf, cargo, salario, data_admissao, ativo)
-            VALUES (%s, %s, %s, %s, %s, %s, 1)
-        """
-        cursor.execute(query, (
-            data['loja_id'],
-            data['nome'],
-            data['cpf'],
-            data['cargo'],
-            data['salario'],
-            data['data_admissao']
-        ))
-        conn.commit()
-        func_id = cursor.lastrowid
-        cursor.close()
-        conn.close()
-        
-        return jsonify({'success': True, 'id': func_id, 'message': 'Funcionário criado com sucesso'})
-    except Exception as e:
-        print(f"Erro ao criar funcionário: {e}")
-        return jsonify({'success': False, 'error': str(e)}), 500
-
-@app.route('/api/admin/funcionarios/<int:id>', methods=['DELETE'])
-def admin_excluir_funcionario(id):
-    """Exclui funcionário (desativa)"""
-    try:
-        conn = get_db_connection()
-        if not conn:
-            return jsonify({'error': 'Erro ao conectar ao banco de dados'}), 500
-        
-        cursor = conn.cursor()
-        cursor.execute("UPDATE funcionarios SET ativo = 0 WHERE id = %s", (id,))
-        conn.commit()
-        cursor.close()
-        conn.close()
-        
-        return jsonify({'success': True, 'message': 'Funcionário removido com sucesso'})
-    except Exception as e:
-        return jsonify({'success': False, 'error': str(e)}), 500
-
-# ============= ROTAS ADMIN - LOJAS =============
-
-@app.route('/api/admin/lojas', methods=['GET'])
-def admin_get_lojas():
-    """Lista todas as lojas"""
-    conn = get_db_connection()
-    if not conn:
-        return jsonify({'error': 'Erro ao conectar ao banco de dados'}), 500
-    
-    cursor = conn.cursor(dictionary=True)
-    cursor.execute("""
-        SELECT l.*,
-            (SELECT COUNT(*) FROM pedidos p 
-             WHERE p.loja_id = l.id AND DATE(p.data_hora) = CURDATE()) as total_pedidos_hoje,
-            (SELECT COALESCE(SUM(total), 0) FROM pedidos p 
-             WHERE p.loja_id = l.id AND DATE(p.data_hora) = CURDATE() AND status != 'cancelado') as receita_hoje
-        FROM lojas l
-        ORDER BY l.nome
-    """)
-    lojas = cursor.fetchall()
-    cursor.close()
-    conn.close()
-    
-    return jsonify(lojas)
-
-@app.route('/api/admin/lojas', methods=['POST'])
-def admin_criar_loja():
-    """Cria nova loja"""
-    try:
-        data = request.json
-        conn = get_db_connection()
-        if not conn:
-            return jsonify({'error': 'Erro ao conectar ao banco de dados'}), 500
-        
-        cursor = conn.cursor()
-        query = """
-            INSERT INTO lojas 
-            (nome, endereco, cidade, estado, cep, telefone, email, data_abertura, ativo)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 1)
-        """
-        cursor.execute(query, (
-            data['nome'],
-            data['endereco'],
-            data['cidade'],
-            data['estado'],
-            data['cep'],
-            data['telefone'],
-            data['email'],
-            data['data_abertura']
-        ))
-        conn.commit()
-        loja_id = cursor.lastrowid
-        cursor.close()
-        conn.close()
-        
-        return jsonify({'success': True, 'id': loja_id, 'message': 'Loja criada com sucesso'})
-    except Exception as e:
-        print(f"Erro ao criar loja: {e}")
-        return jsonify({'success': False, 'error': str(e)}), 500
-
-# ============= ROTAS ADMIN - CLIENTES =============
-
-@app.route('/api/admin/clientes', methods=['GET'])
-def admin_get_clientes():
-    """Lista todos os clientes com estatísticas"""
-    conn = get_db_connection()
-    if not conn:
-        return jsonify({'error': 'Erro ao conectar ao banco de dados'}), 500
-    
-    cursor = conn.cursor(dictionary=True)
-    cursor.execute("""
-        SELECT c.*,
-            COUNT(p.id) as total_pedidos,
-            COALESCE(SUM(p.total), 0) as total_gasto,
-            CASE 
-                WHEN c.pontos_fidelidade >= 500 THEN 'VIP'
-                WHEN c.pontos_fidelidade >= 200 THEN 'PREMIUM'
-                ELSE 'REGULAR'
-            END as nivel
-        FROM clientes c
-        LEFT JOIN pedidos p ON c.id = p.cliente_id AND p.status != 'cancelado'
-        WHERE c.ativo = 1
-        GROUP BY c.id
-        ORDER BY total_gasto DESC
-    """)
-    clientes = cursor.fetchall()
-    cursor.close()
-    conn.close()
-    
-    return jsonify(clientes)
-
-# ============= ROTAS ADMIN - ESTOQUE =============
-
-@app.route('/api/admin/estoque', methods=['GET'])
-def admin_get_estoque():
-    """Lista estoque com alertas"""
-    conn = get_db_connection()
-    if not conn:
-        return jsonify({'error': 'Erro ao conectar ao banco de dados'}), 500
-    
-    cursor = conn.cursor(dictionary=True)
-    cursor.execute("""
-        SELECT e.*, 
-            i.nome as ingrediente_nome,
-            i.unidade_medida,
-            i.estoque_minimo,
-            l.nome as loja_nome,
-            CASE 
-                WHEN e.quantidade_atual <= (i.estoque_minimo * 0.3) THEN 'CRÍTICO'
-                WHEN e.quantidade_atual <= (i.estoque_minimo * 0.5) THEN 'MUITO BAIXO'
-                WHEN e.quantidade_atual <= i.estoque_minimo THEN 'BAIXO'
-                ELSE 'OK'
-            END as status_alerta
-        FROM estoque e
-        JOIN ingredientes i ON e.ingrediente_id = i.id
-        JOIN lojas l ON e.loja_id = l.id
-        ORDER BY 
-            CASE 
-                WHEN e.quantidade_atual <= (i.estoque_minimo * 0.3) THEN 1
-                WHEN e.quantidade_atual <= (i.estoque_minimo * 0.5) THEN 2
-                WHEN e.quantidade_atual <= i.estoque_minimo THEN 3
-                ELSE 4
-            END,
-            e.quantidade_atual
-    """)
-    estoque = cursor.fetchall()
-    cursor.close()
-    conn.close()
-    
-    return jsonify(estoque)
-
-@app.route('/api/admin/estoque/<int:id>/repor', methods=['POST'])
-def admin_repor_estoque(id):
-    """Repõe estoque de um ingrediente"""
-    try:
-        data = request.json
-        quantidade = data.get('quantidade', 0)
-        
-        conn = get_db_connection()
-        if not conn:
-            return jsonify({'error': 'Erro ao conectar ao banco de dados'}), 500
-        
-        cursor = conn.cursor()
-        cursor.execute("""
-            UPDATE estoque 
-            SET quantidade_atual = quantidade_atual + %s,
-                data_ultima_atualizacao = NOW()
-            WHERE id = %s
-        """, (quantidade, id))
-        conn.commit()
-        cursor.close()
-        conn.close()
-        
-        return jsonify({'success': True, 'message': f'Estoque reposto com {quantidade} unidades'})
-    except Exception as e:
-        return jsonify({'success': False, 'error': str(e)}), 500
-
-# ============= ROTAS ADMIN - CATEGORIAS =============
-
-@app.route('/api/admin/categorias', methods=['GET'])
-def admin_get_categorias():
-    """Lista todas as categorias"""
-    conn = get_db_connection()
-    if not conn:
-        return jsonify({'error': 'Erro ao conectar ao banco de dados'}), 500
-    
-    cursor = conn.cursor(dictionary=True)
-    cursor.execute("SELECT * FROM categorias ORDER BY nome")
-    categorias = cursor.fetchall()
-    cursor.close()
-    conn.close()
-    
-    return jsonify(categorias)
-
-# ============= ROTAS ADMIN - RELATÓRIOS =============
-
-@app.route('/api/admin/relatorio/vendas', methods=['GET'])
-def admin_relatorio_vendas():
-    """Relatório de vendas por período"""
-    periodo = request.args.get('periodo', 30)
-    
-    conn = get_db_connection()
-    if not conn:
-        return jsonify({'error': 'Erro ao conectar ao banco de dados'}), 500
-    
-    cursor = conn.cursor(dictionary=True)
-    cursor.execute("""
-        SELECT 
-            DATE(data_hora) as data,
-            COUNT(*) as total_pedidos,
-            SUM(total) as receita,
-            AVG(total) as ticket_medio
-        FROM pedidos
-        WHERE data_hora >= DATE_SUB(NOW(), INTERVAL %s DAY)
-            AND status != 'cancelado'
-        GROUP BY DATE(data_hora)
-        ORDER BY data DESC
-    """, (periodo,))
-    vendas = cursor.fetchall()
-    cursor.close()
-    conn.close()
-    
-    return jsonify(vendas)
-
-# ==================== ROTAS DA API ====================
-
+# PRODUTOS
 @app.route('/api/produtos', methods=['GET'])
 def get_produtos():
     try:
-        conn = mysql.connector.connect(**DB_CONFIG)
+        conn = get_db_connection()
+        if not conn:
+            return jsonify({'error': 'Erro ao conectar ao banco'}), 500
+        
         cursor = conn.cursor(dictionary=True)
         cursor.execute("""
             SELECT p.*, c.nome as categoria_nome 
             FROM produtos p 
             LEFT JOIN categorias c ON p.categoria_id = c.id
+            ORDER BY p.nome
         """)
         produtos = cursor.fetchall()
         cursor.close()
         conn.close()
         return jsonify(produtos)
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        print(f"Erro get_produtos: {e}")
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/api/produtos', methods=['POST'])
 def criar_produto():
     try:
         dados = request.json
-        conn = mysql.connector.connect(**DB_CONFIG)
+        print(f"📦 Criando produto: {dados}")
+        
+        conn = get_db_connection()
+        if not conn:
+            return jsonify({'success': False, 'error': 'Erro ao conectar ao banco'}), 500
+        
         cursor = conn.cursor()
         cursor.execute("""
             INSERT INTO produtos (nome, descricao, preco, custo, categoria_id, tamanho, ativo, calorias)
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-        """, (dados['nome'], dados.get('descricao'), dados['preco'], 
-              dados.get('custo'), dados.get('categoria_id'), 
-              dados.get('tamanho'), dados.get('ativo', 1), dados.get('calorias')))
+        """, (
+            dados.get('nome', ''),
+            dados.get('descricao', ''),
+            float(dados.get('preco', 0)),
+            float(dados.get('custo', 0)),
+            dados.get('categoria_id'),
+            dados.get('tamanho', 'M'),
+            1,
+            int(dados.get('calorias', 0))
+        ))
         conn.commit()
         produto_id = cursor.lastrowid
         cursor.close()
         conn.close()
-        return jsonify({"id": produto_id, "message": "Produto criado!"}), 201
+        
+        print(f"✅ Produto criado com ID: {produto_id}")
+        return jsonify({'success': True, 'id': produto_id, 'message': 'Produto criado com sucesso!'}), 201
+        
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        print(f"❌ Erro criar_produto: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500
 
+@app.route('/api/produtos/<int:id>', methods=['PUT'])
+def atualizar_produto(id):
+    try:
+        dados = request.json
+        conn = get_db_connection()
+        if not conn:
+            return jsonify({'error': 'Erro ao conectar ao banco'}), 500
+        
+        cursor = conn.cursor()
+        cursor.execute("""
+            UPDATE produtos 
+            SET nome=%s, descricao=%s, preco=%s, custo=%s, categoria_id=%s, 
+                tamanho=%s, ativo=%s, calorias=%s
+            WHERE id=%s
+        """, (dados.get('nome'), dados.get('descricao'), dados.get('preco'), 
+              dados.get('custo'), dados.get('categoria_id'), 
+              dados.get('tamanho'), dados.get('ativo', 1), dados.get('calorias'), id))
+        conn.commit()
+        cursor.close()
+        conn.close()
+        return jsonify({'success': True, 'message': 'Produto atualizado com sucesso!'})
+    except Exception as e:
+        print(f"Erro atualizar_produto: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/produtos/<int:id>', methods=['DELETE'])
+def deletar_produto(id):
+    try:
+        conn = get_db_connection()
+        if not conn:
+            return jsonify({'error': 'Erro ao conectar ao banco'}), 500
+        
+        cursor = conn.cursor()
+        cursor.execute("UPDATE produtos SET ativo = 0 WHERE id=%s", (id,))
+        conn.commit()
+        cursor.close()
+        conn.close()
+        return jsonify({'success': True, 'message': 'Produto removido com sucesso!'})
+    except Exception as e:
+        print(f"Erro deletar_produto: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+# CATEGORIAS
 @app.route('/api/categorias', methods=['GET'])
 def get_categorias():
     try:
-        conn = mysql.connector.connect(**DB_CONFIG)
+        conn = get_db_connection()
+        if not conn:
+            return jsonify({'error': 'Erro ao conectar ao banco'}), 500
+        
         cursor = conn.cursor(dictionary=True)
-        cursor.execute("SELECT * FROM categorias")
+        cursor.execute("SELECT * FROM categorias ORDER BY nome")
         categorias = cursor.fetchall()
         cursor.close()
         conn.close()
         return jsonify(categorias)
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        print(f"Erro get_categorias: {e}")
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/api/categorias', methods=['POST'])
 def criar_categoria():
     try:
         dados = request.json
-        conn = mysql.connector.connect(**DB_CONFIG)
+        conn = get_db_connection()
+        if not conn:
+            return jsonify({'error': 'Erro ao conectar ao banco'}), 500
+        
         cursor = conn.cursor()
-        cursor.execute("INSERT INTO categorias (nome) VALUES (%s)", (dados['nome'],))
+        cursor.execute("INSERT INTO categorias (nome) VALUES (%s)", (dados.get('nome'),))
         conn.commit()
         categoria_id = cursor.lastrowid
         cursor.close()
         conn.close()
-        return jsonify({"id": categoria_id, "message": "Categoria criada!"}), 201
+        return jsonify({'id': categoria_id, 'message': 'Categoria criada!'}), 201
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
-    
+        print(f"Erro criar_categoria: {e}")
+        return jsonify({'error': str(e)}), 500
+
+# FUNCIONÁRIOS
 @app.route('/api/funcionarios', methods=['GET'])
 def get_funcionarios():
     try:
-        conn = mysql.connector.connect(**DB_CONFIG)
+        conn = get_db_connection()
+        if not conn:
+            return jsonify({'error': 'Erro ao conectar ao banco'}), 500
+        
         cursor = conn.cursor(dictionary=True)
-        cursor.execute("SELECT * FROM funcionarios")
+        
+        # Query com LEFT JOIN para garantir que funciona mesmo sem loja
+        cursor.execute("""
+            SELECT 
+                f.*,
+                COALESCE(l.nome, 'Sem loja') as loja_nome,
+                COALESCE(f.ativo, 1) as ativo,
+                COALESCE(f.salario, 0) as salario
+            FROM funcionarios f
+            LEFT JOIN lojas l ON f.loja_id = l.id
+            ORDER BY f.nome
+        """)
         funcionarios = cursor.fetchall()
+        
+        # Garantir todos os campos
+        for func in funcionarios:
+            if not func.get('loja_nome'):
+                func['loja_nome'] = 'Sem loja'
+            if 'ativo' not in func or func['ativo'] is None:
+                func['ativo'] = 1
+            if 'salario' not in func or func['salario'] is None:
+                func['salario'] = 0
+            if 'loja_id' not in func or func['loja_id'] is None:
+                func['loja_id'] = 0
+        
         cursor.close()
         conn.close()
         return jsonify(funcionarios)
     except Exception as e:
-        print(f"Erro em funcionarios: {e}") 
-        return jsonify({"error": str(e)}), 500
+        print(f"❌ Erro get_funcionarios: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/api/funcionarios', methods=['POST'])
 def criar_funcionario():
     try:
         dados = request.json
-        conn = mysql.connector.connect(**DB_CONFIG)
+        print(f"👤 Criando funcionário: {dados}")
+        
+        conn = get_db_connection()
+        if not conn:
+            return jsonify({'success': False, 'error': 'Erro ao conectar ao banco'}), 500
+        
         cursor = conn.cursor()
         cursor.execute("""
             INSERT INTO funcionarios (nome, cpf, cargo, loja_id, salario, ativo)
             VALUES (%s, %s, %s, %s, %s, %s)
-        """, (dados['nome'], dados['cpf'], dados['cargo'], 
-              dados.get('loja_id'), dados.get('salario'), dados.get('ativo', 1)))
+        """, (
+            dados.get('nome', ''),
+            dados.get('cpf', ''),
+            dados.get('cargo', ''),
+            dados.get('loja_id'),
+            float(dados.get('salario', 0)),
+            1
+        ))
         conn.commit()
         funcionario_id = cursor.lastrowid
         cursor.close()
         conn.close()
-        return jsonify({"id": funcionario_id, "message": "Funcionário criado!"}), 201
+        
+        print(f"✅ Funcionário criado com ID: {funcionario_id}")
+        return jsonify({'success': True, 'id': funcionario_id, 'message': 'Funcionário criado com sucesso!'}), 201
+        
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        print(f"❌ Erro criar_funcionario: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500
 
+@app.route('/api/funcionarios/<int:id>', methods=['PUT'])
+def atualizar_funcionario(id):
+    try:
+        dados = request.json
+        conn = get_db_connection()
+        if not conn:
+            return jsonify({'error': 'Erro ao conectar ao banco'}), 500
+        
+        cursor = conn.cursor()
+        cursor.execute("""
+            UPDATE funcionarios 
+            SET nome=%s, cpf=%s, cargo=%s, loja_id=%s, salario=%s, ativo=%s
+            WHERE id=%s
+        """, (dados.get('nome'), dados.get('cpf'), dados.get('cargo'), 
+              dados.get('loja_id'), dados.get('salario'), dados.get('ativo', 1), id))
+        conn.commit()
+        cursor.close()
+        conn.close()
+        return jsonify({'success': True, 'message': 'Funcionário atualizado com sucesso!'})
+    except Exception as e:
+        print(f"Erro atualizar_funcionario: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/funcionarios/<int:id>', methods=['DELETE'])
+def deletar_funcionario(id):
+    try:
+        conn = get_db_connection()
+        if not conn:
+            return jsonify({'error': 'Erro ao conectar ao banco'}), 500
+        
+        cursor = conn.cursor()
+        cursor.execute("UPDATE funcionarios SET ativo = 0 WHERE id=%s", (id,))
+        conn.commit()
+        cursor.close()
+        conn.close()
+        return jsonify({'success': True, 'message': 'Funcionário removido com sucesso!'})
+    except Exception as e:
+        print(f"Erro deletar_funcionario: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+# LOJAS
 @app.route('/api/lojas', methods=['GET'])
 def get_lojas():
     try:
-        conn = mysql.connector.connect(**DB_CONFIG)
+        conn = get_db_connection()
+        if not conn:
+            return jsonify({'error': 'Erro ao conectar ao banco'}), 500
+        
         cursor = conn.cursor(dictionary=True)
-        cursor.execute("SELECT * FROM lojas")
+        cursor.execute("SELECT * FROM lojas ORDER BY nome")
         lojas = cursor.fetchall()
         cursor.close()
         conn.close()
         return jsonify(lojas)
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        print(f"Erro get_lojas: {e}")
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/api/lojas', methods=['POST'])
 def criar_loja():
     try:
         dados = request.json
-        conn = mysql.connector.connect(**DB_CONFIG)
+        print(f"🏪 Criando loja: {dados}")
+        
+        conn = get_db_connection()
+        if not conn:
+            return jsonify({'success': False, 'error': 'Erro ao conectar ao banco'}), 500
+        
         cursor = conn.cursor()
         cursor.execute("""
             INSERT INTO lojas (nome, endereco, cidade, estado, telefone, ativo)
             VALUES (%s, %s, %s, %s, %s, %s)
-        """, (dados['nome'], dados.get('endereco'), dados.get('cidade'), 
-              dados.get('estado'), dados.get('telefone'), dados.get('ativo', 1)))
+        """, (
+            dados.get('nome', ''),
+            dados.get('endereco', ''),
+            dados.get('cidade', ''),
+            dados.get('estado', ''),
+            dados.get('telefone', ''),
+            1
+        ))
         conn.commit()
         loja_id = cursor.lastrowid
         cursor.close()
         conn.close()
-        return jsonify({"id": loja_id, "message": "Loja criada!"}), 201
+        
+        print(f"✅ Loja criada com ID: {loja_id}")
+        return jsonify({'success': True, 'id': loja_id, 'message': 'Loja criada com sucesso!'}), 201
+        
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        print(f"❌ Erro criar_loja: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500
 
+@app.route('/api/lojas/<int:id>', methods=['PUT'])
+def atualizar_loja(id):
+    try:
+        dados = request.json
+        conn = get_db_connection()
+        if not conn:
+            return jsonify({'error': 'Erro ao conectar ao banco'}), 500
+        
+        cursor = conn.cursor()
+        cursor.execute("""
+            UPDATE lojas 
+            SET nome=%s, endereco=%s, cidade=%s, estado=%s, telefone=%s, ativo=%s
+            WHERE id=%s
+        """, (dados.get('nome'), dados.get('endereco'), dados.get('cidade'), 
+              dados.get('estado'), dados.get('telefone'), dados.get('ativo', 1), id))
+        conn.commit()
+        cursor.close()
+        conn.close()
+        return jsonify({'success': True, 'message': 'Loja atualizada com sucesso!'})
+    except Exception as e:
+        print(f"Erro atualizar_loja: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/lojas/<int:id>', methods=['DELETE'])
+def deletar_loja(id):
+    try:
+        conn = get_db_connection()
+        if not conn:
+            return jsonify({'error': 'Erro ao conectar ao banco'}), 500
+        
+        cursor = conn.cursor()
+        cursor.execute("UPDATE lojas SET ativo = 0 WHERE id=%s", (id,))
+        conn.commit()
+        cursor.close()
+        conn.close()
+        return jsonify({'success': True, 'message': 'Loja removida com sucesso!'})
+    except Exception as e:
+        print(f"Erro deletar_loja: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+# CLIENTES
 @app.route('/api/clientes', methods=['GET'])
 def get_clientes():
     try:
-        conn = mysql.connector.connect(**DB_CONFIG)
+        conn = get_db_connection()
+        if not conn:
+            return jsonify({'error': 'Erro ao conectar ao banco'}), 500
+        
         cursor = conn.cursor(dictionary=True)
-        cursor.execute("SELECT * FROM clientes")
+        cursor.execute("SELECT * FROM clientes ORDER BY nome")
         clientes = cursor.fetchall()
+        
+        # Garantir campos
         for cliente in clientes:
-            if 'nivel' not in cliente:
+            if 'nivel' not in cliente or not cliente['nivel']:
                 cliente['nivel'] = 'Regular'
             if 'pontos' not in cliente:
                 cliente['pontos'] = 0
@@ -925,127 +754,321 @@ def get_clientes():
         conn.close()
         return jsonify(clientes)
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        print(f"Erro get_clientes: {e}")
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/api/clientes', methods=['POST'])
 def criar_cliente():
     try:
         dados = request.json
-        conn = mysql.connector.connect(**DB_CONFIG)
+        conn = get_db_connection()
+        if not conn:
+            return jsonify({'error': 'Erro ao conectar ao banco'}), 500
+        
         cursor = conn.cursor()
         cursor.execute("""
             INSERT INTO clientes (nome, email, telefone, pontos)
             VALUES (%s, %s, %s, %s)
-        """, (dados['nome'], dados.get('email'), dados.get('telefone'), dados.get('pontos', 0)))
+        """, (dados.get('nome'), dados.get('email', ''), dados.get('telefone', ''), dados.get('pontos', 0)))
         conn.commit()
         cliente_id = cursor.lastrowid
         cursor.close()
         conn.close()
-        return jsonify({"id": cliente_id, "message": "Cliente criado!"}), 201
+        return jsonify({'success': True, 'id': cliente_id, 'message': 'Cliente criado com sucesso!'}), 201
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        print(f"Erro criar_cliente: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
 
+@app.route('/api/clientes/<int:id>', methods=['PUT'])
+def atualizar_cliente(id):
+    try:
+        dados = request.json
+        conn = get_db_connection()
+        if not conn:
+            return jsonify({'error': 'Erro ao conectar ao banco'}), 500
+        
+        cursor = conn.cursor()
+        cursor.execute("""
+            UPDATE clientes 
+            SET nome=%s, email=%s, telefone=%s, pontos=%s
+            WHERE id=%s
+        """, (dados.get('nome'), dados.get('email'), dados.get('telefone'), 
+              dados.get('pontos', 0), id))
+        conn.commit()
+        cursor.close()
+        conn.close()
+        return jsonify({'success': True, 'message': 'Cliente atualizado com sucesso!'})
+    except Exception as e:
+        print(f"Erro atualizar_cliente: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/clientes/<int:id>', methods=['DELETE'])
+def deletar_cliente(id):
+    try:
+        conn = get_db_connection()
+        if not conn:
+            return jsonify({'error': 'Erro ao conectar ao banco'}), 500
+        
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM clientes WHERE id=%s", (id,))
+        conn.commit()
+        cursor.close()
+        conn.close()
+        return jsonify({'success': True, 'message': 'Cliente removido com sucesso!'})
+    except Exception as e:
+        print(f"Erro deletar_cliente: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+# ESTOQUE
 @app.route('/api/estoque', methods=['GET'])
 def get_estoque():
     try:
-        conn = mysql.connector.connect(**DB_CONFIG)
+        conn = get_db_connection()
+        if not conn:
+            return jsonify({'error': 'Erro ao conectar ao banco'}), 500
+        
         cursor = conn.cursor(dictionary=True)
+        
+        # Query completa com todas as informações necessárias
         cursor.execute("""
-            SELECT e.*, i.nome as ingrediente_nome, l.nome as loja_nome
+            SELECT 
+                e.id,
+                e.loja_id,
+                e.ingrediente_id,
+                COALESCE(e.quantidade_atual, 0) as quantidade_atual,
+                COALESCE(e.quantidade_minima, 0) as quantidade_minima,
+                COALESCE(l.nome, 'Sem loja') as loja_nome,
+                COALESCE(i.nome, 'Ingrediente desconhecido') as ingrediente_nome,
+                COALESCE(i.unidade_medida, 'un') as unidade_medida,
+                COALESCE(i.estoque_minimo, 0) as estoque_minimo,
+                CASE 
+                    WHEN e.quantidade_atual <= (i.estoque_minimo * 0.3) THEN 'CRÍTICO'
+                    WHEN e.quantidade_atual <= (i.estoque_minimo * 0.5) THEN 'BAIXO'
+                    WHEN e.quantidade_atual <= i.estoque_minimo THEN 'ATENÇÃO'
+                    ELSE 'OK'
+                END as status
             FROM estoque e
-            LEFT JOIN ingredientes i ON e.ingrediente_id = i.id
             LEFT JOIN lojas l ON e.loja_id = l.id
+            LEFT JOIN ingredientes i ON e.ingrediente_id = i.id
+            ORDER BY 
+                CASE 
+                    WHEN e.quantidade_atual <= (i.estoque_minimo * 0.3) THEN 1
+                    WHEN e.quantidade_atual <= (i.estoque_minimo * 0.5) THEN 2
+                    WHEN e.quantidade_atual <= i.estoque_minimo THEN 3
+                    ELSE 4
+                END,
+                e.quantidade_atual
         """)
         estoque = cursor.fetchall()
+        
+        # Garantir todos os campos existem
+        for item in estoque:
+            if not item.get('loja_nome'):
+                item['loja_nome'] = 'Sem loja'
+            if not item.get('ingrediente_nome'):
+                item['ingrediente_nome'] = 'Ingrediente desconhecido'
+            if 'quantidade_atual' not in item or item['quantidade_atual'] is None:
+                item['quantidade_atual'] = 0
+            if 'quantidade_minima' not in item or item['quantidade_minima'] is None:
+                item['quantidade_minima'] = 0
+            if 'estoque_minimo' not in item or item['estoque_minimo'] is None:
+                item['estoque_minimo'] = 0
+            if not item.get('unidade_medida'):
+                item['unidade_medida'] = 'un'
+            if not item.get('status'):
+                item['status'] = 'undefined'
+        
         cursor.close()
         conn.close()
         return jsonify(estoque)
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        print(f"❌ Erro get_estoque: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
 
+# DASHBOARD
 @app.route('/api/dashboard', methods=['GET'])
 def get_dashboard():
     try:
-        conn = mysql.connector.connect(**DB_CONFIG)
+        conn = get_db_connection()
+        if not conn:
+            return jsonify({'error': 'Erro ao conectar ao banco'}), 500
+        
         cursor = conn.cursor(dictionary=True)
-
+        
+        # Totais básicos
         cursor.execute("SELECT COUNT(*) as total FROM produtos WHERE ativo = 1")
         total_produtos = cursor.fetchone()['total']
-
+        
         cursor.execute("SELECT COUNT(*) as total FROM funcionarios WHERE ativo = 1")
         total_funcionarios = cursor.fetchone()['total']
-    
+        
         cursor.execute("SELECT COUNT(*) as total FROM lojas WHERE ativo = 1")
         total_lojas = cursor.fetchone()['total']
-
+        
         cursor.execute("SELECT COUNT(*) as total FROM clientes")
         total_clientes = cursor.fetchone()['total']
         
-
+        # Receita e pedidos (com try/catch pois tabelas podem não existir)
+        total_pedidos = 0
+        receita_total = 0
+        pedidos_hoje = 0
         try:
-            cursor.execute("SELECT SUM(valor_total) as receita FROM vendas")
-            receita_result = cursor.fetchone()
-            receita_total = receita_result['receita'] if receita_result['receita'] else 0
-        except:
-            receita_total = 0
-        try:
-            cursor.execute("SELECT COUNT(*) as total FROM pedidos WHERE DATE(created_at) = CURDATE()")
-            pedidos_result = cursor.fetchone()
-            pedidos_hoje = pedidos_result['total'] if pedidos_result else 0
-        except:
-            pedidos_hoje = 0
+            cursor.execute("SELECT COUNT(*) as total, COALESCE(SUM(total), 0) as receita FROM pedidos WHERE status != 'cancelado'")
+            result = cursor.fetchone()
+            total_pedidos = result['total'] if result else 0
+            receita_total = float(result['receita']) if result and result['receita'] else 0
+            
+            cursor.execute("SELECT COUNT(*) as total FROM pedidos WHERE DATE(data_hora) = CURDATE() AND status != 'cancelado'")
+            result = cursor.fetchone()
+            pedidos_hoje = result['total'] if result else 0
+        except Exception as e:
+            print(f"Aviso dashboard pedidos: {e}")
+            # Se não existir tabela pedidos, tenta vendas
+            try:
+                cursor.execute("SELECT SUM(valor_total) as receita FROM vendas")
+                result = cursor.fetchone()
+                receita_total = float(result['receita']) if result and result['receita'] else 0
+            except:
+                pass
         
         cursor.close()
         conn.close()
         
+        ticket_medio = receita_total / total_pedidos if total_pedidos > 0 else 0
+        
         return jsonify({
-            "produtos": total_produtos,
-            "funcionarios": total_funcionarios,
-            "lojas": total_lojas,
-            "clientes": total_clientes,
-            "receita_total": receita_total,
-            "pedidos_hoje": pedidos_hoje,
-            "ticket_medio": receita_total / total_clientes if total_clientes > 0 else 0
+            'total_pedidos': total_pedidos,
+            'receita_total': receita_total,
+            'pedidos_hoje': pedidos_hoje,
+            'ticket_medio': ticket_medio,
+            'produtos': total_produtos,
+            'funcionarios': total_funcionarios,
+            'lojas': total_lojas,
+            'clientes': total_clientes,
+            'clientes_ativos': total_clientes,
+            'alertas_estoque': 0
         })
     except Exception as e:
-        print(f"Erro no dashboard: {e}")
-        return jsonify({"error": str(e)}), 500
+        print(f"Erro dashboard: {e}")
+        return jsonify({'error': str(e)}), 500
 
-    cursor.execute("""
-        SELECT COUNT(*) as total_pedidos, COALESCE(SUM(total), 0) as receita_total
-        FROM pedidos
-        WHERE DATE(data_hora) = CURDATE()
-    """)
-    vendas_hoje = cursor.fetchone()
+# ============= ROTAS DE RELATÓRIOS =============
 
-    cursor.execute("""
-        SELECT p.nome, SUM(ip.quantidade) as total_vendido
-        FROM itens_pedido ip
-        JOIN produtos p ON ip.produto_id = p.id
-        JOIN pedidos ped ON ip.pedido_id = ped.id
-        WHERE DATE(ped.data_hora) = CURDATE()
-        GROUP BY p.id
-        ORDER BY total_vendido DESC
-        LIMIT 5
-    """)
-    top_produtos = cursor.fetchall()
-    
-    cursor.close()
-    conn.close()
-    
-    return jsonify({
-        'vendas_hoje': vendas_hoje,
-        'top_produtos': top_produtos,
-        'pedidos_fila': order_queue.size()
-    })
+@app.route('/api/relatorio/vendas', methods=['GET'])
+def relatorio_vendas():
+    """Relatório de vendas por período"""
+    try:
+        periodo = request.args.get('periodo', 30, type=int)
+        
+        conn = get_db_connection()
+        if not conn:
+            return jsonify({'error': 'Erro ao conectar ao banco'}), 500
+        
+        cursor = conn.cursor(dictionary=True)
+        
+        # Tenta buscar de pedidos
+        try:
+            cursor.execute("""
+                SELECT 
+                    DATE(data_hora) as data,
+                    COUNT(*) as total_pedidos,
+                    SUM(total) as receita,
+                    AVG(total) as ticket_medio
+                FROM pedidos
+                WHERE data_hora >= DATE_SUB(NOW(), INTERVAL %s DAY)
+                    AND status != 'cancelado'
+                GROUP BY DATE(data_hora)
+                ORDER BY data DESC
+            """, (periodo,))
+            vendas = cursor.fetchall()
+        except:
+            # Se não existir, retorna dados vazios
+            vendas = []
+        
+        cursor.close()
+        conn.close()
+        
+        return jsonify(vendas)
+    except Exception as e:
+        print(f"Erro relatorio_vendas: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/relatorio/produtos', methods=['GET'])
+def relatorio_produtos():
+    """Relatório de produtos mais vendidos"""
+    try:
+        conn = get_db_connection()
+        if not conn:
+            return jsonify({'error': 'Erro ao conectar ao banco'}), 500
+        
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("""
+            SELECT p.*, c.nome as categoria_nome,
+                CASE 
+                    WHEN p.custo > 0 THEN ((p.preco - p.custo) / p.custo * 100)
+                    ELSE 0 
+                END as margem_percentual
+            FROM produtos p
+            LEFT JOIN categorias c ON p.categoria_id = c.id
+            WHERE p.ativo = 1
+            ORDER BY p.nome
+        """)
+        produtos = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        
+        return jsonify(produtos)
+    except Exception as e:
+        print(f"Erro relatorio_produtos: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/admin/dashboard', methods=['GET'])
+def admin_dashboard():
+    """Dashboard administrativo com mais detalhes"""
+    return get_dashboard()
+
+@app.route('/api/admin/produtos', methods=['GET'])
+def admin_get_produtos():
+    """Lista produtos (alias)"""
+    return get_produtos()
+
+@app.route('/api/admin/funcionarios', methods=['GET'])
+def admin_get_funcionarios():
+    """Lista funcionários (alias)"""
+    return get_funcionarios()
+
+@app.route('/api/admin/lojas', methods=['GET'])
+def admin_get_lojas():
+    """Lista lojas (alias)"""
+    return get_lojas()
+
+@app.route('/api/admin/clientes', methods=['GET'])
+def admin_get_clientes():
+    """Lista clientes (alias)"""
+    return get_clientes()
+
+@app.route('/api/admin/categorias', methods=['GET'])
+def admin_get_categorias():
+    """Lista categorias (alias)"""
+    return get_categorias()
+
+@app.route('/api/admin/estoque', methods=['GET'])
+def admin_get_estoque():
+    """Lista estoque com alertas (versão completa)"""
+    return get_estoque()
+
+# ============= INICIALIZAÇÃO =============
 
 if __name__ == '__main__':
-    print("\n🦆 Paraíso Gelado - Sistema Iniciando...")
-    print(f"📊 Servidor rodando em: https://paraiso-gelado.onrender.com/")
+    print("\n🍦 Paraíso Gelado - Sistema Iniciando...")
+    print(f"🌐 Servidor rodando em: http://0.0.0.0:5000")
     print(f"🗄️  Banco de dados: {DB_CONFIG['database']}")
     print(f"🔧 Debug mode: {Config.DEBUG}")
     print(f"👤 Login padrão: admin@paraisogelado.com / admin123\n")
     
+    # Testa conexão com banco
     test_conn = get_db_connection()
     if test_conn:
         print("✅ Conexão com banco de dados: OK")
@@ -1054,4 +1077,5 @@ if __name__ == '__main__':
         print("❌ Conexão com banco de dados: FALHOU")
         print("⚠️  Verifique as configurações em paraiso_config.py")
     
-    app.run(debug=Config.DEBUG, host='0.0.0.0', port=5000, load_dotenv=False)
+    port = int(os.environ.get('PORT', 5000))
+    app.run(debug=Config.DEBUG, host='0.0.0.0', port=port)
