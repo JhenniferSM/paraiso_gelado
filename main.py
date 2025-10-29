@@ -8,7 +8,6 @@ from collections import deque
 import heapq
 from paraiso_config import Config
 
-# Tenta carregar variáveis de ambiente
 try:
     from dotenv import load_dotenv
     load_dotenv()
@@ -16,7 +15,6 @@ try:
 except Exception as e:
     print(f"⚠️ Usando configurações padrão (erro ao carregar .env: {e})")
 
-# Tenta importar mysql.connector
 try:
     import mysql.connector
 except ImportError:
@@ -776,11 +774,8 @@ def admin_relatorio_vendas():
     
     return jsonify(vendas)
 
-# ============= ROTAS PÚBLICAS (mantidas do código original) =============
-
 # ==================== ROTAS DA API ====================
 
-# PRODUTOS
 @app.route('/api/produtos', methods=['GET'])
 def get_produtos():
     try:
@@ -818,22 +813,46 @@ def criar_produto():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# FUNCIONÁRIOS
+@app.route('/api/categorias', methods=['GET'])
+def get_categorias():
+    try:
+        conn = mysql.connector.connect(**DB_CONFIG)
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("SELECT * FROM categorias")
+        categorias = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        return jsonify(categorias)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/categorias', methods=['POST'])
+def criar_categoria():
+    try:
+        dados = request.json
+        conn = mysql.connector.connect(**DB_CONFIG)
+        cursor = conn.cursor()
+        cursor.execute("INSERT INTO categorias (nome) VALUES (%s)", (dados['nome'],))
+        conn.commit()
+        categoria_id = cursor.lastrowid
+        cursor.close()
+        conn.close()
+        return jsonify({"id": categoria_id, "message": "Categoria criada!"}), 201
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
 @app.route('/api/funcionarios', methods=['GET'])
 def get_funcionarios():
     try:
         conn = mysql.connector.connect(**DB_CONFIG)
         cursor = conn.cursor(dictionary=True)
-        cursor.execute("""
-            SELECT f.*, l.nome as loja_nome 
-            FROM funcionarios f
-            LEFT JOIN lojas l ON f.loja_id = l.id
-        """)
+        cursor.execute("SELECT * FROM funcionarios")
         funcionarios = cursor.fetchall()
         cursor.close()
         conn.close()
         return jsonify(funcionarios)
     except Exception as e:
+        print(f"Erro em funcionarios: {e}") 
         return jsonify({"error": str(e)}), 500
 
 @app.route('/api/funcionarios', methods=['POST'])
@@ -855,7 +874,6 @@ def criar_funcionario():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# LOJAS
 @app.route('/api/lojas', methods=['GET'])
 def get_lojas():
     try:
@@ -888,7 +906,6 @@ def criar_loja():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# CLIENTES
 @app.route('/api/clientes', methods=['GET'])
 def get_clientes():
     try:
@@ -896,6 +913,14 @@ def get_clientes():
         cursor = conn.cursor(dictionary=True)
         cursor.execute("SELECT * FROM clientes")
         clientes = cursor.fetchall()
+        for cliente in clientes:
+            if 'nivel' not in cliente:
+                cliente['nivel'] = 'Regular'
+            if 'pontos' not in cliente:
+                cliente['pontos'] = 0
+            if 'total_compras' not in cliente:
+                cliente['total_compras'] = 0
+        
         cursor.close()
         conn.close()
         return jsonify(clientes)
@@ -920,7 +945,6 @@ def criar_cliente():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# ESTOQUE
 @app.route('/api/estoque', methods=['GET'])
 def get_estoque():
     try:
@@ -939,28 +963,37 @@ def get_estoque():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# DASHBOARD - Estatísticas
 @app.route('/api/dashboard', methods=['GET'])
 def get_dashboard():
     try:
         conn = mysql.connector.connect(**DB_CONFIG)
         cursor = conn.cursor(dictionary=True)
-        
-        # Total de produtos
+
         cursor.execute("SELECT COUNT(*) as total FROM produtos WHERE ativo = 1")
         total_produtos = cursor.fetchone()['total']
-        
-        # Total de funcionários
+
         cursor.execute("SELECT COUNT(*) as total FROM funcionarios WHERE ativo = 1")
         total_funcionarios = cursor.fetchone()['total']
-        
-        # Total de lojas
+    
         cursor.execute("SELECT COUNT(*) as total FROM lojas WHERE ativo = 1")
         total_lojas = cursor.fetchone()['total']
-        
-        # Total de clientes
+
         cursor.execute("SELECT COUNT(*) as total FROM clientes")
         total_clientes = cursor.fetchone()['total']
+        
+
+        try:
+            cursor.execute("SELECT SUM(valor_total) as receita FROM vendas")
+            receita_result = cursor.fetchone()
+            receita_total = receita_result['receita'] if receita_result['receita'] else 0
+        except:
+            receita_total = 0
+        try:
+            cursor.execute("SELECT COUNT(*) as total FROM pedidos WHERE DATE(created_at) = CURDATE()")
+            pedidos_result = cursor.fetchone()
+            pedidos_hoje = pedidos_result['total'] if pedidos_result else 0
+        except:
+            pedidos_hoje = 0
         
         cursor.close()
         conn.close()
@@ -969,20 +1002,22 @@ def get_dashboard():
             "produtos": total_produtos,
             "funcionarios": total_funcionarios,
             "lojas": total_lojas,
-            "clientes": total_clientes
+            "clientes": total_clientes,
+            "receita_total": receita_total,
+            "pedidos_hoje": pedidos_hoje,
+            "ticket_medio": receita_total / total_clientes if total_clientes > 0 else 0
         })
     except Exception as e:
+        print(f"Erro no dashboard: {e}")
         return jsonify({"error": str(e)}), 500
- 
-    # Total de vendas hoje
+
     cursor.execute("""
         SELECT COUNT(*) as total_pedidos, COALESCE(SUM(total), 0) as receita_total
         FROM pedidos
         WHERE DATE(data_hora) = CURDATE()
     """)
     vendas_hoje = cursor.fetchone()
-    
-    # Produtos mais vendidos
+
     cursor.execute("""
         SELECT p.nome, SUM(ip.quantidade) as total_vendido
         FROM itens_pedido ip
@@ -1011,7 +1046,6 @@ if __name__ == '__main__':
     print(f"🔧 Debug mode: {Config.DEBUG}")
     print(f"👤 Login padrão: admin@paraisogelado.com / admin123\n")
     
-    # Testa conexão com banco
     test_conn = get_db_connection()
     if test_conn:
         print("✅ Conexão com banco de dados: OK")
