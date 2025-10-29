@@ -31,11 +31,11 @@ CORS(app)
 # ============= CONFIGURAÇÃO DO BANCO DE DADOS =============
 
 DB_CONFIG = {
-    'host': Config.DB_HOST,
-    'user': Config.DB_USER,
-    'password': Config.DB_PASSWORD,
-    'database': Config.DB_NAME,
-    'port': Config.DB_PORT
+    'host': os.getenv('DB_HOST'),
+    'user': os.getenv('DB_USER'),
+    'password': os.getenv('DB_PASSWORD'),
+    'database': os.getenv('DB_NAME'),
+    'port': int(os.getenv('DB_PORT', 3306))
 }
 
 def get_db_connection():
@@ -228,6 +228,41 @@ def verificar_autenticacao():
     return session.get('authenticated', False)
 
 # ============= ROTAS PRINCIPAIS =============
+
+# Rota de teste de conexão com banco
+@app.route('/test-db')
+def test_db():
+    try:
+        conn = mysql.connector.connect(**DB_CONFIG)
+        cursor = conn.cursor()
+        cursor.execute("SELECT 1")
+        result = cursor.fetchone()
+        cursor.close()
+        conn.close()
+        return jsonify({
+            "status": "success",
+            "message": "Conexão com banco de dados OK!",
+            "result": result
+        })
+    except Exception as e:
+        return jsonify({
+            "status": "error",
+            "message": str(e),
+            "db_config": {
+                "host": DB_CONFIG.get('host'),
+                "user": DB_CONFIG.get('user'),
+                "database": DB_CONFIG.get('database'),
+                "port": DB_CONFIG.get('port')
+            }
+        }), 500
+
+# Rota de health check
+@app.route('/health')
+def health():
+    return jsonify({
+        "status": "online",
+        "env_loaded": bool(os.getenv('DB_HOST'))
+    })
 
 @app.route('/admin')
 def admin_panel():
@@ -809,7 +844,7 @@ def dashboard():
 
 if __name__ == '__main__':
     print("\n🦆 Paraíso Gelado - Sistema Iniciando...")
-    print(f"📊 Servidor rodando em: http://localhost:5000")
+    print(f"📊 Servidor rodando em: https://paraiso-gelado.onrender.com/")
     print(f"🗄️  Banco de dados: {DB_CONFIG['database']}")
     print(f"🔧 Debug mode: {Config.DEBUG}")
     print(f"👤 Login padrão: admin@paraisogelado.com / admin123\n")
