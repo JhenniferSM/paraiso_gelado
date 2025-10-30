@@ -1,13 +1,14 @@
 import os
 from flask import Flask, render_template, request, jsonify, session
 from flask_cors import CORS
-from datetime import datetime, timedelta
+from datetime import datetime
 import hashlib
 import json
 from collections import deque
 import heapq
 from paraiso_config import Config
 
+# Tenta carregar variáveis de ambiente
 try:
     from dotenv import load_dotenv
     load_dotenv()
@@ -15,6 +16,7 @@ try:
 except Exception as e:
     print(f"⚠️ Usando configurações padrão (erro ao carregar .env: {e})")
 
+# Tenta importar mysql.connector
 try:
     import mysql.connector
 except ImportError:
@@ -225,40 +227,6 @@ def verificar_autenticacao():
     """Verifica se o usuário está autenticado"""
     return session.get('authenticated', False)
 
-def calcular_margem(preco, custo):
-    """Calcula margem de lucro percentual"""
-    if custo and custo > 0:
-        return round(((preco - custo) / custo) * 100, 1)
-    return 0.0
-
-def calcular_status_estoque(qtd_atual, qtd_minima):
-    """Calcula status do estoque"""
-    if qtd_minima <= 0:
-        return 'OK'
-    
-    percentual = (qtd_atual / qtd_minima) * 100
-    
-    if percentual <= 30:
-        return 'CRÍTICO'
-    elif percentual <= 50:
-        return 'MUITO BAIXO'
-    elif percentual <= 100:
-        return 'BAIXO'
-    else:
-        return 'OK'
-
-def calcular_previsao_reposicao(qtd_atual, qtd_minima, consumo_medio_diario):
-    """Calcula em quantos dias será necessário repor o estoque"""
-    if consumo_medio_diario <= 0:
-        return None
-    
-    dias_restantes = (qtd_atual - qtd_minima) / consumo_medio_diario
-    
-    if dias_restantes <= 0:
-        return 0
-    
-    return int(dias_restantes)
-
 # ============= ROTAS PRINCIPAIS =============
 
 @app.route('/admin')
@@ -273,23 +241,28 @@ def index():
 
 @app.route('/test-db')
 def test_db():
-    """Testa a conexão com o banco de dados"""
+    """Testa a conexão com o banco de dados e mostra estrutura das tabelas"""
     try:
         conn = get_db_connection()
         if not conn:
             return jsonify({"status": "error", "message": "Não foi possível conectar ao banco"}), 500
         
         cursor = conn.cursor(dictionary=True)
+        
+        # Testa conexão básica
         cursor.execute("SELECT 1")
         result = cursor.fetchone()
         
+        # Mostra estrutura de tabelas importantes
         tabelas_info = {}
+        
         for tabela in ['funcionarios', 'lojas', 'estoque', 'ingredientes', 'produtos', 'categorias']:
             try:
                 cursor.execute(f"DESCRIBE {tabela}")
                 colunas = cursor.fetchall()
                 tabelas_info[tabela] = [col['Field'] for col in colunas]
                 
+                # Conta registros
                 cursor.execute(f"SELECT COUNT(*) as total FROM {tabela}")
                 total = cursor.fetchone()
                 tabelas_info[f"{tabela}_count"] = total['total']
@@ -337,6 +310,7 @@ def login():
         username = data.get('username')
         password = data.get('password')
         
+        # Credenciais de demonstração
         if username == 'admin@paraisogelado.com' and password == 'admin123':
             session['authenticated'] = True
             session['user'] = {
@@ -350,10 +324,12 @@ def login():
                 'user': session['user']
             })
         
+        # Verificar no banco de dados (funcionários)
         conn = get_db_connection()
         if conn:
             cursor = conn.cursor(dictionary=True)
             
+            # Buscar por email ou CPF
             query = """
                 SELECT f.*, l.nome as loja_nome 
                 FROM funcionarios f
@@ -398,8 +374,9 @@ def logout():
     session.clear()
     return jsonify({'success': True, 'message': 'Logout realizado com sucesso'})
 
-# ============= ROTAS API - PRODUTOS =============
+# ============= ROTAS API SIMPLIFICADAS =============
 
+# PRODUTOS
 @app.route('/api/produtos', methods=['GET'])
 def get_produtos():
     try:
@@ -409,65 +386,17 @@ def get_produtos():
         
         cursor = conn.cursor(dictionary=True)
         cursor.execute("""
-            SELECT 
-                p.*,
-                c.nome as categoria_nome,
-                CASE 
-                    WHEN p.custo > 0 THEN ROUND(((p.preco - p.custo) / p.custo) * 100, 1)
-                    ELSE 0 
-                END as margem_percentual
+            SELECT p.*, c.nome as categoria_nome 
             FROM produtos p 
             LEFT JOIN categorias c ON p.categoria_id = c.id
             ORDER BY p.nome
         """)
         produtos = cursor.fetchall()
-        
-        # Garantir que margem está calculada
-        for produto in produtos:
-            if 'margem_percentual' not in produto or produto['margem_percentual'] is None:
-                produto['margem_percentual'] = calcular_margem(
-                    produto.get('preco', 0), 
-                    produto.get('custo', 0)
-                )
-        
         cursor.close()
         conn.close()
         return jsonify(produtos)
     except Exception as e:
         print(f"Erro get_produtos: {e}")
-        return jsonify({'error': str(e)}), 500
-
-@app.route('/api/produtos/<int:id>', methods=['GET'])
-def get_produto(id):
-    """Busca um produto específico por ID"""
-    try:
-        conn = get_db_connection()
-        if not conn:
-            return jsonify({'error': 'Erro ao conectar ao banco'}), 500
-        
-        cursor = conn.cursor(dictionary=True)
-        cursor.execute("""
-            SELECT 
-                p.*,
-                c.nome as categoria_nome,
-                CASE 
-                    WHEN p.custo > 0 THEN ROUND(((p.preco - p.custo) / p.custo) * 100, 1)
-                    ELSE 0 
-                END as margem_percentual
-            FROM produtos p 
-            LEFT JOIN categorias c ON p.categoria_id = c.id
-            WHERE p.id = %s
-        """, (id,))
-        produto = cursor.fetchone()
-        cursor.close()
-        conn.close()
-        
-        if produto:
-            return jsonify(produto)
-        else:
-            return jsonify({'error': 'Produto não encontrado'}), 404
-    except Exception as e:
-        print(f"Erro get_produto: {e}")
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/produtos', methods=['POST'])
@@ -512,74 +441,45 @@ def criar_produto():
 def atualizar_produto(id):
     try:
         dados = request.json
-        print(f"📝 Atualizando produto {id}: {dados}")
-        
         conn = get_db_connection()
         if not conn:
-            return jsonify({'success': False, 'error': 'Erro ao conectar ao banco'}), 500
+            return jsonify({'error': 'Erro ao conectar ao banco'}), 500
         
         cursor = conn.cursor()
         cursor.execute("""
             UPDATE produtos 
             SET nome=%s, descricao=%s, preco=%s, custo=%s, categoria_id=%s, 
-                tamanho=%s, ativo=%s, calorias=%s, updated_at=NOW()
+                tamanho=%s, ativo=%s, calorias=%s
             WHERE id=%s
-        """, (
-            dados.get('nome'), 
-            dados.get('descricao'), 
-            float(dados.get('preco', 0)), 
-            float(dados.get('custo', 0)), 
-            dados.get('categoria_id'), 
-            dados.get('tamanho'), 
-            dados.get('ativo', 1), 
-            int(dados.get('calorias', 0)), 
-            id
-        ))
+        """, (dados.get('nome'), dados.get('descricao'), dados.get('preco'), 
+              dados.get('custo'), dados.get('categoria_id'), 
+              dados.get('tamanho'), dados.get('ativo', 1), dados.get('calorias'), id))
         conn.commit()
         cursor.close()
         conn.close()
-        
-        print(f"✅ Produto {id} atualizado com sucesso")
         return jsonify({'success': True, 'message': 'Produto atualizado com sucesso!'})
     except Exception as e:
-        print(f"❌ Erro atualizar_produto: {e}")
-        import traceback
-        traceback.print_exc()
+        print(f"Erro atualizar_produto: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @app.route('/api/produtos/<int:id>', methods=['DELETE'])
 def deletar_produto(id):
     try:
-        print(f"🗑️ Deletando produto {id}")
-        
         conn = get_db_connection()
         if not conn:
-            return jsonify({'success': False, 'error': 'Erro ao conectar ao banco'}), 500
+            return jsonify({'error': 'Erro ao conectar ao banco'}), 500
         
         cursor = conn.cursor()
-        
-        # DELETE real do banco de dados
-        cursor.execute("DELETE FROM produtos WHERE id=%s", (id,))
-        
+        cursor.execute("UPDATE produtos SET ativo = 0 WHERE id=%s", (id,))
         conn.commit()
-        rows_affected = cursor.rowcount
         cursor.close()
         conn.close()
-        
-        if rows_affected > 0:
-            print(f"✅ Produto {id} deletado com sucesso")
-            return jsonify({'success': True, 'message': 'Produto removido com sucesso!'})
-        else:
-            return jsonify({'success': False, 'error': 'Produto não encontrado'}), 404
-            
+        return jsonify({'success': True, 'message': 'Produto removido com sucesso!'})
     except Exception as e:
-        print(f"❌ Erro deletar_produto: {e}")
-        import traceback
-        traceback.print_exc()
+        print(f"Erro deletar_produto: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
-# ============= ROTAS API - CATEGORIAS =============
-
+# CATEGORIAS
 @app.route('/api/categorias', methods=['GET'])
 def get_categorias():
     try:
@@ -616,8 +516,7 @@ def criar_categoria():
         print(f"Erro criar_categoria: {e}")
         return jsonify({'error': str(e)}), 500
 
-# ============= ROTAS API - FUNCIONÁRIOS =============
-
+# FUNCIONÁRIOS
 @app.route('/api/funcionarios', methods=['GET'])
 def get_funcionarios():
     try:
@@ -627,6 +526,7 @@ def get_funcionarios():
         
         cursor = conn.cursor(dictionary=True)
         
+        # Query com LEFT JOIN para garantir que funciona mesmo sem loja
         cursor.execute("""
             SELECT 
                 f.*,
@@ -639,6 +539,7 @@ def get_funcionarios():
         """)
         funcionarios = cursor.fetchall()
         
+        # Garantir todos os campos
         for func in funcionarios:
             if not func.get('loja_nome'):
                 func['loja_nome'] = 'Sem loja'
@@ -658,35 +559,6 @@ def get_funcionarios():
         traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
-@app.route('/api/funcionarios/<int:id>', methods=['GET'])
-def get_funcionario(id):
-    """Busca um funcionário específico por ID"""
-    try:
-        conn = get_db_connection()
-        if not conn:
-            return jsonify({'error': 'Erro ao conectar ao banco'}), 500
-        
-        cursor = conn.cursor(dictionary=True)
-        cursor.execute("""
-            SELECT 
-                f.*,
-                COALESCE(l.nome, 'Sem loja') as loja_nome
-            FROM funcionarios f
-            LEFT JOIN lojas l ON f.loja_id = l.id
-            WHERE f.id = %s
-        """, (id,))
-        funcionario = cursor.fetchone()
-        cursor.close()
-        conn.close()
-        
-        if funcionario:
-            return jsonify(funcionario)
-        else:
-            return jsonify({'error': 'Funcionário não encontrado'}), 404
-    except Exception as e:
-        print(f"Erro get_funcionario: {e}")
-        return jsonify({'error': str(e)}), 500
-
 @app.route('/api/funcionarios', methods=['POST'])
 def criar_funcionario():
     try:
@@ -699,15 +571,14 @@ def criar_funcionario():
         
         cursor = conn.cursor()
         cursor.execute("""
-            INSERT INTO funcionarios (nome, cpf, cargo, loja_id, salario, data_admissao, ativo)
-            VALUES (%s, %s, %s, %s, %s, %s, %s)
+            INSERT INTO funcionarios (nome, cpf, cargo, loja_id, salario, ativo)
+            VALUES (%s, %s, %s, %s, %s, %s)
         """, (
             dados.get('nome', ''),
             dados.get('cpf', ''),
             dados.get('cargo', ''),
             dados.get('loja_id'),
             float(dados.get('salario', 0)),
-            dados.get('data_admissao', datetime.now().date()),
             1
         ))
         conn.commit()
@@ -728,72 +599,43 @@ def criar_funcionario():
 def atualizar_funcionario(id):
     try:
         dados = request.json
-        print(f"📝 Atualizando funcionário {id}: {dados}")
-        
         conn = get_db_connection()
         if not conn:
-            return jsonify({'success': False, 'error': 'Erro ao conectar ao banco'}), 500
+            return jsonify({'error': 'Erro ao conectar ao banco'}), 500
         
         cursor = conn.cursor()
         cursor.execute("""
             UPDATE funcionarios 
-            SET nome=%s, cpf=%s, cargo=%s, loja_id=%s, salario=%s, data_admissao=%s, ativo=%s
+            SET nome=%s, cpf=%s, cargo=%s, loja_id=%s, salario=%s, ativo=%s
             WHERE id=%s
-        """, (
-            dados.get('nome'), 
-            dados.get('cpf'), 
-            dados.get('cargo'), 
-            dados.get('loja_id'), 
-            float(dados.get('salario', 0)), 
-            dados.get('data_admissao'),
-            dados.get('ativo', 1), 
-            id
-        ))
+        """, (dados.get('nome'), dados.get('cpf'), dados.get('cargo'), 
+              dados.get('loja_id'), dados.get('salario'), dados.get('ativo', 1), id))
         conn.commit()
         cursor.close()
         conn.close()
-        
-        print(f"✅ Funcionário {id} atualizado com sucesso")
         return jsonify({'success': True, 'message': 'Funcionário atualizado com sucesso!'})
     except Exception as e:
-        print(f"❌ Erro atualizar_funcionario: {e}")
-        import traceback
-        traceback.print_exc()
+        print(f"Erro atualizar_funcionario: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @app.route('/api/funcionarios/<int:id>', methods=['DELETE'])
 def deletar_funcionario(id):
     try:
-        print(f"🗑️ Deletando funcionário {id}")
-        
         conn = get_db_connection()
         if not conn:
-            return jsonify({'success': False, 'error': 'Erro ao conectar ao banco'}), 500
+            return jsonify({'error': 'Erro ao conectar ao banco'}), 500
         
         cursor = conn.cursor()
-        
-        # DELETE real do banco de dados
-        cursor.execute("DELETE FROM funcionarios WHERE id=%s", (id,))
-        
+        cursor.execute("UPDATE funcionarios SET ativo = 0 WHERE id=%s", (id,))
         conn.commit()
-        rows_affected = cursor.rowcount
         cursor.close()
         conn.close()
-        
-        if rows_affected > 0:
-            print(f"✅ Funcionário {id} deletado com sucesso")
-            return jsonify({'success': True, 'message': 'Funcionário removido com sucesso!'})
-        else:
-            return jsonify({'success': False, 'error': 'Funcionário não encontrado'}), 404
-            
+        return jsonify({'success': True, 'message': 'Funcionário removido com sucesso!'})
     except Exception as e:
-        print(f"❌ Erro deletar_funcionario: {e}")
-        import traceback
-        traceback.print_exc()
+        print(f"Erro deletar_funcionario: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
-# ============= ROTAS API - LOJAS =============
-
+# LOJAS
 @app.route('/api/lojas', methods=['GET'])
 def get_lojas():
     try:
@@ -802,17 +644,13 @@ def get_lojas():
             return jsonify({'error': 'Erro ao conectar ao banco'}), 500
         
         cursor = conn.cursor(dictionary=True)
-        cursor.execute("SELECT * FROM lojas WHERE id = %s", (id,))
-        loja = cursor.fetchone()
+        cursor.execute("SELECT * FROM lojas ORDER BY nome")
+        lojas = cursor.fetchall()
         cursor.close()
         conn.close()
-        
-        if loja:
-            return jsonify(loja)
-        else:
-            return jsonify({'error': 'Loja não encontrada'}), 404
+        return jsonify(lojas)
     except Exception as e:
-        print(f"Erro get_loja: {e}")
+        print(f"Erro get_lojas: {e}")
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/lojas', methods=['POST'])
@@ -827,17 +665,14 @@ def criar_loja():
         
         cursor = conn.cursor()
         cursor.execute("""
-            INSERT INTO lojas (nome, endereco, cidade, estado, cep, telefone, email, data_abertura, ativo)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+            INSERT INTO lojas (nome, endereco, cidade, estado, telefone, ativo)
+            VALUES (%s, %s, %s, %s, %s, %s)
         """, (
             dados.get('nome', ''),
             dados.get('endereco', ''),
             dados.get('cidade', ''),
             dados.get('estado', ''),
-            dados.get('cep', ''),
             dados.get('telefone', ''),
-            dados.get('email', ''),
-            dados.get('data_abertura', datetime.now().date()),
             1
         ))
         conn.commit()
@@ -858,74 +693,43 @@ def criar_loja():
 def atualizar_loja(id):
     try:
         dados = request.json
-        print(f"📝 Atualizando loja {id}: {dados}")
-        
         conn = get_db_connection()
         if not conn:
-            return jsonify({'success': False, 'error': 'Erro ao conectar ao banco'}), 500
+            return jsonify({'error': 'Erro ao conectar ao banco'}), 500
         
         cursor = conn.cursor()
         cursor.execute("""
             UPDATE lojas 
-            SET nome=%s, endereco=%s, cidade=%s, estado=%s, cep=%s, telefone=%s, email=%s, data_abertura=%s, ativo=%s
+            SET nome=%s, endereco=%s, cidade=%s, estado=%s, telefone=%s, ativo=%s
             WHERE id=%s
-        """, (
-            dados.get('nome'), 
-            dados.get('endereco'), 
-            dados.get('cidade'), 
-            dados.get('estado'), 
-            dados.get('cep'),
-            dados.get('telefone'), 
-            dados.get('email'),
-            dados.get('data_abertura'),
-            dados.get('ativo', 1), 
-            id
-        ))
+        """, (dados.get('nome'), dados.get('endereco'), dados.get('cidade'), 
+              dados.get('estado'), dados.get('telefone'), dados.get('ativo', 1), id))
         conn.commit()
         cursor.close()
         conn.close()
-        
-        print(f"✅ Loja {id} atualizada com sucesso")
         return jsonify({'success': True, 'message': 'Loja atualizada com sucesso!'})
     except Exception as e:
-        print(f"❌ Erro atualizar_loja: {e}")
-        import traceback
-        traceback.print_exc()
+        print(f"Erro atualizar_loja: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @app.route('/api/lojas/<int:id>', methods=['DELETE'])
 def deletar_loja(id):
     try:
-        print(f"🗑️ Deletando loja {id}")
-        
         conn = get_db_connection()
         if not conn:
-            return jsonify({'success': False, 'error': 'Erro ao conectar ao banco'}), 500
+            return jsonify({'error': 'Erro ao conectar ao banco'}), 500
         
         cursor = conn.cursor()
-        
-        # DELETE real do banco de dados
-        cursor.execute("DELETE FROM lojas WHERE id=%s", (id,))
-        
+        cursor.execute("UPDATE lojas SET ativo = 0 WHERE id=%s", (id,))
         conn.commit()
-        rows_affected = cursor.rowcount
         cursor.close()
         conn.close()
-        
-        if rows_affected > 0:
-            print(f"✅ Loja {id} deletada com sucesso")
-            return jsonify({'success': True, 'message': 'Loja removida com sucesso!'})
-        else:
-            return jsonify({'success': False, 'error': 'Loja não encontrada'}), 404
-            
+        return jsonify({'success': True, 'message': 'Loja removida com sucesso!'})
     except Exception as e:
-        print(f"❌ Erro deletar_loja: {e}")
-        import traceback
-        traceback.print_exc()
+        print(f"Erro deletar_loja: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
-# ============= ROTAS API - CLIENTES =============
-
+# CLIENTES
 @app.route('/api/clientes', methods=['GET'])
 def get_clientes():
     try:
@@ -934,32 +738,17 @@ def get_clientes():
             return jsonify({'error': 'Erro ao conectar ao banco'}), 500
         
         cursor = conn.cursor(dictionary=True)
-        cursor.execute("""
-            SELECT 
-                c.*,
-                COUNT(DISTINCT p.id) as total_pedidos,
-                COALESCE(SUM(p.total), 0) as total_gasto,
-                CASE 
-                    WHEN c.pontos_fidelidade >= 500 THEN 'VIP'
-                    WHEN c.pontos_fidelidade >= 200 THEN 'Premium'
-                    ELSE 'Regular'
-                END as nivel
-            FROM clientes c
-            LEFT JOIN pedidos p ON c.id = p.cliente_id AND p.status != 'cancelado'
-            GROUP BY c.id
-            ORDER BY c.nome
-        """)
+        cursor.execute("SELECT * FROM clientes ORDER BY nome")
         clientes = cursor.fetchall()
         
+        # Garantir campos
         for cliente in clientes:
             if 'nivel' not in cliente or not cliente['nivel']:
                 cliente['nivel'] = 'Regular'
-            if 'pontos_fidelidade' not in cliente:
-                cliente['pontos_fidelidade'] = 0
-            if 'total_pedidos' not in cliente:
-                cliente['total_pedidos'] = 0
-            if 'total_gasto' not in cliente:
-                cliente['total_gasto'] = 0
+            if 'pontos' not in cliente:
+                cliente['pontos'] = 0
+            if 'total_compras' not in cliente:
+                cliente['total_compras'] = 0
         
         cursor.close()
         conn.close()
@@ -978,9 +767,9 @@ def criar_cliente():
         
         cursor = conn.cursor()
         cursor.execute("""
-            INSERT INTO clientes (nome, email, cpf, telefone, pontos_fidelidade)
-            VALUES (%s, %s, %s, %s, %s)
-        """, (dados.get('nome'), dados.get('email', ''), dados.get('cpf', ''), dados.get('telefone', ''), dados.get('pontos_fidelidade', 0)))
+            INSERT INTO clientes (nome, email, telefone, pontos)
+            VALUES (%s, %s, %s, %s)
+        """, (dados.get('nome'), dados.get('email', ''), dados.get('telefone', ''), dados.get('pontos', 0)))
         conn.commit()
         cliente_id = cursor.lastrowid
         cursor.close()
@@ -1001,10 +790,10 @@ def atualizar_cliente(id):
         cursor = conn.cursor()
         cursor.execute("""
             UPDATE clientes 
-            SET nome=%s, email=%s, cpf=%s, telefone=%s, pontos_fidelidade=%s, updated_at=NOW()
+            SET nome=%s, email=%s, telefone=%s, pontos=%s
             WHERE id=%s
-        """, (dados.get('nome'), dados.get('email'), dados.get('cpf'), dados.get('telefone'), 
-              dados.get('pontos_fidelidade', 0), id))
+        """, (dados.get('nome'), dados.get('email'), dados.get('telefone'), 
+              dados.get('pontos', 0), id))
         conn.commit()
         cursor.close()
         conn.close()
@@ -1030,17 +819,15 @@ def deletar_cliente(id):
         print(f"Erro deletar_cliente: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
-# ============= ROTAS API - ESTOQUE (COMPLETO) =============
-
+# ESTOQUE
 @app.route('/api/estoque', methods=['GET'])
 def get_estoque():
     try:
         conn = get_db_connection()
         if not conn:
             return jsonify({'error': 'Erro ao conectar ao banco'}), 500
-        
+                
         cursor = conn.cursor(dictionary=True)
-        
         cursor.execute("""
             SELECT 
                 e.id,
@@ -1052,202 +839,43 @@ def get_estoque():
                 COALESCE(i.unidade_medida, 'un') as unidade_medida,
                 COALESCE(i.estoque_minimo, 0) as estoque_minimo,
                 COALESCE(i.custo_unitario, 0) as custo_unitario,
-                COALESCE(i.fornecedor, 'Não informado') as fornecedor
+                COALESCE(i.fornecedor, 'Não informado') as fornecedor,
+                e.data_ultima_atualizacao,
+                CASE 
+                    WHEN e.quantidade_atual <= (i.estoque_minimo * 0.3) THEN 'CRÍTICO'
+                    WHEN e.quantidade_atual <= (i.estoque_minimo * 0.5) THEN 'BAIXO'
+                    WHEN e.quantidade_atual <= i.estoque_minimo THEN 'ATENÇÃO'
+                    ELSE 'OK'
+                END as status
             FROM estoque e
             LEFT JOIN lojas l ON e.loja_id = l.id
             LEFT JOIN ingredientes i ON e.ingrediente_id = i.id
-            ORDER BY e.quantidade_atual
+            ORDER BY 
+                CASE 
+                    WHEN e.quantidade_atual <= (i.estoque_minimo * 0.3) THEN 1
+                    WHEN e.quantidade_atual <= (i.estoque_minimo * 0.5) THEN 2
+                    WHEN e.quantidade_atual <= i.estoque_minimo THEN 3
+                    ELSE 4
+                END,
+                e.quantidade_atual
         """)
+        
         estoque = cursor.fetchall()
         
-        # Calcular status e previsão para cada item
-        for item in estoque:
-            qtd_atual = float(item.get('quantidade_atual', 0))
-            qtd_minima = float(item.get('estoque_minimo', 0))
-            
-            # Calcular status
-            item['status_alerta'] = calcular_status_estoque(qtd_atual, qtd_minima)
-            
-            # Calcular consumo médio (últimos 7 dias)
-            try:
-                cursor.execute("""
-                    SELECT COALESCE(AVG(quantidade_consumida), 0) as consumo_medio
-                    FROM (
-                        SELECT 
-                            DATE(data_ultima_atualizacao) as data,
-                            SUM(quantidade_atual) as quantidade_consumida
-                        FROM estoque
-                        WHERE ingrediente_id = %s 
-                            AND loja_id = %s
-                            AND data_ultima_atualizacao >= DATE_SUB(NOW(), INTERVAL 7 DAY)
-                        GROUP BY DATE(data_ultima_atualizacao)
-                    ) as consumo_diario
-                """, (item['ingrediente_id'], item['loja_id']))
-                
-                resultado = cursor.fetchone()
-                consumo_medio = float(resultado['consumo_medio']) if resultado else 0
-                
-                # Calcular previsão de reposição
-                dias_reposicao = calcular_previsao_reposicao(qtd_atual, qtd_minima, consumo_medio)
-                
-                if dias_reposicao is not None:
-                    if dias_reposicao <= 0:
-                        item['previsao_reposicao'] = 'URGENTE - Repor imediatamente'
-                    elif dias_reposicao <= 3:
-                        item['previsao_reposicao'] = f'Repor em {dias_reposicao} dias'
-                    elif dias_reposicao <= 7:
-                        item['previsao_reposicao'] = f'Repor em {dias_reposicao} dias'
-                    else:
-                        item['previsao_reposicao'] = f'Estoque para {dias_reposicao} dias'
-                else:
-                    item['previsao_reposicao'] = 'Dados insuficientes'
-                    
-            except Exception as e:
-                print(f"Erro ao calcular previsão: {e}")
-                item['previsao_reposicao'] = 'Não calculado'
-            
-            # Buscar ficha técnica (produtos que usam este ingrediente)
-            try:
-                cursor.execute("""
-                    SELECT 
-                        p.nome as produto_nome,
-                        ft.quantidade as quantidade_necessaria
-                    FROM ficha_tecnica ft
-                    INNER JOIN produtos p ON ft.produto_id = p.id
-                    WHERE ft.ingrediente_id = %s
-                    LIMIT 5
-                """, (item['ingrediente_id'],))
-                
-                produtos_relacionados = cursor.fetchall()
-                item['produtos_utilizam'] = [p['produto_nome'] for p in produtos_relacionados] if produtos_relacionados else []
-                
-            except Exception as e:
-                print(f"Erro ao buscar ficha técnica: {e}")
-                item['produtos_utilizam'] = []
-            
-            # Garantir todos os campos existem
-            if not item.get('loja_nome'):
-                item['loja_nome'] = 'Sem loja'
-            if not item.get('ingrediente_nome'):
-                item['ingrediente_nome'] = 'Ingrediente desconhecido'
-            if 'quantidade_atual' not in item or item['quantidade_atual'] is None:
-                item['quantidade_atual'] = 0
-            if 'estoque_minimo' not in item or item['estoque_minimo'] is None:
-                item['estoque_minimo'] = 0
-            if not item.get('unidade_medida'):
-                item['unidade_medida'] = 'un'
+        print(f"✅ Total de itens no estoque: {len(estoque)}")
         
         cursor.close()
         conn.close()
         
         return jsonify(estoque)
+        
     except Exception as e:
         print(f"❌ Erro get_estoque: {e}")
         import traceback
         traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
-@app.route('/api/estoque/<int:id>/repor', methods=['POST'])
-def repor_estoque(id):
-    """Repõe quantidade no estoque"""
-    try:
-        dados = request.json
-        quantidade = float(dados.get('quantidade', 0))
-        
-        if quantidade <= 0:
-            return jsonify({'success': False, 'error': 'Quantidade inválida'}), 400
-        
-        conn = get_db_connection()
-        if not conn:
-            return jsonify({'success': False, 'error': 'Erro ao conectar ao banco'}), 500
-        
-        cursor = conn.cursor(dictionary=True)
-        
-        # Buscar item atual
-        cursor.execute("SELECT * FROM estoque WHERE id = %s", (id,))
-        item = cursor.fetchone()
-        
-        if not item:
-            cursor.close()
-            conn.close()
-            return jsonify({'success': False, 'error': 'Item não encontrado'}), 404
-        
-        # Atualizar quantidade
-        nova_quantidade = float(item['quantidade_atual']) + quantidade
-        
-        cursor.execute("""
-            UPDATE estoque 
-            SET quantidade_atual = %s, data_ultima_atualizacao = NOW()
-            WHERE id = %s
-        """, (nova_quantidade, id))
-        
-        conn.commit()
-        cursor.close()
-        conn.close()
-        
-        return jsonify({
-            'success': True, 
-            'message': f'Estoque reposto com sucesso! Nova quantidade: {nova_quantidade}'
-        })
-        
-    except Exception as e:
-        print(f"❌ Erro repor_estoque: {e}")
-        import traceback
-        traceback.print_exc()
-        return jsonify({'success': False, 'error': str(e)}), 500
-
-@app.route('/api/estoque/alertas', methods=['GET'])
-def get_alertas_estoque():
-    """Retorna apenas itens com alertas de estoque"""
-    try:
-        conn = get_db_connection()
-        if not conn:
-            return jsonify({'error': 'Erro ao conectar ao banco'}), 500
-        
-        cursor = conn.cursor(dictionary=True)
-        
-        cursor.execute("""
-            SELECT 
-                e.id,
-                l.nome as loja_nome,
-                i.nome as ingrediente_nome,
-                e.quantidade_atual,
-                i.estoque_minimo,
-                i.unidade_medida,
-                i.fornecedor,
-                CASE 
-                    WHEN e.quantidade_atual <= (i.estoque_minimo * 0.3) THEN 'CRÍTICO'
-                    WHEN e.quantidade_atual <= (i.estoque_minimo * 0.5) THEN 'MUITO BAIXO'
-                    WHEN e.quantidade_atual <= i.estoque_minimo THEN 'BAIXO'
-                END as status_alerta
-            FROM estoque e
-            INNER JOIN lojas l ON e.loja_id = l.id
-            INNER JOIN ingredientes i ON e.ingrediente_id = i.id
-            WHERE e.quantidade_atual <= i.estoque_minimo
-            ORDER BY 
-                CASE 
-                    WHEN e.quantidade_atual <= (i.estoque_minimo * 0.3) THEN 1
-                    WHEN e.quantidade_atual <= (i.estoque_minimo * 0.5) THEN 2
-                    ELSE 3
-                END,
-                e.quantidade_atual
-        """)
-        
-        alertas = cursor.fetchall()
-        cursor.close()
-        conn.close()
-        
-        return jsonify({
-            'total_alertas': len(alertas),
-            'alertas': alertas
-        })
-        
-    except Exception as e:
-        print(f"Erro get_alertas_estoque: {e}")
-        return jsonify({'error': str(e)}), 500
-
-# ============= DASHBOARD =============
-
+# DASHBOARD
 @app.route('/api/dashboard', methods=['GET'])
 def get_dashboard():
     try:
@@ -1270,68 +898,28 @@ def get_dashboard():
         cursor.execute("SELECT COUNT(*) as total FROM clientes")
         total_clientes = cursor.fetchone()['total']
         
-        # Alertas de estoque
-        cursor.execute("""
-            SELECT COUNT(*) as total 
-            FROM estoque e
-            INNER JOIN ingredientes i ON e.ingrediente_id = i.id
-            WHERE e.quantidade_atual <= i.estoque_minimo
-        """)
-        alertas_estoque = cursor.fetchone()['total']
-        
-        # Vendas e pedidos
+        # Receita e pedidos (com try/catch pois tabelas podem não existir)
         total_pedidos = 0
         receita_total = 0
         pedidos_hoje = 0
-        receita_hoje = 0
-        
         try:
-            cursor.execute("""
-                SELECT 
-                    COUNT(*) as total, 
-                    COALESCE(SUM(total), 0) as receita 
-                FROM pedidos 
-                WHERE status != 'cancelado'
-            """)
+            cursor.execute("SELECT COUNT(*) as total, COALESCE(SUM(total), 0) as receita FROM pedidos WHERE status != 'cancelado'")
             result = cursor.fetchone()
             total_pedidos = result['total'] if result else 0
             receita_total = float(result['receita']) if result and result['receita'] else 0
             
-            cursor.execute("""
-                SELECT 
-                    COUNT(*) as total,
-                    COALESCE(SUM(total), 0) as receita
-                FROM pedidos 
-                WHERE DATE(data_hora) = CURDATE() AND status != 'cancelado'
-            """)
+            cursor.execute("SELECT COUNT(*) as total FROM pedidos WHERE DATE(data_hora) = CURDATE() AND status != 'cancelado'")
             result = cursor.fetchone()
             pedidos_hoje = result['total'] if result else 0
-            receita_hoje = float(result['receita']) if result and result['receita'] else 0
-            
         except Exception as e:
             print(f"Aviso dashboard pedidos: {e}")
-        
-        # Performance por loja
-        try:
-            cursor.execute("""
-                SELECT 
-                    l.id,
-                    l.nome,
-                    COUNT(DISTINCT p.id) as total_pedidos,
-                    COALESCE(SUM(p.total), 0) as receita,
-                    COALESCE(AVG(p.total), 0) as ticket_medio
-                FROM lojas l
-                LEFT JOIN pedidos p ON l.id = p.loja_id 
-                    AND DATE(p.data_hora) = CURDATE()
-                    AND p.status != 'cancelado'
-                WHERE l.ativo = 1
-                GROUP BY l.id, l.nome
-                ORDER BY receita DESC
-            """)
-            performance_lojas = cursor.fetchall()
-        except Exception as e:
-            print(f"Erro performance lojas: {e}")
-            performance_lojas = []
+            # Se não existir tabela pedidos, tenta vendas
+            try:
+                cursor.execute("SELECT SUM(valor_total) as receita FROM vendas")
+                result = cursor.fetchone()
+                receita_total = float(result['receita']) if result and result['receita'] else 0
+            except:
+                pass
         
         cursor.close()
         conn.close()
@@ -1339,10 +927,6 @@ def get_dashboard():
         ticket_medio = receita_total / total_pedidos if total_pedidos > 0 else 0
         
         return jsonify({
-            'vendas_hoje': {
-                'receita_total': receita_hoje,
-                'total_pedidos': pedidos_hoje
-            },
             'total_pedidos': total_pedidos,
             'receita_total': receita_total,
             'pedidos_hoje': pedidos_hoje,
@@ -1352,13 +936,10 @@ def get_dashboard():
             'lojas': total_lojas,
             'clientes': total_clientes,
             'clientes_ativos': total_clientes,
-            'alertas_estoque': alertas_estoque,
-            'performance_lojas': performance_lojas
+            'alertas_estoque': 0
         })
     except Exception as e:
         print(f"Erro dashboard: {e}")
-        import traceback
-        traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
 # ============= ROTAS DE RELATÓRIOS =============
@@ -1375,6 +956,7 @@ def relatorio_vendas():
         
         cursor = conn.cursor(dictionary=True)
         
+        # Tenta buscar de pedidos
         try:
             cursor.execute("""
                 SELECT 
@@ -1390,7 +972,7 @@ def relatorio_vendas():
             """, (periodo,))
             vendas = cursor.fetchall()
         except:
-            vendas = []
+        vendas = []
         
         cursor.close()
         conn.close()
@@ -1412,7 +994,7 @@ def relatorio_produtos():
         cursor.execute("""
             SELECT p.*, c.nome as categoria_nome,
                 CASE 
-                    WHEN p.custo > 0 THEN ROUND(((p.preco - p.custo) / p.custo) * 100, 1)
+                    WHEN p.custo > 0 THEN ((p.preco - p.custo) / p.custo * 100)
                     ELSE 0 
                 END as margem_percentual
             FROM produtos p
@@ -1428,8 +1010,6 @@ def relatorio_produtos():
     except Exception as e:
         print(f"Erro relatorio_produtos: {e}")
         return jsonify({'error': str(e)}), 500
-
-# ============= ROTAS ALIAS (ADMIN) =============
 
 @app.route('/api/admin/dashboard', methods=['GET'])
 def admin_dashboard():
@@ -1468,6 +1048,7 @@ if __name__ == '__main__':
     print(f"🔧 Debug mode: {Config.DEBUG}")
     print(f"👤 Login padrão: admin@paraisogelado.com / admin123\n")
     
+    # Testa conexão com banco
     test_conn = get_db_connection()
     if test_conn:
         print("✅ Conexão com banco de dados: OK")
@@ -1477,21 +1058,4 @@ if __name__ == '__main__':
         print("⚠️  Verifique as configurações em paraiso_config.py")
     
     port = int(os.environ.get('PORT', 5000))
-    app.run(debug=Config.DEBUG, host='0.0.0.0', port=port) ORDER BY nome")
-        lojas = cursor.fetchall()
-        cursor.close()
-        conn.close()
-        return jsonify(lojas)
-    except Exception as e:
-        print(f"Erro get_lojas: {e}")
-        return jsonify({'error': str(e)}), 500
-
-@app.route('/api/lojas/<int:id>', methods=['GET'])
-def get_loja(id):
-    """Busca uma loja específica por ID"""
-    try:
-        conn = get_db_connection()
-        if not conn:
-            return jsonify({'error': 'Erro ao conectar ao banco'}), 500
-        
-        cursor = conn.cursor(dictionary=True)
+    app.run(debug=Config.DEBUG, host='0.0.0.0', port=port)
