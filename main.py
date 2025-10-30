@@ -237,12 +237,6 @@ def admin_panel():
     """Painel administrativo"""
     return render_template('admin.html')
 
-@app.route('/')
-def index():
-    if session.get('logged_in'):
-        return redirect(url_for('admin_page'))
-    return redirect(url_for('login_page'))
-
 @app.route('/test-db')
 def test_db():
     """Testa a conexão com o banco de dados e mostra estrutura das tabelas"""
