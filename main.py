@@ -913,7 +913,6 @@ def get_dashboard():
             pedidos_hoje = result['total'] if result else 0
         except Exception as e:
             print(f"Aviso dashboard pedidos: {e}")
-            # Se não existir tabela pedidos, tenta vendas
             try:
                 cursor.execute("SELECT SUM(valor_total) as receita FROM vendas")
                 result = cursor.fetchone()
@@ -946,7 +945,6 @@ def get_dashboard():
 
 @app.route('/api/relatorio/vendas', methods=['GET'])
 def relatorio_vendas():
-    """Relatório de vendas por período"""
     try:
         periodo = request.args.get('periodo', 30, type=int)
         
@@ -972,7 +970,7 @@ def relatorio_vendas():
             """, (periodo,))
             vendas = cursor.fetchall()
         except:
-        vendas = []
+           vendas = []
         
         cursor.close()
         conn.close()
