@@ -1835,15 +1835,17 @@ async function loadFuncionarios() {
                 const tbody = document.getElementById('estoqueTable');
                 if (estoque && estoque.length > 0) {
                     tbody.innerHTML = estoque.map(e => {
-                        const statusClass = e.status_alerta === 'CRÍTICO' || e.status_alerta === 'MUITO BAIXO' ? 'critico' : 
-                                           e.status_alerta === 'BAIXO' ? 'baixo' : 'ok';
+                        // CORREÇÃO: usar e.status em vez de e.status_alerta
+                        const statusClass = e.status === 'CRÍTICO' ? 'critico' : 
+                                        e.status === 'BAIXO' ? 'baixo' : 
+                                        e.status === 'ATENÇÃO' ? 'baixo' : 'ok';
                         return `
                             <tr>
                                 <td><strong>${e.ingrediente_nome}</strong></td>
                                 <td>${e.loja_nome}</td>
                                 <td>${parseFloat(e.quantidade_atual).toFixed(1)} ${e.unidade_medida}</td>
                                 <td>${parseFloat(e.estoque_minimo).toFixed(1)} ${e.unidade_medida}</td>
-                                <td><span class="status-badge status-${statusClass}">${e.status_alerta}</span></td>
+                                <td><span class="status-badge status-${statusClass}">${e.status}</span></td>
                                 <td>
                                     <button class="btn btn-success btn-sm" onclick="reporEstoque(${e.id})">➕ Repor</button>
                                 </td>
