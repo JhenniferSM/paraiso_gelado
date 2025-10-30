@@ -266,16 +266,41 @@
         }
 
         // ============= MODAL =============
+// ============= MODAL =============
         function openModal(modalId) {
             document.getElementById(modalId).classList.add('active');
-            if (modalId === 'modalProduto') carregarCategorias();
-            if (modalId === 'modalFuncionario') carregarLojasSelect();
+            
+            if (modalId === 'modalProduto') {
+                carregarCategorias();
+            }
+            
+            if (modalId === 'modalFuncionario') {
+                carregarLojasSelect();
+                
+                if (!funcionarioEditando) {
+                    document.getElementById('formFuncionario').reset();
+                    document.querySelector('#modalFuncionario .modal-title').textContent = 'Cadastrar Funcionário';
+                }
+            }
         }
 
         function closeModal(modalId) {
             document.getElementById(modalId).classList.remove('active');
+            
+            if (modalId === 'modalFuncionario') {
+                funcionarioEditando = null;
+                document.getElementById('formFuncionario').reset();
+                document.querySelector('#modalFuncionario .modal-title').textContent = 'Cadastrar Funcionário';
+            }
+            
+            if (modalId === 'modalProduto') {
+                document.getElementById('formProduto').reset();
+            }
+            
+            if (modalId === 'modalLoja') {
+                document.getElementById('formLoja').reset();
+            }
         }
-
         // ============= ALERTS =============
         function showAlert(message, type = 'success') {
             const alertDiv = document.createElement('div');
@@ -455,6 +480,8 @@
         }
 
         // ============= FUNCIONÁRIOS =============
+        let funcionarioEditando = null;
+        
         async function loadFuncionarios() {
             try {
                 const response = await fetch(`${API_URL}/funcionarios`);
@@ -471,8 +498,13 @@
                             <td>R$ ${parseFloat(f.salario).toFixed(2)}</td>
                             <td><span class="status-badge ${f.ativo ? 'status-active' : 'status-inactive'}">
                                 ${f.ativo ? 'Ativo' : 'Inativo'}</span></td>
-                            <td>
-                                <button class="btn btn-danger btn-sm" onclick="excluirFuncionario(${f.id})">🗑️</button>
+                            <td style="display: flex; gap: 5px;">
+                                <button class="btn btn-warning btn-sm" onclick="editarFuncionario(${f.id})" title="Editar">
+                                    ✏️
+                                </button>
+                                <button class="btn btn-danger btn-sm" onclick="excluirFuncionario(${f.id})" title="Excluir">
+                                    🗑️
+                                </button>
                             </td>
                         </tr>
                     `).join('');
@@ -485,30 +517,73 @@
             }
         }
 
+        async function editarFuncionario(id) {
+            try {
+                const response = await fetch(`${API_URL}/funcionarios/${id}`);
+                const funcionario = await response.json();
+                
+                if (funcionario.error) {
+                    showAlert('Funcionário não encontrado', 'danger');
+                    return;
+                }
+                
+                funcionarioEditando = id;
+                await carregarLojasSelect();
+                
+                document.querySelector('#formFuncionario [name="nome"]').value = funcionario.nome || '';
+                document.querySelector('#formFuncionario [name="cpf"]').value = funcionario.cpf || '';
+                document.querySelector('#formFuncionario [name="cargo"]').value = funcionario.cargo || '';
+                document.querySelector('#formFuncionario [name="data_admissao"]').value = funcionario.data_admissao || '';
+                document.querySelector('#formFuncionario [name="salario"]').value = funcionario.salario || '';
+                document.querySelector('#formFuncionario [name="loja_id"]').value = funcionario.loja_id || '';
+                
+                document.querySelector('#modalFuncionario .modal-title').textContent = 'Editar Funcionário';
+                openModal('modalFuncionario');
+                
+            } catch (error) {
+                console.error('Erro:', error);
+                showAlert('Erro ao carregar dados do funcionário', 'danger');
+            }
+        }
+
         async function salvarFuncionario(event) {
             event.preventDefault();
             const formData = new FormData(event.target);
             const data = Object.fromEntries(formData);
             
             try {
-                const response = await fetch(`${API_URL}/funcionarios`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(data)
-                });
+                let response;
+                
+                if (funcionarioEditando) {
+                    response = await fetch(`${API_URL}/funcionarios/${funcionarioEditando}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data)
+                    });
+                } else {
+                    response = await fetch(`${API_URL}/funcionarios`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data)
+                    });
+                }
                 
                 const result = await response.json();
                 if (result.success) {
-                    showAlert('Funcionário cadastrado com sucesso!', 'success');
+                    showAlert(
+                        funcionarioEditando ? 'Funcionário atualizado com sucesso!' : 'Funcionário cadastrado com sucesso!',
+                        'success'
+                    );
                     closeModal('modalFuncionario');
                     event.target.reset();
+                    funcionarioEditando = null;
                     loadFuncionarios();
                 } else {
-                    showAlert(result.error || 'Erro ao cadastrar funcionário', 'danger');
+                    showAlert(result.error || 'Erro ao salvar funcionário', 'danger');
                 }
             } catch (error) {
                 console.error('Erro:', error);
-                showAlert('Erro ao cadastrar funcionário', 'danger');
+                showAlert('Erro ao salvar funcionário', 'danger');
             }
         }
 
@@ -1183,6 +1258,27 @@
             box-shadow: 0 6px 20px rgba(255,107,157,0.3);
         }
 
+        .btn-warning {
+            background: var(--warning);
+            color: white;
+        }
+        
+        .btn-warning:hover {
+            background: #E67E22;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(243, 156, 18, 0.3);
+        }
+
+        .btn-danger:hover {
+            background: #C0392B;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3);
+        }
+
+        .data-table td button {
+            margin: 0 2px;
+        }
+        
         .btn-success {
             background: var(--success);
             color: white;

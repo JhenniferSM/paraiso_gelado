@@ -376,7 +376,6 @@ def logout():
 
 # ============= ROTAS API SIMPLIFICADAS =============
 
-# PRODUTOS
 @app.route('/api/produtos', methods=['GET'])
 def get_produtos():
     try:
@@ -386,12 +385,28 @@ def get_produtos():
         
         cursor = conn.cursor(dictionary=True)
         cursor.execute("""
-            SELECT p.*, c.nome as categoria_nome 
+            SELECT 
+                p.*,
+                c.nome as categoria_nome,
+                CASE 
+                    WHEN p.custo > 0 THEN ROUND(((p.preco - p.custo) / p.preco * 100), 2)
+                    ELSE 0 
+                END as margem_percentual
             FROM produtos p 
             LEFT JOIN categorias c ON p.categoria_id = c.id
             ORDER BY p.nome
         """)
         produtos = cursor.fetchall()
+        
+        for produto in produtos:
+            if 'margem_percentual' not in produto or produto['margem_percentual'] is None:
+                if produto.get('custo') and produto.get('preco') and float(produto['custo']) > 0:
+                    custo = float(produto['custo'])
+                    preco = float(produto['preco'])
+                    produto['margem_percentual'] = round(((preco - custo) / preco * 100), 2)
+                else:
+                    produto['margem_percentual'] = 0
+        
         cursor.close()
         conn.close()
         return jsonify(produtos)
@@ -516,49 +531,6 @@ def criar_categoria():
         print(f"Erro criar_categoria: {e}")
         return jsonify({'error': str(e)}), 500
 
-# FUNCIONÁRIOS
-@app.route('/api/funcionarios', methods=['GET'])
-def get_funcionarios():
-    try:
-        conn = get_db_connection()
-        if not conn:
-            return jsonify({'error': 'Erro ao conectar ao banco'}), 500
-        
-        cursor = conn.cursor(dictionary=True)
-        
-        # Query com LEFT JOIN para garantir que funciona mesmo sem loja
-        cursor.execute("""
-            SELECT 
-                f.*,
-                COALESCE(l.nome, 'Sem loja') as loja_nome,
-                COALESCE(f.ativo, 1) as ativo,
-                COALESCE(f.salario, 0) as salario
-            FROM funcionarios f
-            LEFT JOIN lojas l ON f.loja_id = l.id
-            ORDER BY f.nome
-        """)
-        funcionarios = cursor.fetchall()
-        
-        # Garantir todos os campos
-        for func in funcionarios:
-            if not func.get('loja_nome'):
-                func['loja_nome'] = 'Sem loja'
-            if 'ativo' not in func or func['ativo'] is None:
-                func['ativo'] = 1
-            if 'salario' not in func or func['salario'] is None:
-                func['salario'] = 0
-            if 'loja_id' not in func or func['loja_id'] is None:
-                func['loja_id'] = 0
-        
-        cursor.close()
-        conn.close()
-        return jsonify(funcionarios)
-    except Exception as e:
-        print(f"❌ Erro get_funcionarios: {e}")
-        import traceback
-        traceback.print_exc()
-        return jsonify({'error': str(e)}), 500
-
 @app.route('/api/funcionarios', methods=['POST'])
 def criar_funcionario():
     try:
@@ -571,7 +543,7 @@ def criar_funcionario():
         
         cursor = conn.cursor()
         cursor.execute("""
-            INSERT INTO funcionarios (nome, cpf, cargo, loja_id, salario, ativo)
+            INSERT INTO funcionarios (nome, cpf, cargo, loja_id, salario, data_admissao, ativo)
             VALUES (%s, %s, %s, %s, %s, %s)
         """, (
             dados.get('nome', ''),
@@ -579,6 +551,7 @@ def criar_funcionario():
             dados.get('cargo', ''),
             dados.get('loja_id'),
             float(dados.get('salario', 0)),
+            dados.get('data_admissao', datetime.now().date()),
             1
         ))
         conn.commit()
@@ -635,7 +608,36 @@ def deletar_funcionario(id):
         print(f"Erro deletar_funcionario: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
-# LOJAS
+@app.route('/api/funcionarios/<int:id>', methods=['GET'])
+def get_funcionario(id):
+    try:
+        conn = get_db_connection()
+        if not conn:
+            return jsonify({'error': 'Erro ao conectar ao banco'}), 500
+        
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("""
+            SELECT 
+                f.*,
+                COALESCE(l.nome, 'Sem loja') as loja_nome
+            FROM funcionarios f
+            LEFT JOIN lojas l ON f.loja_id = l.id
+            WHERE f.id = %s
+        """, (id,))
+        funcionario = cursor.fetchone()
+        
+        cursor.close()
+        conn.close()
+        
+        if funcionario:
+            return jsonify(funcionario)
+        else:
+            return jsonify({'error': 'Funcionário não encontrado'}), 404
+            
+    except Exception as e:
+        print(f"❌ Erro get_funcionario: {e}")
+        return jsonify({'error': str(e)}), 500
+    
 @app.route('/api/lojas', methods=['GET'])
 def get_lojas():
     try:
@@ -875,7 +877,6 @@ def get_estoque():
         traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
-# DASHBOARD
 @app.route('/api/dashboard', methods=['GET'])
 def get_dashboard():
     try:
@@ -884,8 +885,7 @@ def get_dashboard():
             return jsonify({'error': 'Erro ao conectar ao banco'}), 500
         
         cursor = conn.cursor(dictionary=True)
-        
-        # Totais básicos
+
         cursor.execute("SELECT COUNT(*) as total FROM produtos WHERE ativo = 1")
         total_produtos = cursor.fetchone()['total']
         
@@ -897,28 +897,70 @@ def get_dashboard():
         
         cursor.execute("SELECT COUNT(*) as total FROM clientes")
         total_clientes = cursor.fetchone()['total']
+       
+        alertas_estoque = 0
+        try:
+            cursor.execute("""
+                SELECT COUNT(*) as total 
+                FROM estoque e
+                INNER JOIN ingredientes i ON e.ingrediente_id = i.id
+                WHERE e.quantidade_atual <= i.estoque_minimo
+            """)
+            result = cursor.fetchone()
+            alertas_estoque = result['total'] if result else 0
+        except:
+            pass
         
-        # Receita e pedidos (com try/catch pois tabelas podem não existir)
         total_pedidos = 0
         receita_total = 0
         pedidos_hoje = 0
+        receita_hoje = 0
+        
         try:
-            cursor.execute("SELECT COUNT(*) as total, COALESCE(SUM(total), 0) as receita FROM pedidos WHERE status != 'cancelado'")
+            cursor.execute("""
+                SELECT 
+                    COUNT(*) as total, 
+                    COALESCE(SUM(total), 0) as receita 
+                FROM pedidos 
+                WHERE status != 'cancelado'
+            """)
             result = cursor.fetchone()
             total_pedidos = result['total'] if result else 0
             receita_total = float(result['receita']) if result and result['receita'] else 0
             
-            cursor.execute("SELECT COUNT(*) as total FROM pedidos WHERE DATE(data_hora) = CURDATE() AND status != 'cancelado'")
+            cursor.execute("""
+                SELECT 
+                    COUNT(*) as total,
+                    COALESCE(SUM(total), 0) as receita
+                FROM pedidos 
+                WHERE DATE(data_hora) = CURDATE() AND status != 'cancelado'
+            """)
             result = cursor.fetchone()
             pedidos_hoje = result['total'] if result else 0
+            receita_hoje = float(result['receita']) if result and result['receita'] else 0
         except Exception as e:
             print(f"Aviso dashboard pedidos: {e}")
-            try:
-                cursor.execute("SELECT SUM(valor_total) as receita FROM vendas")
-                result = cursor.fetchone()
-                receita_total = float(result['receita']) if result and result['receita'] else 0
-            except:
-                pass
+        
+        performance_lojas = []
+        try:
+            cursor.execute("""
+                SELECT 
+                    l.id,
+                    l.nome,
+                    COUNT(DISTINCT p.id) as total_pedidos,
+                    COALESCE(SUM(p.total), 0) as receita,
+                    COALESCE(AVG(p.total), 0) as ticket_medio
+                FROM lojas l
+                LEFT JOIN pedidos p ON l.id = p.loja_id 
+                    AND DATE(p.data_hora) = CURDATE()
+                    AND p.status != 'cancelado'
+                WHERE l.ativo = 1
+                GROUP BY l.id, l.nome
+                ORDER BY receita DESC
+            """)
+            performance_lojas = cursor.fetchall()
+        except Exception as e:
+            print(f"Erro performance lojas: {e}")
         
         cursor.close()
         conn.close()
@@ -926,6 +968,10 @@ def get_dashboard():
         ticket_medio = receita_total / total_pedidos if total_pedidos > 0 else 0
         
         return jsonify({
+            'vendas_hoje': {
+                'receita_total': receita_hoje,
+                'total_pedidos': pedidos_hoje
+            },
             'total_pedidos': total_pedidos,
             'receita_total': receita_total,
             'pedidos_hoje': pedidos_hoje,
@@ -935,10 +981,13 @@ def get_dashboard():
             'lojas': total_lojas,
             'clientes': total_clientes,
             'clientes_ativos': total_clientes,
-            'alertas_estoque': 0
+            'alertas_estoque': alertas_estoque,
+            'performance_lojas': performance_lojas
         })
     except Exception as e:
         print(f"Erro dashboard: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
 # ============= ROTAS DE RELATÓRIOS =============
