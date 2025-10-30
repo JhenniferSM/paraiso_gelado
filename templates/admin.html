@@ -239,50 +239,113 @@
             document.getElementById('sidebar').classList.toggle('collapsed');
         }
 
-        // ============= NAVIGATION =============
-        function showSection(sectionId) {
-            document.querySelectorAll('.content-section').forEach(section => {
-                section.classList.remove('active');
-            });
-            document.querySelectorAll('.menu-item').forEach(item => {
-                item.classList.remove('active');
-            });
-            
-            document.getElementById(sectionId).classList.add('active');
-            event.target.closest('.menu-item').classList.add('active');
-            
-            const titles = {
-                'dashboard': 'Dashboard Gerencial',
-                'produtos': 'Gestão de Produtos',
-                'funcionarios': 'Gestão de Funcionários',
-                'lojas': 'Gestão de Lojas/Franquias',
-                'clientes': 'Gestão de Clientes',
-                'estoque': 'Controle de Estoque',
-                'relatorios': 'Relatórios'
-            };
-            document.getElementById('pageTitle').textContent = titles[sectionId];
-            
-            loadSectionData(sectionId);
+        let permissoesUsuario = {};
+        let usuarioLogado = {};
+
+        async function verificarPermissoes() {
+            try {
+                const response = await fetch('/api/verificar-permissao');
+                const data = await response.json();
+                
+                if (!data.authenticated) {
+                    window.location.href = '/';
+                    return;
+                }
+                
+                usuarioLogado = data.user;
+                permissoesUsuario = data.permissoes;
+                
+                document.querySelector('.user-info div:first-child').innerHTML = `
+                    <div style="font-weight: 600; color: var(--dark);">${usuarioLogado.nome}</div>
+                    <div style="font-size: 12px; color: #7F8C8D;">${formatarCargo(usuarioLogado.cargo)}</div>
+                `;
+                
+                aplicarRestricoesPorCargo();
+                
+            } catch (error) {
+                console.error('Erro ao verificar permissões:', error);
+                window.location.href = '/';
+            }
         }
 
-        // ============= MODAL =============
-// ============= MODAL =============
-        function openModal(modalId) {
-            document.getElementById(modalId).classList.add('active');
+        function formatarCargo(cargo) {
+            const cargos = {
+                'gerente_geral': 'Gerente Geral',
+                'gerente': 'Gerente',
+                'atendente': 'Atendente',
+                'caixa': 'Caixa',
+                'entregador': 'Entregador'
+            };
+            return cargos[cargo] || cargo;
+        }
+
+        function aplicarRestricoesPorCargo() {
+            const menuItems = [
+                { selector: 'a[onclick*="dashboard"]', permissao: 'dashboard' },
+                { selector: 'a[onclick*="produtos"]', permissao: 'produtos' },
+                { selector: 'a[onclick*="funcionarios"]', permissao: 'funcionarios' },
+                { selector: 'a[onclick*="lojas"]', permissao: 'lojas' },
+                { selector: 'a[onclick*="clientes"]', permissao: 'clientes' },
+                { selector: 'a[onclick*="estoque"]', permissao: 'estoque' },
+                { selector: 'a[onclick*="relatorios"]', permissao: 'relatorios' }
+            ];
             
-            if (modalId === 'modalProduto') {
-                carregarCategorias();
-            }
+            menuItems.forEach(item => {
+                const element = document.querySelector(item.selector);
+                if (element) {
+                    if (!permissoesUsuario[item.permissao]) {
+                        // Ocultar item do menu se não tiver permissão
+                        element.style.display = 'none';
+                    } else {
+                        element.style.display = 'flex';
+                    }
+                }
+            });
             
-            if (modalId === 'modalFuncionario') {
-                carregarLojasSelect();
-                
-                if (!funcionarioEditando) {
-                    document.getElementById('formFuncionario').reset();
-                    document.querySelector('#modalFuncionario .modal-title').textContent = 'Cadastrar Funcionário';
+            if (!permissoesUsuario.dashboard) {
+                const primeiroDisponivel = menuItems.find(item => permissoesUsuario[item.permissao]);
+                if (primeiroDisponivel) {
+                    showSection(primeiroDisponivel.permissao);
                 }
             }
         }
+
+        function verificarAcessoSecao(secao) {
+            if (!permissoesUsuario[secao]) {
+                showAlert(`Você não tem permissão para acessar ${secao}`, 'danger');
+                const secoesDisponiveis = Object.keys(permissoesUsuario).filter(k => permissoesUsuario[k]);
+                if (secoesDisponiveis.length > 0) {
+                    showSection(secoesDisponiveis[0]);
+                }
+                return false;
+            }
+            return true;
+        }
+
+
+        // ============= NAVIGATION =============
+            const showSectionOriginal = showSection;
+            function showSection(sectionId) {
+                if (!verificarAcessoSecao(sectionId)) {
+                    return;
+                }
+                showSectionOriginal(sectionId);
+            }
+
+        const openModalOriginal = openModal;
+        function openModal(modalId) {
+            if (modalId === 'modalFuncionario' && !permissoesUsuario.funcionarios) {
+                    showAlert('Você não tem permissão para cadastrar funcionários', 'danger');
+                    return;
+                }
+                
+                if (modalId === 'modalLoja' && !permissoesUsuario.lojas) {
+                    showAlert('Você não tem permissão para cadastrar lojas', 'danger');
+                    return;
+                }
+                
+                openModalOriginal(modalId);
+            }
 
         function closeModal(modalId) {
             document.getElementById(modalId).classList.remove('active');
@@ -301,6 +364,40 @@
                 document.getElementById('formLoja').reset();
             }
         }
+
+            function mostrarBoasVindas() {
+                const mensagens = {
+                    'gerente_geral': '👑 Bem-vindo, Gerente Geral! Você tem acesso total ao sistema.',
+                    'gerente': '🎯 Bem-vindo, Gerente! Gerencie sua loja com eficiência.',
+                    'atendente': '👋 Bem-vindo! Você pode gerenciar produtos, clientes e estoque.',
+                    'caixa': '💰 Bem-vindo! Foque em vendas e atendimento ao cliente.',
+                    'entregador': '🚗 Bem-vindo! Gerencie suas entregas com eficiência.'
+                };
+                
+                const mensagem = mensagens[usuarioLogado.cargo] || 'Bem-vindo ao sistema!';
+                
+                setTimeout(() => {
+                    showAlert(mensagem, 'success');
+                }, 500);
+            }
+
+            function aplicarRestricoesUI() {
+                if (!permissoesUsuario.funcionarios) {
+                    const btnNovoFunc = document.querySelector('button[onclick*="modalFuncionario"]');
+                    if (btnNovoFunc) btnNovoFunc.style.display = 'none';
+                }
+                
+                if (!permissoesUsuario.lojas) {
+                    const btnNovaLoja = document.querySelector('button[onclick*="modalLoja"]');
+                    if (btnNovaLoja) btnNovaLoja.style.display = 'none';
+                }
+                
+                if (!permissoesUsuario.funcionarios) {
+                    const acoesFunc = document.querySelectorAll('button[onclick*="editarFuncionario"], button[onclick*="excluirFuncionario"]');
+                    acoesFunc.forEach(btn => btn.style.display = 'none');
+                }
+            }
+
         // ============= ALERTS =============
         function showAlert(message, type = 'success') {
             const alertDiv = document.createElement('div');
@@ -927,10 +1024,13 @@
         });
 
         // ============= INITIALIZATION =============
-        window.addEventListener('DOMContentLoaded', function() {
+        window.addEventListener('DOMContentLoaded', async function() {
+            await verificarPermissoes();
+            aplicarRestricoesUI();
             loadDashboard();
+            mostrarBoasVindas();
             console.log('🍦 Painel Administrativo Paraíso Gelado - Carregado!');
-            showAlert('Bem-vindo ao Painel Administrativo!', 'success');
+            console.log('👤 Usuário:', usuarioLogado.nome, '| Cargo:', usuarioLogado.cargo);
         });
     </script>
 </body>

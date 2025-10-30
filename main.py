@@ -304,19 +304,18 @@ def health():
 
 @app.route('/api/login', methods=['POST'])
 def login():
-    """Autentica usuário no sistema"""
     try:
         data = request.json
         username = data.get('username')
         password = data.get('password')
         
-        # Credenciais de demonstração
-        if username == 'admin@paraisogelado.com' and password == 'admin123':
+        if username == 'eliel@paraisogelado.com' and password == 'eliel2025':
             session['authenticated'] = True
             session['user'] = {
-                'nome': 'Administrador',
+                'nome': 'Eliel (Dono)',
                 'email': username,
-                'cargo': 'admin'
+                'cargo': 'gerente_geral',
+                'nivel_acesso': 'total'
             }
             return jsonify({
                 'success': True,
@@ -324,17 +323,29 @@ def login():
                 'user': session['user']
             })
         
-        # Verificar no banco de dados (funcionários)
+        if username == 'admin@paraisogelado.com' and password == 'admin123':
+            session['authenticated'] = True
+            session['user'] = {
+                'nome': 'Administrador',
+                'email': username,
+                'cargo': 'gerente',
+                'nivel_acesso': 'gerente'
+            }
+            return jsonify({
+                'success': True,
+                'message': 'Login realizado com sucesso',
+                'user': session['user']
+            })
+        
         conn = get_db_connection()
         if conn:
             cursor = conn.cursor(dictionary=True)
             
-            # Buscar por email ou CPF
             query = """
                 SELECT f.*, l.nome as loja_nome 
                 FROM funcionarios f
-                JOIN lojas l ON f.loja_id = l.id
-                WHERE f.cpf = %s OR %s LIKE CONCAT('%%', f.cpf, '%%')
+                LEFT JOIN lojas l ON f.loja_id = l.id
+                WHERE (f.cpf = %s OR %s LIKE CONCAT('%%', f.cpf, '%%')) AND f.ativo = 1
             """
             cursor.execute(query, (username, username))
             funcionario = cursor.fetchone()
@@ -342,13 +353,18 @@ def login():
             cursor.close()
             conn.close()
             
-            if funcionario and funcionario['cargo'] == 'gerente':
+            if funcionario:
+                nivel_acesso = 'total' if funcionario['cargo'] == 'gerente' else 'limitado'
+                
                 session['authenticated'] = True
                 session['user'] = {
+                    'id': funcionario['id'],
                     'nome': funcionario['nome'],
                     'cpf': funcionario['cpf'],
                     'cargo': funcionario['cargo'],
-                    'loja': funcionario['loja_nome']
+                    'loja': funcionario['loja_nome'],
+                    'loja_id': funcionario['loja_id'],
+                    'nivel_acesso': nivel_acesso
                 }
                 return jsonify({
                     'success': True,
@@ -370,9 +386,70 @@ def login():
 
 @app.route('/api/logout', methods=['POST'])
 def logout():
-    """Faz logout do sistema"""
     session.clear()
     return jsonify({'success': True, 'message': 'Logout realizado com sucesso'})
+
+@app.route('/api/verificar-permissao', methods=['GET'])
+def verificar_permissao():
+    if not session.get('authenticated'):
+        return jsonify({'authenticated': False}), 401
+    
+    user = session.get('user', {})
+    cargo = user.get('cargo', '')
+    
+    permissoes = {
+        'gerente_geral': {
+            'dashboard': True,
+            'produtos': True,
+            'funcionarios': True,
+            'lojas': True,
+            'clientes': True,
+            'estoque': True,
+            'relatorios': True
+        },
+        'gerente': {
+            'dashboard': True,
+            'produtos': True,
+            'funcionarios': True,
+            'lojas': True,
+            'clientes': True,
+            'estoque': True,
+            'relatorios': True
+        },
+        'atendente': {
+            'dashboard': True,
+            'produtos': True,
+            'funcionarios': False,
+            'lojas': False,
+            'clientes': True,
+            'estoque': True,
+            'relatorios': False
+        },
+        'caixa': {
+            'dashboard': True,
+            'produtos': True,
+            'funcionarios': False,
+            'lojas': False,
+            'clientes': True,
+            'estoque': False,
+            'relatorios': False
+        },
+        'entregador': {
+            'dashboard': False,
+            'produtos': True,
+            'funcionarios': False,
+            'lojas': False,
+            'clientes': True,
+            'estoque': False,
+            'relatorios': False
+        }
+    }
+    
+    return jsonify({
+        'authenticated': True,
+        'user': user,
+        'permissoes': permissoes.get(cargo, {})
+    })
 
 # ============= ROTAS API SIMPLIFICADAS =============
 
@@ -533,7 +610,18 @@ def criar_categoria():
 
 @app.route('/api/funcionarios', methods=['POST'])
 def criar_funcionario():
+    """Cria novo funcionário - REQUER AUTENTICAÇÃO DE GERENTE GERAL"""
     try:
+        if not session.get('authenticated'):
+            return jsonify({'success': False, 'error': 'Não autenticado'}), 401
+        
+        user = session.get('user', {})
+        if user.get('cargo') != 'gerente_geral':
+            return jsonify({
+                'success': False, 
+                'error': 'Apenas o Gerente Geral pode cadastrar funcionários'
+            }), 403
+        
         dados = request.json
         print(f"👤 Criando funcionário: {dados}")
         
@@ -542,32 +630,54 @@ def criar_funcionario():
             return jsonify({'success': False, 'error': 'Erro ao conectar ao banco'}), 500
         
         cursor = conn.cursor()
-        cursor.execute("""
+        
+        cursor.execute("SELECT id FROM funcionarios WHERE cpf = %s", (dados.get('cpf'),))
+        if cursor.fetchone():
+            cursor.close()
+            conn.close()
+            return jsonify({'success': False, 'error': 'CPF já cadastrado'}), 400
+        
+            cursor.execute("""
             INSERT INTO funcionarios (nome, cpf, cargo, loja_id, salario, data_admissao, ativo)
-            VALUES (%s, %s, %s, %s, %s, %s)
+            VALUES (%s, %s, %s, %s, %s, %s, 1)
         """, (
             dados.get('nome', ''),
             dados.get('cpf', ''),
             dados.get('cargo', ''),
             dados.get('loja_id'),
             float(dados.get('salario', 0)),
-            dados.get('data_admissao', datetime.now().date()),
-            1
+            dados.get('data_admissao', datetime.now().date())
         ))
+        
         conn.commit()
         funcionario_id = cursor.lastrowid
         cursor.close()
         conn.close()
         
         print(f"✅ Funcionário criado com ID: {funcionario_id}")
-        return jsonify({'success': True, 'id': funcionario_id, 'message': 'Funcionário criado com sucesso!'}), 201
+        return jsonify({
+            'success': True, 
+            'id': funcionario_id, 
+            'message': 'Funcionário cadastrado com sucesso!'
+        }), 201
         
     except Exception as e:
         print(f"❌ Erro criar_funcionario: {e}")
         import traceback
         traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
-
+    
+@app.route('/cadastro-funcionario')
+def cadastro_funcionario_page():
+    if not session.get('authenticated'):
+        return redirect('/')
+    
+    user = session.get('user', {})
+    if user.get('cargo') != 'gerente_geral':
+        return redirect('/admin')
+    
+    return render_template('cadastro_funcionario.html')
+    
 @app.route('/api/funcionarios/<int:id>', methods=['PUT'])
 def atualizar_funcionario(id):
     try:
