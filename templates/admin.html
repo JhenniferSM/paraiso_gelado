@@ -323,14 +323,23 @@
 
 
         // ============= NAVIGATION =============
-            const showSectionOriginal = showSection;
-            function showSection(sectionId) {
-                if (!verificarAcessoSecao(sectionId)) {
-                    return;
-                }
-                showSectionOriginal(sectionId);
-            }
+            if (typeof window.showSection === 'function') {
+            const _showSectionOriginal = window.showSection;
 
+            window.showSection = function (sectionId) {
+                if (!verificarAcessoSecao(sectionId)) return;
+                _showSectionOriginal(sectionId);
+            };
+        }window.addEventListener('DOMContentLoaded', () => {
+            if (typeof window.showSection === 'function') {
+                const _showSectionOriginal = window.showSection;
+
+                window.showSection = function (sectionId) {
+                    if (!verificarAcessoSecao(sectionId)) return;
+                    _showSectionOriginal(sectionId);
+                };
+            }
+        });
         const openModalOriginal = openModal;
         function openModal(modalId) {
             if (modalId === 'modalFuncionario' && !permissoesUsuario.funcionarios) {
