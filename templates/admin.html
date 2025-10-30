@@ -1573,47 +1573,69 @@
         }
 
         // ============= FUNCIONÁRIOS =============
-        let funcionarioEditando = null;
+let funcionarioEditando = null;
+let listaFuncionarios = []; // Array para cache dos funcionários
+
+async function loadFuncionarios() {
+    try {
+        const response = await fetch(`${API_URL}/funcionarios`);
+        const funcionarios = await response.json();
+        listaFuncionarios = funcionarios; // Salva no cache
         
-        async function loadFuncionarios() {
-            try {
-                const response = await fetch(`${API_URL}/funcionarios`);
-                const funcionarios = await response.json();
-                
-                const tbody = document.getElementById('funcionariosTable');
-                if (funcionarios && funcionarios.length > 0) {
-                    tbody.innerHTML = funcionarios.map(f => `
-                        <tr>
-                            <td><strong>${f.nome}</strong></td>
-                            <td>${f.cpf}</td>
-                            <td>${f.cargo.charAt(0).toUpperCase() + f.cargo.slice(1)}</td>
-                            <td>${f.loja_nome || 'N/A'}</td>
-                            <td>R$ ${parseFloat(f.salario).toFixed(2)}</td>
-                            <td><span class="status-badge ${f.ativo ? 'status-active' : 'status-inactive'}">
-                                ${f.ativo ? 'Ativo' : 'Inativo'}</span></td>
-                            <td style="display: flex; gap: 5px;">
-                                <button class="btn btn-warning btn-sm" onclick="editarFuncionario(${f.id})" title="Editar">
-                                    ✏️
-                                </button>
-                                <button class="btn btn-danger btn-sm" onclick="excluirFuncionario(${f.id})" title="Excluir">
-                                    🗑️
-                                </button>
-                            </td>
-                        </tr>
-                    `).join('');
-                } else {
-                    tbody.innerHTML = '<tr><td colspan="7" class="empty-state">Nenhum funcionário cadastrado</td></tr>';
-                }
-            } catch (error) {
-                console.error('Erro:', error);
-                showAlert('Erro ao carregar funcionários', 'danger');
-            }
+        const tbody = document.getElementById('funcionariosTable');
+        if (funcionarios && funcionarios.length > 0) {
+            tbody.innerHTML = funcionarios.map(f => `
+                <tr>
+                    <td><strong>${f.nome}</strong></td>
+                    <td>${f.cpf}</td>
+                    <td>${f.cargo.charAt(0).toUpperCase() + f.cargo.slice(1)}</td>
+                    <td>${f.loja_nome || 'N/A'}</td>
+                    <td>R$ ${parseFloat(f.salario).toFixed(2)}</td>
+                    <td><span class="status-badge ${f.ativo ? 'status-active' : 'status-inactive'}">
+                        ${f.ativo ? 'Ativo' : 'Inativo'}</span></td>
+                    <td style="display: flex; gap: 5px;">
+                        <button class="btn btn-warning btn-sm" onclick="editarFuncionario(${f.id})" title="Editar">
+                            ✏️
+                        </button>
+                        <button class="btn btn-danger btn-sm" onclick="excluirFuncionario(${f.id})" title="Excluir">
+                            🗑️
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        } else {
+            tbody.innerHTML = '<tr><td colspan="7" class="empty-state">Nenhum funcionário cadastrado</td></tr>';
         }
+    } catch (error) {
+        console.error('Erro:', error);
+        showAlert('Erro ao carregar funcionários', 'danger');
+    }
+}
 
         async function editarFuncionario(id) {
             try {
-                const response = await fetch(`${API_URL}/funcionarios/${id}`);
-                const funcionario = await response.json();
+                // Tenta buscar do cache primeiro (evita erro 405)
+                let funcionario = listaFuncionarios.find(f => f.id == id);
+                
+                // Se não encontrou no cache, tenta buscar da API
+                if (!funcionario) {
+                    console.log('Funcionário não encontrado no cache, tentando API...');
+                    try {
+                        const response = await fetch(`${API_URL}/funcionarios/${id}`);
+                        if (!response.ok) {
+                            throw new Error(`Erro ${response.status}: ${response.statusText}`);
+                        }
+                        funcionario = await response.json();
+                    } catch (apiError) {
+                        console.warn('Erro ao buscar funcionário da API:', apiError);
+                        showAlert('Não foi possível carregar os dados do funcionário. Preencha manualmente.', 'warning');
+                        // Abre o modal mesmo sem dados para edição manual
+                        funcionarioEditando = id;
+                        document.querySelector('#modalFuncionario .modal-title').textContent = 'Editar Funcionário';
+                        openModal('modalFuncionario');
+                        return;
+                    }
+                }
                 
                 if (funcionario.error) {
                     showAlert('Funcionário não encontrado', 'danger');
@@ -1623,22 +1645,23 @@
                 funcionarioEditando = id;
                 await carregarLojasSelect();
                 
+                // Preenche o formulário com os dados
                 document.querySelector('#formFuncionario [name="nome"]').value = funcionario.nome || '';
                 document.querySelector('#formFuncionario [name="cpf"]').value = funcionario.cpf || '';
                 document.querySelector('#formFuncionario [name="cargo"]').value = funcionario.cargo || '';
                 document.querySelector('#formFuncionario [name="data_admissao"]').value = funcionario.data_admissao || '';
                 document.querySelector('#formFuncionario [name="salario"]').value = funcionario.salario || '';
                 document.querySelector('#formFuncionario [name="loja_id"]').value = funcionario.loja_id || '';
+                document.querySelector('#formFuncionario [name="ativo"]').value = funcionario.ativo ? '1' : '0';
                 
                 document.querySelector('#modalFuncionario .modal-title').textContent = 'Editar Funcionário';
                 openModal('modalFuncionario');
                 
             } catch (error) {
-                console.error('Erro:', error);
+                console.error('Erro ao editar funcionário:', error);
                 showAlert('Erro ao carregar dados do funcionário', 'danger');
             }
         }
-
         async function salvarFuncionario(event) {
             event.preventDefault();
             const formData = new FormData(event.target);
