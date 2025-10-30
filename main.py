@@ -1,6 +1,7 @@
+
 import os
 from functools import wraps
-from flask import Flask, render_template, request, jsonify, session
+from flask import Flask, render_template, request, jsonify, session, redirect, url_for
 from flask_cors import CORS
 from datetime import datetime
 import hashlib
@@ -226,6 +227,10 @@ def verificar_autenticacao():
     return session.get('authenticated', False)
 
 # ============= ROTAS PRINCIPAIS =============
+
+@app.route('/')
+def index():
+    return render_template('login.html')
 
 @app.route('/admin')
 def admin_panel():
