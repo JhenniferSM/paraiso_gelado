@@ -309,7 +309,7 @@ def login():
         username = data.get('username')
         password = data.get('password')
         
-        if username == 'eliel@paraisogelado.com' and password == 'eliel2025':
+        if username == 'eliel@paraisogelado.com' and password == 'eliel':
             session['authenticated'] = True
             session['user'] = {
                 'nome': 'Eliel (Dono)',

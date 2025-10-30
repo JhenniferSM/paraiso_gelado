@@ -294,7 +294,6 @@
                 const element = document.querySelector(item.selector);
                 if (element) {
                     if (!permissoesUsuario[item.permissao]) {
-                        // Ocultar item do menu se não tiver permissão
                         element.style.display = 'none';
                     } else {
                         element.style.display = 'flex';
