@@ -728,7 +728,8 @@
             
             if (salarios[cargo]) {
                 sugestaoDiv.textContent = salarios[cargo].texto;
-                sugestaoDiv.style.color = var(--success);
+                // CORREÇÃO: Usar a cor diretamente em vez da variável CSS
+                sugestaoDiv.style.color = '#27AE60'; // Cor verde do success
                 if (!salarioInput.value) {
                     salarioInput.value = salarios[cargo].valor;
                 }

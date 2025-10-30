@@ -1,1039 +1,4 @@
-<div class="metric-card" style="cursor: pointer;" onclick="gerarRelatorio('vendas')">
-                        <div class="metric-header">
-                            <div class="metric-icon">💰</div>
-                        </div>
-                        <div class="metric-label" style="font-size: 16px; font-weight: 600; margin: 15px 0;">Relatório de Vendas</div>
-                        <button class="btn btn-primary btn-sm">📄 Ver Relatório</button>
-                    </div>
-
-                    <div class="metric-card" style="cursor: pointer;" onclick="gerarRelatorio('produtos')">
-                        <div class="metric-header">
-                            <div class="metric-icon">🍨</div>
-                        </div>
-                        <div class="metric-label" style="font-size: 16px; font-weight: 600; margin: 15px 0;">Relatório de Produtos</div>
-                        <button class="btn btn-primary btn-sm">📄 Ver Relatório</button>
-                    </div>
-
-                    <div class="metric-card" style="cursor: pointer;" onclick="gerarRelatorio('clientes')">
-                        <div class="metric-header">
-                            <div class="metric-icon">👥</div>
-                        </div>
-                        <div class="metric-label" style="font-size: 16px; font-weight: 600; margin: 15px 0;">Relatório de Clientes</div>
-                        <button class="btn btn-primary btn-sm">📄 Ver Relatório</button>
-                    </div>
-
-                    <div class="metric-card" style="cursor: pointer;" onclick="gerarRelatorio('estoque')">
-                        <div class="metric-header">
-                            <div class="metric-icon">📦</div>
-                        </div>
-                        <div class="metric-label" style="font-size: 16px; font-weight: 600; margin: 15px 0;">Relatório de Estoque</div>
-                        <button class="btn btn-primary btn-sm">📄 Ver Relatório</button>
-                    </div>
-                </div>
-
-                <div id="relatorioContent"></div>
-            </div>
-        </div>
-    </div>
-
-    <!-- MODALS -->
-    
-    <!-- Modal Produto -->
-    <div class="modal" id="modalProduto">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 class="modal-title">Cadastrar Produto</h3>
-                <button class="close-modal" onclick="closeModal('modalProduto')">×</button>
-            </div>
-
-            <form id="formProduto" onsubmit="salvarProduto(event)">
-                <div class="form-group">
-                    <label class="form-label">Nome do Produto *</label>
-                    <input type="text" class="form-control" required name="nome">
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">Categoria *</label>
-                        <select class="form-control" required name="categoria_id" id="selectCategoria">
-                            <option value="">Carregando...</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Tamanho *</label>
-                        <select class="form-control" required name="tamanho">
-                            <option value="P">Pequeno</option>
-                            <option value="M">Médio</option>
-                            <option value="G">Grande</option>
-                            <option value="ÚNICO">Único</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Descrição</label>
-                    <textarea class="form-control" rows="3" name="descricao"></textarea>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">Preço de Venda (R$) *</label>
-                        <input type="number" step="0.01" class="form-control" required name="preco">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Custo (R$)</label>
-                        <input type="number" step="0.01" class="form-control" name="custo">
-                    </div>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">Calorias</label>
-                        <input type="number" class="form-control" name="calorias">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Status</label>
-                        <select class="form-control" name="ativo">
-                            <option value="1">Ativo</option>
-                            <option value="0">Inativo</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div style="display: flex; gap: 10px; margin-top: 20px;">
-                    <button type="submit" class="btn btn-success">💾 Salvar</button>
-                    <button type="button" class="btn btn-secondary" onclick="closeModal('modalProduto')">Cancelar</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Modal Funcionário -->
-    <div class="modal" id="modalFuncionario">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 class="modal-title">Cadastrar Funcionário</h3>
-                <button class="close-modal" onclick="closeModal('modalFuncionario')">×</button>
-            </div>
-
-            <form id="formFuncionario" onsubmit="salvarFuncionario(event)">
-                <div class="form-group">
-                    <label class="form-label">Nome Completo *</label>
-                    <input type="text" class="form-control" required name="nome">
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">CPF *</label>
-                        <input type="text" class="form-control" required name="cpf" placeholder="000.000.000-00">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Data de Admissão *</label>
-                        <input type="date" class="form-control" required name="data_admissao">
-                    </div>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">Cargo *</label>
-                        <select class="form-control" required name="cargo">
-                            <option value="">Selecione...</option>
-                            <option value="gerente">Gerente</option>
-                            <option value="atendente">Atendente</option>
-                            <option value="caixa">Caixa</option>
-                            <option value="entregador">Entregador</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Loja *</label>
-                        <select class="form-control" required name="loja_id" id="selectLojaFunc">
-                            <option value="">Carregando...</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Salário (R$) *</label>
-                    <input type="number" step="0.01" class="form-control" required name="salario">
-                </div>
-
-                <div style="display: flex; gap: 10px; margin-top: 20px;">
-                    <button type="submit" class="btn btn-success">💾 Salvar</button>
-                    <button type="button" class="btn btn-secondary" onclick="closeModal('modalFuncionario')">Cancelar</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Modal Loja -->
-    <div class="modal" id="modalLoja">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 class="modal-title">Cadastrar Loja/Franquia</h3>
-                <button class="close-modal" onclick="closeModal('modalLoja')">×</button>
-            </div>
-
-            <form id="formLoja" onsubmit="salvarLoja(event)">
-                <div class="form-group">
-                    <label class="form-label">Nome da Loja *</label>
-                    <input type="text" class="form-control" required name="nome">
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Endereço *</label>
-                    <input type="text" class="form-control" required name="endereco">
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">Cidade *</label>
-                        <input type="text" class="form-control" required name="cidade">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Estado *</label>
-                        <select class="form-control" required name="estado">
-                            <option value="GO">Goiás</option>
-                            <option value="SP">São Paulo</option>
-                            <option value="RJ">Rio de Janeiro</option>
-                            <option value="MG">Minas Gerais</option>
-                            <option value="DF">Distrito Federal</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">CEP *</label>
-                        <input type="text" class="form-control" required name="cep" placeholder="00000-000">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Telefone *</label>
-                        <input type="tel" class="form-control" required name="telefone">
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Email *</label>
-                    <input type="email" class="form-control" required name="email">
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Data de Abertura *</label>
-                    <input type="date" class="form-control" required name="data_abertura">
-                </div>
-
-                <div style="display: flex; gap: 10px; margin-top: 20px;">
-                    <button type="submit" class="btn btn-success">💾 Salvar</button>
-                    <button type="button" class="btn btn-secondary" onclick="closeModal('modalLoja')">Cancelar</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <script>
-        // ============= CONFIGURAÇÃO DA API =============
-        const API_URL = '/api';
-
-        // ============= SIDEBAR =============
-        function toggleSidebar() {
-            document.getElementById('sidebar').classList.toggle('collapsed');
-        }
-
-        let permissoesUsuario = {};
-        let usuarioLogado = {};
-
-        async function verificarPermissoes() {
-            try {
-                const response = await fetch('/api/verificar-permissao');
-                const data = await response.json();
-                
-                if (!data.authenticated) {
-                    window.location.href = '/';
-                    return;
-                }
-                
-                usuarioLogado = data.user;
-                permissoesUsuario = data.permissoes;
-                
-                document.querySelector('.user-info div:first-child').innerHTML = `
-                    <div style="font-weight: 600; color: var(--dark);">${usuarioLogado.nome}</div>
-                    <div style="font-size: 12px; color: #7F8C8D;">${formatarCargo(usuarioLogado.cargo)}</div>
-                `;
-                
-                aplicarRestricoesPorCargo();
-                
-            } catch (error) {
-                console.error('Erro ao verificar permissões:', error);
-                window.location.href = '/';
-            }
-        }
-
-        function formatarCargo(cargo) {
-            const cargos = {
-                'gerente_geral': 'Gerente Geral',
-                'gerente': 'Gerente',
-                'atendente': 'Atendente',
-                'caixa': 'Caixa',
-                'entregador': 'Entregador'
-            };
-            return cargos[cargo] || cargo;
-        }
-
-        function aplicarRestricoesPorCargo() {
-            const menuItems = [
-                { selector: 'a[onclick*="dashboard"]', permissao: 'dashboard' },
-                { selector: 'a[onclick*="produtos"]', permissao: 'produtos' },
-                { selector: 'a[onclick*="funcionarios"]', permissao: 'funcionarios' },
-                { selector: 'a[onclick*="lojas"]', permissao: 'lojas' },
-                { selector: 'a[onclick*="clientes"]', permissao: 'clientes' },
-                { selector: 'a[onclick*="estoque"]', permissao: 'estoque' },
-                { selector: 'a[onclick*="relatorios"]', permissao: 'relatorios' }
-            ];
-            
-            menuItems.forEach(item => {
-                const element = document.querySelector(item.selector);
-                if (element) {
-                    if (!permissoesUsuario[item.permissao]) {
-                        element.style.display = 'none';
-                    } else {
-                        element.style.display = 'flex';
-                    }
-                }
-            });
-            
-            if (!permissoesUsuario.dashboard) {
-                const primeiroDisponivel = menuItems.find(item => permissoesUsuario[item.permissao]);
-                if (primeiroDisponivel) {
-                    showSection(primeiroDisponivel.permissao);
-                }
-            }
-        }
-
-        function verificarAcessoSecao(secao) {
-            if (!permissoesUsuario[secao]) {
-                showAlert(`Você não tem permissão para acessar ${secao}`, 'danger');
-                const secoesDisponiveis = Object.keys(permissoesUsuario).filter(k => permissoesUsuario[k]);
-                if (secoesDisponiveis.length > 0) {
-                    showSection(secoesDisponiveis[0]);
-                }
-                return false;
-            }
-            return true;
-        }
-
-
-        // ============= NAVIGATION =============
-            const showSectionOriginal = showSection;
-            function showSection(sectionId) {
-                if (!verificarAcessoSecao(sectionId)) {
-                    return;
-                }
-                showSectionOriginal(sectionId);
-            }
-
-        const openModalOriginal = openModal;
-        function openModal(modalId) {
-            if (modalId === 'modalFuncionario' && !permissoesUsuario.funcionarios) {
-                    showAlert('Você não tem permissão para cadastrar funcionários', 'danger');
-                    return;
-                }
-                
-                if (modalId === 'modalLoja' && !permissoesUsuario.lojas) {
-                    showAlert('Você não tem permissão para cadastrar lojas', 'danger');
-                    return;
-                }
-                
-                openModalOriginal(modalId);
-            }
-
-        function closeModal(modalId) {
-            document.getElementById(modalId).classList.remove('active');
-            
-            if (modalId === 'modalFuncionario') {
-                funcionarioEditando = null;
-                document.getElementById('formFuncionario').reset();
-                document.querySelector('#modalFuncionario .modal-title').textContent = 'Cadastrar Funcionário';
-            }
-            
-            if (modalId === 'modalProduto') {
-                document.getElementById('formProduto').reset();
-            }
-            
-            if (modalId === 'modalLoja') {
-                document.getElementById('formLoja').reset();
-            }
-        }
-
-            function mostrarBoasVindas() {
-                const mensagens = {
-                    'gerente_geral': '👑 Bem-vindo, Gerente Geral! Você tem acesso total ao sistema.',
-                    'gerente': '🎯 Bem-vindo, Gerente! Gerencie sua loja com eficiência.',
-                    'atendente': '👋 Bem-vindo! Você pode gerenciar produtos, clientes e estoque.',
-                    'caixa': '💰 Bem-vindo! Foque em vendas e atendimento ao cliente.',
-                    'entregador': '🚗 Bem-vindo! Gerencie suas entregas com eficiência.'
-                };
-                
-                const mensagem = mensagens[usuarioLogado.cargo] || 'Bem-vindo ao sistema!';
-                
-                setTimeout(() => {
-                    showAlert(mensagem, 'success');
-                }, 500);
-            }
-
-            function aplicarRestricoesUI() {
-                if (!permissoesUsuario.funcionarios) {
-                    const btnNovoFunc = document.querySelector('button[onclick*="modalFuncionario"]');
-                    if (btnNovoFunc) btnNovoFunc.style.display = 'none';
-                }
-                
-                if (!permissoesUsuario.lojas) {
-                    const btnNovaLoja = document.querySelector('button[onclick*="modalLoja"]');
-                    if (btnNovaLoja) btnNovaLoja.style.display = 'none';
-                }
-                
-                if (!permissoesUsuario.funcionarios) {
-                    const acoesFunc = document.querySelectorAll('button[onclick*="editarFuncionario"], button[onclick*="excluirFuncionario"]');
-                    acoesFunc.forEach(btn => btn.style.display = 'none');
-                }
-            }
-
-        // ============= ALERTS =============
-        function showAlert(message, type = 'success') {
-            const alertDiv = document.createElement('div');
-            alertDiv.className = `alert alert-${type}`;
-            alertDiv.innerHTML = `
-                <span style="font-size: 20px;">${type === 'success' ? '✅' : type === 'danger' ? '❌' : '⚠️'}</span>
-                <span>${message}</span>
-            `;
-            alertDiv.style.position = 'fixed';
-            alertDiv.style.top = '20px';
-            alertDiv.style.right = '20px';
-            alertDiv.style.zIndex = '3000';
-            alertDiv.style.minWidth = '300px';
-            
-            document.body.appendChild(alertDiv);
-            
-            setTimeout(() => {
-                alertDiv.remove();
-            }, 3000);
-        }
-
-        // ============= DATA LOADING =============
-        function loadSectionData(section) {
-            switch(section) {
-                case 'dashboard':
-                    loadDashboard();
-                    break;
-                case 'produtos':
-                    loadProdutos();
-                    break;
-                case 'funcionarios':
-                    loadFuncionarios();
-                    break;
-                case 'lojas':
-                    loadLojas();
-                    break;
-                case 'clientes':
-                    loadClientes();
-                    break;
-                case 'estoque':
-                    loadEstoque();
-                    break;
-            }
-        }
-
-        // ============= DASHBOARD =============
-        async function loadDashboard() {
-            try {
-                const response = await fetch(`${API_URL}/dashboard`);
-                const data = await response.json();
-                
-                document.getElementById('vendasHoje').textContent = 
-                    `R$ ${parseFloat(data.vendas_hoje.receita_total || 0).toFixed(2)}`;
-                document.getElementById('pedidosHoje').textContent = 
-                    data.vendas_hoje.total_pedidos || 0;
-                document.getElementById('totalPedidos').textContent = 
-                    data.vendas_hoje.total_pedidos || 0;
-                document.getElementById('clientesAtivos').textContent = 
-                    data.clientes_ativos || 0;
-                document.getElementById('totalAlertas').textContent = 
-                    data.alertas_estoque || 0;
-                
-                const tbody = document.getElementById('performanceLojas');
-                if (data.performance_lojas && data.performance_lojas.length > 0) {
-                    tbody.innerHTML = data.performance_lojas.map(loja => `
-                        <tr>
-                            <td><strong>${loja.nome}</strong></td>
-                            <td>R$ ${parseFloat(loja.receita || 0).toFixed(2)}</td>
-                            <td>${loja.total_pedidos || 0}</td>
-                            <td>R$ ${parseFloat(loja.ticket_medio || 0).toFixed(2)}</td>
-                            <td><span class="status-badge status-active">Operando</span></td>
-                        </tr>
-                    `).join('');
-                } else {
-                    tbody.innerHTML = '<tr><td colspan="5" class="empty-state">Nenhum dado disponível</td></tr>';
-                }
-            } catch (error) {
-                console.error('Erro:', error);
-                showAlert('Erro ao carregar dashboard', 'danger');
-            }
-        }
-
-        // ============= PRODUTOS =============
-        async function loadProdutos() {
-            try {
-                const response = await fetch(`${API_URL}/produtos`);
-                const produtos = await response.json();
-                
-                const grid = document.getElementById('productGrid');
-                if (produtos && produtos.length > 0) {
-                    grid.innerHTML = produtos.map(p => {
-                        const margem = p.margem_percentual ? parseFloat(p.margem_percentual).toFixed(1) : '0.0';
-                        return `
-                            <div class="product-card" data-nome="${p.nome.toLowerCase()}">
-                                <div class="product-image">🍦</div>
-                                <div class="product-info">
-                                    <div class="product-name">${p.nome}</div>
-                                    <div class="product-price">R$ ${parseFloat(p.preco).toFixed(2)}</div>
-                                    <div style="font-size: 12px; margin: 5px 0;">
-                                        <span class="status-badge ${p.ativo ? 'status-active' : 'status-inactive'}">
-                                            ${p.ativo ? 'Ativo' : 'Inativo'}
-                                        </span>
-                                    </div>
-                                    <div style="font-size: 12px; color: #27AE60; margin-top: 5px;">
-                                        <strong>Margem: ${margem}%</strong>
-                                    </div>
-                                    <div class="product-actions">
-                                        <button class="btn btn-danger btn-sm" onclick="excluirProduto(${p.id})">🗑️ Excluir</button>
-                                    </div>
-                                </div>
-                            </div>
-                        `;
-                    }).join('');
-                } else {
-                    grid.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🍨</div><p>Nenhum produto cadastrado</p></div>';
-                }
-            } catch (error) {
-                console.error('Erro:', error);
-                showAlert('Erro ao carregar produtos', 'danger');
-            }
-        }
-
-        async function salvarProduto(event) {
-            event.preventDefault();
-            const formData = new FormData(event.target);
-            const data = Object.fromEntries(formData);
-            
-            try {
-                const response = await fetch(`${API_URL}/produtos`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(data)
-                });
-                
-                const result = await response.json();
-                if (result.success) {
-                    showAlert('Produto cadastrado com sucesso!', 'success');
-                    closeModal('modalProduto');
-                    event.target.reset();
-                    loadProdutos();
-                } else {
-                    showAlert(result.error || 'Erro ao cadastrar produto', 'danger');
-                }
-            } catch (error) {
-                console.error('Erro:', error);
-                showAlert('Erro ao cadastrar produto', 'danger');
-            }
-        }
-
-        async function excluirProduto(id) {
-            if (!confirm('Tem certeza que deseja excluir este produto?')) return;
-            
-            try {
-                const response = await fetch(`${API_URL}/produtos/${id}`, {
-                    method: 'DELETE'
-                });
-                const result = await response.json();
-                
-                if (result.success) {
-                    showAlert('Produto removido com sucesso!', 'success');
-                    loadProdutos();
-                } else {
-                    showAlert(result.error || 'Erro ao excluir produto', 'danger');
-                }
-            } catch (error) {
-                console.error('Erro:', error);
-                showAlert('Erro ao excluir produto', 'danger');
-            }
-        }
-
-        function filtrarProdutos() {
-            const search = document.getElementById('searchProduto').value.toLowerCase();
-            document.querySelectorAll('.product-card').forEach(card => {
-                const nome = card.getAttribute('data-nome');
-                card.style.display = nome.includes(search) ? 'block' : 'none';
-            });
-        }
-
-        // ============= FUNCIONÁRIOS =============
-        let funcionarioEditando = null;
-        
-        async function loadFuncionarios() {
-            try {
-                const response = await fetch(`${API_URL}/funcionarios`);
-                const funcionarios = await response.json();
-                
-                const tbody = document.getElementById('funcionariosTable');
-                if (funcionarios && funcionarios.length > 0) {
-                    tbody.innerHTML = funcionarios.map(f => `
-                        <tr>
-                            <td><strong>${f.nome}</strong></td>
-                            <td>${f.cpf}</td>
-                            <td>${f.cargo.charAt(0).toUpperCase() + f.cargo.slice(1)}</td>
-                            <td>${f.loja_nome || 'N/A'}</td>
-                            <td>R$ ${parseFloat(f.salario).toFixed(2)}</td>
-                            <td><span class="status-badge ${f.ativo ? 'status-active' : 'status-inactive'}">
-                                ${f.ativo ? 'Ativo' : 'Inativo'}</span></td>
-                            <td style="display: flex; gap: 5px;">
-                                <button class="btn btn-warning btn-sm" onclick="editarFuncionario(${f.id})" title="Editar">
-                                    ✏️
-                                </button>
-                                <button class="btn btn-danger btn-sm" onclick="excluirFuncionario(${f.id})" title="Excluir">
-                                    🗑️
-                                </button>
-                            </td>
-                        </tr>
-                    `).join('');
-                } else {
-                    tbody.innerHTML = '<tr><td colspan="7" class="empty-state">Nenhum funcionário cadastrado</td></tr>';
-                }
-            } catch (error) {
-                console.error('Erro:', error);
-                showAlert('Erro ao carregar funcionários', 'danger');
-            }
-        }
-
-        async function editarFuncionario(id) {
-            try {
-                const response = await fetch(`${API_URL}/funcionarios/${id}`);
-                const funcionario = await response.json();
-                
-                if (funcionario.error) {
-                    showAlert('Funcionário não encontrado', 'danger');
-                    return;
-                }
-                
-                funcionarioEditando = id;
-                await carregarLojasSelect();
-                
-                document.querySelector('#formFuncionario [name="nome"]').value = funcionario.nome || '';
-                document.querySelector('#formFuncionario [name="cpf"]').value = funcionario.cpf || '';
-                document.querySelector('#formFuncionario [name="cargo"]').value = funcionario.cargo || '';
-                document.querySelector('#formFuncionario [name="data_admissao"]').value = funcionario.data_admissao || '';
-                document.querySelector('#formFuncionario [name="salario"]').value = funcionario.salario || '';
-                document.querySelector('#formFuncionario [name="loja_id"]').value = funcionario.loja_id || '';
-                
-                document.querySelector('#modalFuncionario .modal-title').textContent = 'Editar Funcionário';
-                openModal('modalFuncionario');
-                
-            } catch (error) {
-                console.error('Erro:', error);
-                showAlert('Erro ao carregar dados do funcionário', 'danger');
-            }
-        }
-
-        async function salvarFuncionario(event) {
-            event.preventDefault();
-            const formData = new FormData(event.target);
-            const data = Object.fromEntries(formData);
-            
-            try {
-                let response;
-                
-                if (funcionarioEditando) {
-                    response = await fetch(`${API_URL}/funcionarios/${funcionarioEditando}`, {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(data)
-                    });
-                } else {
-                    response = await fetch(`${API_URL}/funcionarios`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(data)
-                    });
-                }
-                
-                const result = await response.json();
-                if (result.success) {
-                    showAlert(
-                        funcionarioEditando ? 'Funcionário atualizado com sucesso!' : 'Funcionário cadastrado com sucesso!',
-                        'success'
-                    );
-                    closeModal('modalFuncionario');
-                    event.target.reset();
-                    funcionarioEditando = null;
-                    loadFuncionarios();
-                } else {
-                    showAlert(result.error || 'Erro ao salvar funcionário', 'danger');
-                }
-            } catch (error) {
-                console.error('Erro:', error);
-                showAlert('Erro ao salvar funcionário', 'danger');
-            }
-        }
-
-        async function excluirFuncionario(id) {
-            if (!confirm('Tem certeza que deseja excluir este funcionário?')) return;
-            
-            try {
-                const response = await fetch(`${API_URL}/funcionarios/${id}`, {
-                    method: 'DELETE'
-                });
-                const result = await response.json();
-                
-                if (result.success) {
-                    showAlert('Funcionário removido com sucesso!', 'success');
-                    loadFuncionarios();
-                } else {
-                    showAlert(result.error || 'Erro ao excluir', 'danger');
-                }
-            } catch (error) {
-                showAlert('Erro ao excluir funcionário', 'danger');
-            }
-        }
-
-        // ============= LOJAS =============
-        async function loadLojas() {
-            try {
-                const response = await fetch(`${API_URL}/lojas`);
-                const lojas = await response.json();
-                
-                const grid = document.getElementById('lojasGrid');
-                if (lojas && lojas.length > 0) {
-                    grid.innerHTML = lojas.map(l => `
-                        <div class="metric-card">
-                            <div class="metric-header">
-                                <div class="metric-icon">🏪</div>
-                                <div class="metric-trend ${l.ativo ? 'trend-up' : 'trend-down'}">
-                                    ${l.ativo ? 'Ativo' : 'Inativo'}
-                                </div>
-                            </div>
-                            <div style="font-size: 18px; font-weight: 700; margin: 10px 0;">${l.nome}</div>
-                            <div style="font-size: 12px; color: #7F8C8D; margin-bottom: 10px;">${l.endereco}</div>
-                            <div style="font-size: 14px; color: var(--primary); font-weight: 600;">
-                                R$ ${parseFloat(l.receita_hoje || 0).toFixed(2)}
-                            </div>
-                            <div style="font-size: 12px; color: #7F8C8D;">
-                                ${l.total_pedidos_hoje || 0} pedidos hoje
-                            </div>
-                        </div>
-                    `).join('');
-                } else {
-                    grid.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🏪</div><p>Nenhuma loja cadastrada</p></div>';
-                }
-            } catch (error) {
-                console.error('Erro:', error);
-                showAlert('Erro ao carregar lojas', 'danger');
-            }
-        }
-
-        async function salvarLoja(event) {
-            event.preventDefault();
-            const formData = new FormData(event.target);
-            const data = Object.fromEntries(formData);
-            
-            try {
-                const response = await fetch(`${API_URL}/lojas`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(data)
-                });
-                
-                const result = await response.json();
-                if (result.success) {
-                    showAlert('Loja cadastrada com sucesso!', 'success');
-                    closeModal('modalLoja');
-                    event.target.reset();
-                    loadLojas();
-                    carregarLojasSelect(); // Atualizar select de lojas
-                } else {
-                    showAlert(result.error || 'Erro ao cadastrar loja', 'danger');
-                }
-            } catch (error) {
-                console.error('Erro:', error);
-                showAlert('Erro ao cadastrar loja', 'danger');
-            }
-        }
-
-        // ============= CLIENTES =============
-        async function loadClientes() {
-            try {
-                const response = await fetch(`${API_URL}/clientes`);
-                const clientes = await response.json();
-                
-                const tbody = document.getElementById('clientesTable');
-                if (clientes && clientes.length > 0) {
-                    tbody.innerHTML = clientes.map(c => `
-                        <tr data-nome="${c.nome.toLowerCase()}">
-                            <td><strong>${c.nome}</strong></td>
-                            <td>${c.email}</td>
-                            <td><strong style="color: var(--primary);">${c.pontos_fidelidade}</strong></td>
-                            <td>R$ ${parseFloat(c.total_gasto || 0).toFixed(2)}</td>
-                            <td><span class="status-badge status-${c.nivel.toLowerCase()}">${c.nivel}</span></td>
-                            <td>${c.total_pedidos || 0}</td>
-                        </tr>
-                    `).join('');
-                } else {
-                    tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Nenhum cliente cadastrado</td></tr>';
-                }
-            } catch (error) {
-                console.error('Erro:', error);
-                showAlert('Erro ao carregar clientes', 'danger');
-            }
-        }
-
-        function filtrarClientes() {
-            const search = document.getElementById('searchCliente').value.toLowerCase();
-            document.querySelectorAll('#clientesTable tr[data-nome]').forEach(row => {
-                const nome = row.getAttribute('data-nome');
-                row.style.display = nome.includes(search) ? '' : 'none';
-            });
-        }
-
-        function exportarClientes() {
-            showAlert('Gerando relatório de clientes...', 'info');
-            // Implementar export se necessário
-        }
-
-        // ============= ESTOQUE =============
-        async function loadEstoque() {
-            try {
-                const response = await fetch(`${API_URL}/estoque`);
-                const estoque = await response.json();
-                
-                const tbody = document.getElementById('estoqueTable');
-                if (estoque && estoque.length > 0) {
-                    tbody.innerHTML = estoque.map(e => {
-                        const statusClass = e.status_alerta === 'CRÍTICO' || e.status_alerta === 'MUITO BAIXO' ? 'critico' : 
-                                           e.status_alerta === 'BAIXO' ? 'baixo' : 'ok';
-                        return `
-                            <tr>
-                                <td><strong>${e.ingrediente_nome}</strong></td>
-                                <td>${e.loja_nome}</td>
-                                <td>${parseFloat(e.quantidade_atual).toFixed(1)} ${e.unidade_medida}</td>
-                                <td>${parseFloat(e.estoque_minimo).toFixed(1)} ${e.unidade_medida}</td>
-                                <td><span class="status-badge status-${statusClass}">${e.status_alerta}</span></td>
-                                <td>
-                                    <button class="btn btn-success btn-sm" onclick="reporEstoque(${e.id})">➕ Repor</button>
-                                </td>
-                            </tr>
-                        `;
-                    }).join('');
-                } else {
-                    tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Nenhum item no estoque</td></tr>';
-                }
-            } catch (error) {
-                console.error('Erro:', error);
-                showAlert('Erro ao carregar estoque', 'danger');
-            }
-        }
-
-        async function reporEstoque(id) {
-            const qtd = prompt('Digite a quantidade a repor:');
-            if (qtd !== null && qtd > 0) {
-                try {
-                    const response = await fetch(`${API_URL}/estoque/${id}/repor`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ quantidade: parseFloat(qtd) })
-                    });
-                    const result = await response.json();
-                    
-                    if (result.success) {
-                        showAlert(result.message, 'success');
-                        loadEstoque();
-                    } else {
-                        showAlert(result.error || 'Erro ao repor estoque', 'danger');
-                    }
-                } catch (error) {
-                    showAlert('Erro ao repor estoque', 'danger');
-                }
-            }
-        }
-
-        // ============= RELATÓRIOS =============
-        async function gerarRelatorio(tipo) {
-            const content = document.getElementById('relatorioContent');
-            content.innerHTML = '<div class="loading"><div class="spinner"></div><p>Gerando relatório...</p></div>';
-            
-            try {
-                let html = '';
-                
-                if (tipo === 'vendas') {
-                    const response = await fetch(`${API_URL}/relatorio/vendas?periodo=30`);
-                    const dados = await response.json();
-                    
-                    html = '<div class="content-card" style="margin-top: 20px;"><h3>Relatório de Vendas - Últimos 30 dias</h3>';
-                    html += '<table class="data-table"><thead><tr><th>Data</th><th>Pedidos</th><th>Receita</th><th>Ticket Médio</th></tr></thead><tbody>';
-                    
-                    if (dados && dados.length > 0) {
-                        dados.forEach(d => {
-                            html += `<tr>
-                                <td>${d.data}</td>
-                                <td>${d.total_pedidos}</td>
-                                <td>R$ ${parseFloat(d.receita).toFixed(2)}</td>
-                                <td>R$ ${parseFloat(d.ticket_medio).toFixed(2)}</td>
-                            </tr>`;
-                        });
-                    } else {
-                        html += '<tr><td colspan="4" class="empty-state">Nenhum dado disponível</td></tr>';
-                    }
-                    
-                    html += '</tbody></table></div>';
-                } else if (tipo === 'produtos') {
-                    const response = await fetch(`${API_URL}/produtos`);
-                    const produtos = await response.json();
-                    
-                    html = '<div class="content-card" style="margin-top: 20px;"><h3>Relatório de Produtos</h3>';
-                    html += '<table class="data-table"><thead><tr><th>Nome</th><th>Categoria</th><th>Preço</th><th>Margem</th><th>Status</th></tr></thead><tbody>';
-                    
-                    if (produtos && produtos.length > 0) {
-                        produtos.forEach(p => {
-                            html += `<tr>
-                                <td>${p.nome}</td>
-                                <td>${p.categoria_nome}</td>
-                                <td>R$ ${parseFloat(p.preco).toFixed(2)}</td>
-                                <td>${parseFloat(p.margem_percentual || 0).toFixed(1)}%</td>
-                                <td><span class="status-badge ${p.ativo ? 'status-active' : 'status-inactive'}">
-                                    ${p.ativo ? 'Ativo' : 'Inativo'}</span></td>
-                            </tr>`;
-                        });
-                    } else {
-                        html += '<tr><td colspan="5" class="empty-state">Nenhum produto cadastrado</td></tr>';
-                    }
-                    
-                    html += '</tbody></table></div>';
-                } else if (tipo === 'clientes') {
-                    const response = await fetch(`${API_URL}/clientes`);
-                    const clientes = await response.json();
-                    
-                    html = '<div class="content-card" style="margin-top: 20px;"><h3>Relatório de Clientes</h3>';
-                    html += '<table class="data-table"><thead><tr><th>Nome</th><th>Email</th><th>Pontos</th><th>Total Gasto</th><th>Nível</th></tr></thead><tbody>';
-                    
-                    if (clientes && clientes.length > 0) {
-                        clientes.forEach(c => {
-                            html += `<tr>
-                                <td>${c.nome}</td>
-                                <td>${c.email}</td>
-                                <td>${c.pontos_fidelidade}</td>
-                                <td>R$ ${parseFloat(c.total_gasto || 0).toFixed(2)}</td>
-                                <td><span class="status-badge status-${c.nivel.toLowerCase()}">${c.nivel}</span></td>
-                            </tr>`;
-                        });
-                    } else {
-                        html += '<tr><td colspan="5" class="empty-state">Nenhum cliente cadastrado</td></tr>';
-                    }
-                    
-                    html += '</tbody></table></div>';
-                } else if (tipo === 'estoque') {
-                    const response = await fetch(`${API_URL}/estoque`);
-                    const estoque = await response.json();
-                    
-                    html = '<div class="content-card" style="margin-top: 20px;"><h3>Relatório de Estoque</h3>';
-                    html += '<table class="data-table"><thead><tr><th>Ingrediente</th><th>Loja</th><th>Qtd Atual</th><th>Status</th></tr></thead><tbody>';
-                    
-                    if (estoque && estoque.length > 0) {
-                        estoque.forEach(e => {
-                            const statusClass = e.status_alerta === 'CRÍTICO' ? 'critico' : 
-                                               e.status_alerta === 'BAIXO' ? 'baixo' : 'ok';
-                            html += `<tr>
-                                <td>${e.ingrediente_nome}</td>
-                                <td>${e.loja_nome}</td>
-                                <td>${parseFloat(e.quantidade_atual).toFixed(1)} ${e.unidade_medida}</td>
-                                <td><span class="status-badge status-${statusClass}">${e.status_alerta}</span></td>
-                            </tr>`;
-                        });
-                    } else {
-                        html += '<tr><td colspan="4" class="empty-state">Nenhum item no estoque</td></tr>';
-                    }
-                    
-                    html += '</tbody></table></div>';
-                }
-                
-                content.innerHTML = html;
-                showAlert(`Relatório de ${tipo} gerado com sucesso!`, 'success');
-            } catch (error) {
-                console.error('Erro:', error);
-                content.innerHTML = '<div class="alert alert-danger">Erro ao gerar relatório</div>';
-            }
-        }
-
-        // ============= AUXILIARES =============
-        async function carregarCategorias() {
-            try {
-                const response = await fetch(`${API_URL}/categorias`);
-                const categorias = await response.json();
-                
-                const select = document.getElementById('selectCategoria');
-                if (categorias && categorias.length > 0) {
-                    select.innerHTML = '<option value="">Selecione...</option>' +
-                        categorias.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
-                } else {
-                    select.innerHTML = '<option value="">Nenhuma categoria disponível</option>';
-                }
-            } catch (error) {
-                console.error('Erro:', error);
-            }
-        }
-
-        async function carregarLojasSelect() {
-            try {
-                const response = await fetch(`${API_URL}/lojas`);
-                const lojas = await response.json();
-                
-                const select = document.getElementById('selectLojaFunc');
-                if (lojas && lojas.length > 0) {
-                    select.innerHTML = '<option value="">Selecione...</option>' +
-                        lojas.map(l => `<option value="${l.id}">${l.nome}</option>`).join('');
-                } else {
-                    select.innerHTML = '<option value="">Nenhuma loja disponível</option>';
-                }
-            } catch (error) {
-                console.error('Erro:', error);
-            }
-        }
-
-        // ============= CLOSE MODAL ON OUTSIDE CLICK =============
-        document.querySelectorAll('.modal').forEach(modal => {
-            modal.addEventListener('click', function(e) {
-                if (e.target === modal) {
-                    closeModal(modal.id);
-                }
-            });
-        });
-
-        // ============= KEYBOARD SHORTCUTS =============
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                document.querySelectorAll('.modal.active').forEach(modal => {
-                    closeModal(modal.id);
-                });
-            }
-        });
-
-        // ============= INITIALIZATION =============
-        window.addEventListener('DOMContentLoaded', async function() {
-            await verificarPermissoes();
-            aplicarRestricoesUI();
-            loadDashboard();
-            mostrarBoasVindas();
-            console.log('🍦 Painel Administrativo Paraíso Gelado - Carregado!');
-            console.log('👤 Usuário:', usuarioLogado.nome, '| Cargo:', usuarioLogado.cargo);
-        });
-    </script>
-</body>
-</html><!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
@@ -1750,31 +715,31 @@
         </div>
 
         <nav class="sidebar-menu">
-            <a class="menu-item active" onclick="showSection('dashboard')">
+            <a class="menu-item active" data-section="dashboard">
                 <span class="menu-icon">📊</span>
                 <span class="menu-text">Dashboard</span>
             </a>
-            <a class="menu-item" onclick="showSection('produtos')">
+            <a class="menu-item" data-section="produtos">
                 <span class="menu-icon">🍨</span>
                 <span class="menu-text">Produtos</span>
             </a>
-            <a class="menu-item" onclick="showSection('funcionarios')">
+            <a class="menu-item" data-section="funcionarios">
                 <span class="menu-icon">👥</span>
                 <span class="menu-text">Funcionários</span>
             </a>
-            <a class="menu-item" onclick="showSection('lojas')">
+            <a class="menu-item" data-section="lojas">
                 <span class="menu-icon">🏪</span>
                 <span class="menu-text">Lojas/Franquias</span>
             </a>
-            <a class="menu-item" onclick="showSection('clientes')">
+            <a class="menu-item" data-section="clientes">
                 <span class="menu-icon">👤</span>
                 <span class="menu-text">Clientes</span>
             </a>
-            <a class="menu-item" onclick="showSection('estoque')">
+            <a class="menu-item" data-section="estoque">
                 <span class="menu-icon">📦</span>
                 <span class="menu-text">Estoque</span>
             </a>
-            <a class="menu-item" onclick="showSection('relatorios')">
+            <a class="menu-item" data-section="relatorios">
                 <span class="menu-icon">📈</span>
                 <span class="menu-text">Relatórios</span>
             </a>
@@ -1789,11 +754,11 @@
         <div class="top-bar">
             <h1 class="page-title" id="pageTitle">Dashboard Gerencial</h1>
             <div class="user-info">
-                <div>
-                    <div style="font-weight: 600; color: var(--dark);">Admin</div>
-                    <div style="font-size: 12px; color: #7F8C8D;">Gerente Geral</div>
+                <div id="userInfo">
+                    <div style="font-weight: 600; color: var(--dark);">Carregando...</div>
+                    <div style="font-size: 12px; color: #7F8C8D;">Carregando...</div>
                 </div>
-                <div class="user-avatar">AG</div>
+                <div class="user-avatar" id="userAvatar">?</div>
             </div>
         </div>
 
@@ -2028,3 +993,1107 @@
 
                 <div class="dashboard-grid">
                     <div class="metric-card" style="cursor: pointer;" onclick="gerarRelatorio('vendas')">
+                        <div class="metric-header">
+                            <div class="metric-icon">💰</div>
+                        </div>
+                        <div class="metric-label" style="font-size: 16px; font-weight: 600; margin: 15px 0;">Relatório de Vendas</div>
+                        <button class="btn btn-primary btn-sm">📄 Ver Relatório</button>
+                    </div>
+
+                    <div class="metric-card" style="cursor: pointer;" onclick="gerarRelatorio('produtos')">
+                        <div class="metric-header">
+                            <div class="metric-icon">🍨</div>
+                        </div>
+                        <div class="metric-label" style="font-size: 16px; font-weight: 600; margin: 15px 0;">Relatório de Produtos</div>
+                        <button class="btn btn-primary btn-sm">📄 Ver Relatório</button>
+                    </div>
+
+                    <div class="metric-card" style="cursor: pointer;" onclick="gerarRelatorio('clientes')">
+                        <div class="metric-header">
+                            <div class="metric-icon">👥</div>
+                        </div>
+                        <div class="metric-label" style="font-size: 16px; font-weight: 600; margin: 15px 0;">Relatório de Clientes</div>
+                        <button class="btn btn-primary btn-sm">📄 Ver Relatório</button>
+                    </div>
+
+                    <div class="metric-card" style="cursor: pointer;" onclick="gerarRelatorio('estoque')">
+                        <div class="metric-header">
+                            <div class="metric-icon">📦</div>
+                        </div>
+                        <div class="metric-label" style="font-size: 16px; font-weight: 600; margin: 15px 0;">Relatório de Estoque</div>
+                        <button class="btn btn-primary btn-sm">📄 Ver Relatório</button>
+                    </div>
+                </div>
+
+                <div id="relatorioContent"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODALS -->
+    
+    <!-- Modal Produto -->
+    <div class="modal" id="modalProduto">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Cadastrar Produto</h3>
+                <button class="close-modal" onclick="closeModal('modalProduto')">×</button>
+            </div>
+
+            <form id="formProduto" onsubmit="salvarProduto(event)">
+                <div class="form-group">
+                    <label class="form-label">Nome do Produto *</label>
+                    <input type="text" class="form-control" required name="nome">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Categoria *</label>
+                        <select class="form-control" required name="categoria_id" id="selectCategoria">
+                            <option value="">Carregando...</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Tamanho *</label>
+                        <select class="form-control" required name="tamanho">
+                            <option value="P">Pequeno</option>
+                            <option value="M">Médio</option>
+                            <option value="G">Grande</option>
+                            <option value="ÚNICO">Único</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Descrição</label>
+                    <textarea class="form-control" rows="3" name="descricao"></textarea>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Preço de Venda (R$) *</label>
+                        <input type="number" step="0.01" class="form-control" required name="preco">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Custo (R$)</label>
+                        <input type="number" step="0.01" class="form-control" name="custo">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Calorias</label>
+                        <input type="number" class="form-control" name="calorias">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Status</label>
+                        <select class="form-control" name="ativo">
+                            <option value="1">Ativo</option>
+                            <option value="0">Inativo</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button type="submit" class="btn btn-success">💾 Salvar</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('modalProduto')">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Funcionário -->
+    <div class="modal" id="modalFuncionario">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Cadastrar Funcionário</h3>
+                <button class="close-modal" onclick="closeModal('modalFuncionario')">×</button>
+            </div>
+
+            <form id="formFuncionario" onsubmit="salvarFuncionario(event)">
+                <div class="form-group">
+                    <label class="form-label">Nome Completo *</label>
+                    <input type="text" class="form-control" required name="nome">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">CPF *</label>
+                        <input type="text" class="form-control" required name="cpf" placeholder="000.000.000-00">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Data de Admissão *</label>
+                        <input type="date" class="form-control" required name="data_admissao">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Cargo *</label>
+                        <select class="form-control" required name="cargo">
+                            <option value="">Selecione...</option>
+                            <option value="gerente">Gerente</option>
+                            <option value="atendente">Atendente</option>
+                            <option value="caixa">Caixa</option>
+                            <option value="entregador">Entregador</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Loja *</label>
+                        <select class="form-control" required name="loja_id" id="selectLojaFunc">
+                            <option value="">Carregando...</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Salário (R$) *</label>
+                    <input type="number" step="0.01" class="form-control" required name="salario">
+                </div>
+
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button type="submit" class="btn btn-success">💾 Salvar</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('modalFuncionario')">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Loja -->
+    <div class="modal" id="modalLoja">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Cadastrar Loja/Franquia</h3>
+                <button class="close-modal" onclick="closeModal('modalLoja')">×</button>
+            </div>
+
+            <form id="formLoja" onsubmit="salvarLoja(event)">
+                <div class="form-group">
+                    <label class="form-label">Nome da Loja *</label>
+                    <input type="text" class="form-control" required name="nome">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Endereço *</label>
+                    <input type="text" class="form-control" required name="endereco">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Cidade *</label>
+                        <input type="text" class="form-control" required name="cidade">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Estado *</label>
+                        <select class="form-control" required name="estado">
+                            <option value="GO">Goiás</option>
+                            <option value="SP">São Paulo</option>
+                            <option value="RJ">Rio de Janeiro</option>
+                            <option value="MG">Minas Gerais</option>
+                            <option value="DF">Distrito Federal</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">CEP *</label>
+                        <input type="text" class="form-control" required name="cep" placeholder="00000-000">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Telefone *</label>
+                        <input type="tel" class="form-control" required name="telefone">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Email *</label>
+                    <input type="email" class="form-control" required name="email">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Data de Abertura *</label>
+                    <input type="date" class="form-control" required name="data_abertura">
+                </div>
+
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button type="submit" class="btn btn-success">💾 Salvar</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('modalLoja')">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // ============= FUNÇÕES BÁSICAS DE NAVEGAÇÃO =============
+        
+        // Função para mostrar seções
+        function showSection(sectionId) {
+            console.log('Tentando mostrar seção:', sectionId);
+            
+            // Oculta todas as seções
+            const sections = document.querySelectorAll('.content-section');
+            sections.forEach(section => {
+                section.classList.remove('active');
+            });
+            
+            // Mostra a seção selecionada
+            const targetSection = document.getElementById(sectionId);
+            if (targetSection) {
+                targetSection.classList.add('active');
+            }
+            
+            // Atualiza o título da página
+            const pageTitle = document.getElementById('pageTitle');
+            const titles = {
+                'dashboard': 'Dashboard Gerencial',
+                'produtos': 'Gestão de Produtos',
+                'funcionarios': 'Gestão de Funcionários',
+                'lojas': 'Gestão de Lojas/Franquias',
+                'clientes': 'Gestão de Clientes',
+                'estoque': 'Controle de Estoque',
+                'relatorios': 'Relatórios'
+            };
+            
+            if (titles[sectionId]) {
+                pageTitle.textContent = titles[sectionId];
+            }
+            
+            // Atualiza o menu ativo
+            const menuItems = document.querySelectorAll('.menu-item');
+            menuItems.forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            // Ativa o item do menu correspondente
+            const activeMenuItem = document.querySelector(`.menu-item[data-section="${sectionId}"]`);
+            if (activeMenuItem) {
+                activeMenuItem.classList.add('active');
+            }
+            
+            // Carrega os dados da seção
+            loadSectionData(sectionId);
+        }
+
+        // Função para abrir modais
+        function openModal(modalId) {
+            console.log('Abrindo modal:', modalId);
+            document.getElementById(modalId).classList.add('active');
+        }
+
+        // Função para fechar modais
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+            
+            if (modalId === 'modalFuncionario') {
+                funcionarioEditando = null;
+                document.getElementById('formFuncionario').reset();
+                document.querySelector('#modalFuncionario .modal-title').textContent = 'Cadastrar Funcionário';
+            }
+            
+            if (modalId === 'modalProduto') {
+                document.getElementById('formProduto').reset();
+            }
+            
+            if (modalId === 'modalLoja') {
+                document.getElementById('formLoja').reset();
+            }
+        }
+
+        // ============= SIDEBAR =============
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('collapsed');
+        }
+
+        // ============= CONFIGURAÇÃO DA API =============
+        const API_URL = '/api';
+
+        let permissoesUsuario = {};
+        let usuarioLogado = {};
+
+        async function verificarPermissoes() {
+            try {
+                const response = await fetch('/api/verificar-permissao');
+                const data = await response.json();
+                
+                if (!data.authenticated) {
+                    window.location.href = '/';
+                    return;
+                }
+                
+                usuarioLogado = data.user;
+                permissoesUsuario = data.permissoes;
+                
+                document.getElementById('userInfo').innerHTML = `
+                    <div style="font-weight: 600; color: var(--dark);">${usuarioLogado.nome}</div>
+                    <div style="font-size: 12px; color: #7F8C8D;">${formatarCargo(usuarioLogado.cargo)}</div>
+                `;
+                
+                // Inicial das letras do nome para o avatar
+                const iniciais = usuarioLogado.nome.split(' ').map(n => n[0]).join('').toUpperCase();
+                document.getElementById('userAvatar').textContent = iniciais.substring(0, 2);
+                
+                aplicarRestricoesPorCargo();
+                
+            } catch (error) {
+                console.error('Erro ao verificar permissões:', error);
+                window.location.href = '/';
+            }
+        }
+
+        function formatarCargo(cargo) {
+            const cargos = {
+                'gerente_geral': 'Gerente Geral',
+                'gerente': 'Gerente',
+                'atendente': 'Atendente',
+                'caixa': 'Caixa',
+                'entregador': 'Entregador'
+            };
+            return cargos[cargo] || cargo;
+        }
+
+        function aplicarRestricoesPorCargo() {
+            const menuItems = [
+                { selector: '.menu-item[data-section="dashboard"]', permissao: 'dashboard' },
+                { selector: '.menu-item[data-section="produtos"]', permissao: 'produtos' },
+                { selector: '.menu-item[data-section="funcionarios"]', permissao: 'funcionarios' },
+                { selector: '.menu-item[data-section="lojas"]', permissao: 'lojas' },
+                { selector: '.menu-item[data-section="clientes"]', permissao: 'clientes' },
+                { selector: '.menu-item[data-section="estoque"]', permissao: 'estoque' },
+                { selector: '.menu-item[data-section="relatorios"]', permissao: 'relatorios' }
+            ];
+            
+            menuItems.forEach(item => {
+                const element = document.querySelector(item.selector);
+                if (element) {
+                    if (!permissoesUsuario[item.permissao]) {
+                        element.style.display = 'none';
+                    } else {
+                        element.style.display = 'flex';
+                    }
+                }
+            });
+            
+            if (!permissoesUsuario.dashboard) {
+                const primeiroDisponivel = menuItems.find(item => permissoesUsuario[item.permissao]);
+                if (primeiroDisponivel) {
+                    showSection(primeiroDisponivel.permissao);
+                }
+            }
+        }
+
+        function verificarAcessoSecao(secao) {
+            if (!permissoesUsuario[secao]) {
+                showAlert(`Você não tem permissão para acessar ${secao}`, 'danger');
+                const secoesDisponiveis = Object.keys(permissoesUsuario).filter(k => permissoesUsuario[k]);
+                if (secoesDisponiveis.length > 0) {
+                    showSection(secoesDisponiveis[0]);
+                }
+                return false;
+            }
+            return true;
+        }
+
+        // ============= ALERTS =============
+        function showAlert(message, type = 'success') {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type}`;
+            alertDiv.innerHTML = `
+                <span style="font-size: 20px;">${type === 'success' ? '✅' : type === 'danger' ? '❌' : '⚠️'}</span>
+                <span>${message}</span>
+            `;
+            alertDiv.style.position = 'fixed';
+            alertDiv.style.top = '20px';
+            alertDiv.style.right = '20px';
+            alertDiv.style.zIndex = '3000';
+            alertDiv.style.minWidth = '300px';
+            
+            document.body.appendChild(alertDiv);
+            
+            setTimeout(() => {
+                alertDiv.remove();
+            }, 3000);
+        }
+
+        // ============= DATA LOADING =============
+        function loadSectionData(section) {
+            switch(section) {
+                case 'dashboard':
+                    loadDashboard();
+                    break;
+                case 'produtos':
+                    loadProdutos();
+                    break;
+                case 'funcionarios':
+                    loadFuncionarios();
+                    break;
+                case 'lojas':
+                    loadLojas();
+                    break;
+                case 'clientes':
+                    loadClientes();
+                    break;
+                case 'estoque':
+                    loadEstoque();
+                    break;
+            }
+        }
+
+        // ============= DASHBOARD =============
+        async function loadDashboard() {
+            try {
+                const response = await fetch(`${API_URL}/dashboard`);
+                const data = await response.json();
+                
+                document.getElementById('vendasHoje').textContent = 
+                    `R$ ${parseFloat(data.vendas_hoje.receita_total || 0).toFixed(2)}`;
+                document.getElementById('pedidosHoje').textContent = 
+                    data.vendas_hoje.total_pedidos || 0;
+                document.getElementById('totalPedidos').textContent = 
+                    data.vendas_hoje.total_pedidos || 0;
+                document.getElementById('clientesAtivos').textContent = 
+                    data.clientes_ativos || 0;
+                document.getElementById('totalAlertas').textContent = 
+                    data.alertas_estoque || 0;
+                
+                const tbody = document.getElementById('performanceLojas');
+                if (data.performance_lojas && data.performance_lojas.length > 0) {
+                    tbody.innerHTML = data.performance_lojas.map(loja => `
+                        <tr>
+                            <td><strong>${loja.nome}</strong></td>
+                            <td>R$ ${parseFloat(loja.receita || 0).toFixed(2)}</td>
+                            <td>${loja.total_pedidos || 0}</td>
+                            <td>R$ ${parseFloat(loja.ticket_medio || 0).toFixed(2)}</td>
+                            <td><span class="status-badge status-active">Operando</span></td>
+                        </tr>
+                    `).join('');
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="5" class="empty-state">Nenhum dado disponível</td></tr>';
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+                showAlert('Erro ao carregar dashboard', 'danger');
+            }
+        }
+
+        // ============= PRODUTOS =============
+        async function loadProdutos() {
+            try {
+                const response = await fetch(`${API_URL}/produtos`);
+                const produtos = await response.json();
+                
+                const grid = document.getElementById('productGrid');
+                if (produtos && produtos.length > 0) {
+                    grid.innerHTML = produtos.map(p => {
+                        const margem = p.margem_percentual ? parseFloat(p.margem_percentual).toFixed(1) : '0.0';
+                        return `
+                            <div class="product-card" data-nome="${p.nome.toLowerCase()}">
+                                <div class="product-image">🍦</div>
+                                <div class="product-info">
+                                    <div class="product-name">${p.nome}</div>
+                                    <div class="product-price">R$ ${parseFloat(p.preco).toFixed(2)}</div>
+                                    <div style="font-size: 12px; margin: 5px 0;">
+                                        <span class="status-badge ${p.ativo ? 'status-active' : 'status-inactive'}">
+                                            ${p.ativo ? 'Ativo' : 'Inativo'}
+                                        </span>
+                                    </div>
+                                    <div style="font-size: 12px; color: #27AE60; margin-top: 5px;">
+                                        <strong>Margem: ${margem}%</strong>
+                                    </div>
+                                    <div class="product-actions">
+                                        <button class="btn btn-danger btn-sm" onclick="excluirProduto(${p.id})">🗑️ Excluir</button>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                } else {
+                    grid.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🍨</div><p>Nenhum produto cadastrado</p></div>';
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+                showAlert('Erro ao carregar produtos', 'danger');
+            }
+        }
+
+        async function salvarProduto(event) {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+            const data = Object.fromEntries(formData);
+            
+            try {
+                const response = await fetch(`${API_URL}/produtos`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                if (result.success) {
+                    showAlert('Produto cadastrado com sucesso!', 'success');
+                    closeModal('modalProduto');
+                    event.target.reset();
+                    loadProdutos();
+                } else {
+                    showAlert(result.error || 'Erro ao cadastrar produto', 'danger');
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+                showAlert('Erro ao cadastrar produto', 'danger');
+            }
+        }
+
+        async function excluirProduto(id) {
+            if (!confirm('Tem certeza que deseja excluir este produto?')) return;
+            
+            try {
+                const response = await fetch(`${API_URL}/produtos/${id}`, {
+                    method: 'DELETE'
+                });
+                const result = await response.json();
+                
+                if (result.success) {
+                    showAlert('Produto removido com sucesso!', 'success');
+                    loadProdutos();
+                } else {
+                    showAlert(result.error || 'Erro ao excluir produto', 'danger');
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+                showAlert('Erro ao excluir produto', 'danger');
+            }
+        }
+
+        function filtrarProdutos() {
+            const search = document.getElementById('searchProduto').value.toLowerCase();
+            document.querySelectorAll('.product-card').forEach(card => {
+                const nome = card.getAttribute('data-nome');
+                card.style.display = nome.includes(search) ? 'block' : 'none';
+            });
+        }
+
+        // ============= FUNCIONÁRIOS =============
+        let funcionarioEditando = null;
+        
+        async function loadFuncionarios() {
+            try {
+                const response = await fetch(`${API_URL}/funcionarios`);
+                const funcionarios = await response.json();
+                
+                const tbody = document.getElementById('funcionariosTable');
+                if (funcionarios && funcionarios.length > 0) {
+                    tbody.innerHTML = funcionarios.map(f => `
+                        <tr>
+                            <td><strong>${f.nome}</strong></td>
+                            <td>${f.cpf}</td>
+                            <td>${f.cargo.charAt(0).toUpperCase() + f.cargo.slice(1)}</td>
+                            <td>${f.loja_nome || 'N/A'}</td>
+                            <td>R$ ${parseFloat(f.salario).toFixed(2)}</td>
+                            <td><span class="status-badge ${f.ativo ? 'status-active' : 'status-inactive'}">
+                                ${f.ativo ? 'Ativo' : 'Inativo'}</span></td>
+                            <td style="display: flex; gap: 5px;">
+                                <button class="btn btn-warning btn-sm" onclick="editarFuncionario(${f.id})" title="Editar">
+                                    ✏️
+                                </button>
+                                <button class="btn btn-danger btn-sm" onclick="excluirFuncionario(${f.id})" title="Excluir">
+                                    🗑️
+                                </button>
+                            </td>
+                        </tr>
+                    `).join('');
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="7" class="empty-state">Nenhum funcionário cadastrado</td></tr>';
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+                showAlert('Erro ao carregar funcionários', 'danger');
+            }
+        }
+
+        async function editarFuncionario(id) {
+            try {
+                const response = await fetch(`${API_URL}/funcionarios/${id}`);
+                const funcionario = await response.json();
+                
+                if (funcionario.error) {
+                    showAlert('Funcionário não encontrado', 'danger');
+                    return;
+                }
+                
+                funcionarioEditando = id;
+                await carregarLojasSelect();
+                
+                document.querySelector('#formFuncionario [name="nome"]').value = funcionario.nome || '';
+                document.querySelector('#formFuncionario [name="cpf"]').value = funcionario.cpf || '';
+                document.querySelector('#formFuncionario [name="cargo"]').value = funcionario.cargo || '';
+                document.querySelector('#formFuncionario [name="data_admissao"]').value = funcionario.data_admissao || '';
+                document.querySelector('#formFuncionario [name="salario"]').value = funcionario.salario || '';
+                document.querySelector('#formFuncionario [name="loja_id"]').value = funcionario.loja_id || '';
+                
+                document.querySelector('#modalFuncionario .modal-title').textContent = 'Editar Funcionário';
+                openModal('modalFuncionario');
+                
+            } catch (error) {
+                console.error('Erro:', error);
+                showAlert('Erro ao carregar dados do funcionário', 'danger');
+            }
+        }
+
+        async function salvarFuncionario(event) {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+            const data = Object.fromEntries(formData);
+            
+            try {
+                let response;
+                
+                if (funcionarioEditando) {
+                    response = await fetch(`${API_URL}/funcionarios/${funcionarioEditando}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data)
+                    });
+                } else {
+                    response = await fetch(`${API_URL}/funcionarios`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data)
+                    });
+                }
+                
+                const result = await response.json();
+                if (result.success) {
+                    showAlert(
+                        funcionarioEditando ? 'Funcionário atualizado com sucesso!' : 'Funcionário cadastrado com sucesso!',
+                        'success'
+                    );
+                    closeModal('modalFuncionario');
+                    event.target.reset();
+                    funcionarioEditando = null;
+                    loadFuncionarios();
+                } else {
+                    showAlert(result.error || 'Erro ao salvar funcionário', 'danger');
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+                showAlert('Erro ao salvar funcionário', 'danger');
+            }
+        }
+
+        async function excluirFuncionario(id) {
+            if (!confirm('Tem certeza que deseja excluir este funcionário?')) return;
+            
+            try {
+                const response = await fetch(`${API_URL}/funcionarios/${id}`, {
+                    method: 'DELETE'
+                });
+                const result = await response.json();
+                
+                if (result.success) {
+                    showAlert('Funcionário removido com sucesso!', 'success');
+                    loadFuncionarios();
+                } else {
+                    showAlert(result.error || 'Erro ao excluir', 'danger');
+                }
+            } catch (error) {
+                showAlert('Erro ao excluir funcionário', 'danger');
+            }
+        }
+
+        // ============= LOJAS =============
+        async function loadLojas() {
+            try {
+                const response = await fetch(`${API_URL}/lojas`);
+                const lojas = await response.json();
+                
+                const grid = document.getElementById('lojasGrid');
+                if (lojas && lojas.length > 0) {
+                    grid.innerHTML = lojas.map(l => `
+                        <div class="metric-card">
+                            <div class="metric-header">
+                                <div class="metric-icon">🏪</div>
+                                <div class="metric-trend ${l.ativo ? 'trend-up' : 'trend-down'}">
+                                    ${l.ativo ? 'Ativo' : 'Inativo'}
+                                </div>
+                            </div>
+                            <div style="font-size: 18px; font-weight: 700; margin: 10px 0;">${l.nome}</div>
+                            <div style="font-size: 12px; color: #7F8C8D; margin-bottom: 10px;">${l.endereco}</div>
+                            <div style="font-size: 14px; color: var(--primary); font-weight: 600;">
+                                R$ ${parseFloat(l.receita_hoje || 0).toFixed(2)}
+                            </div>
+                            <div style="font-size: 12px; color: #7F8C8D;">
+                                ${l.total_pedidos_hoje || 0} pedidos hoje
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    grid.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🏪</div><p>Nenhuma loja cadastrada</p></div>';
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+                showAlert('Erro ao carregar lojas', 'danger');
+            }
+        }
+
+        async function salvarLoja(event) {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+            const data = Object.fromEntries(formData);
+            
+            try {
+                const response = await fetch(`${API_URL}/lojas`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                if (result.success) {
+                    showAlert('Loja cadastrada com sucesso!', 'success');
+                    closeModal('modalLoja');
+                    event.target.reset();
+                    loadLojas();
+                    carregarLojasSelect(); // Atualizar select de lojas
+                } else {
+                    showAlert(result.error || 'Erro ao cadastrar loja', 'danger');
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+                showAlert('Erro ao cadastrar loja', 'danger');
+            }
+        }
+
+        // ============= CLIENTES =============
+        async function loadClientes() {
+            try {
+                const response = await fetch(`${API_URL}/clientes`);
+                const clientes = await response.json();
+                
+                const tbody = document.getElementById('clientesTable');
+                if (clientes && clientes.length > 0) {
+                    tbody.innerHTML = clientes.map(c => `
+                        <tr data-nome="${c.nome.toLowerCase()}">
+                            <td><strong>${c.nome}</strong></td>
+                            <td>${c.email}</td>
+                            <td><strong style="color: var(--primary);">${c.pontos_fidelidade}</strong></td>
+                            <td>R$ ${parseFloat(c.total_gasto || 0).toFixed(2)}</td>
+                            <td><span class="status-badge status-${c.nivel.toLowerCase()}">${c.nivel}</span></td>
+                            <td>${c.total_pedidos || 0}</td>
+                        </tr>
+                    `).join('');
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Nenhum cliente cadastrado</td></tr>';
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+                showAlert('Erro ao carregar clientes', 'danger');
+            }
+        }
+
+        function filtrarClientes() {
+            const search = document.getElementById('searchCliente').value.toLowerCase();
+            document.querySelectorAll('#clientesTable tr[data-nome]').forEach(row => {
+                const nome = row.getAttribute('data-nome');
+                row.style.display = nome.includes(search) ? '' : 'none';
+            });
+        }
+
+        function exportarClientes() {
+            showAlert('Gerando relatório de clientes...', 'info');
+            // Implementar export se necessário
+        }
+
+        // ============= ESTOQUE =============
+        async function loadEstoque() {
+            try {
+                const response = await fetch(`${API_URL}/estoque`);
+                const estoque = await response.json();
+                
+                const tbody = document.getElementById('estoqueTable');
+                if (estoque && estoque.length > 0) {
+                    tbody.innerHTML = estoque.map(e => {
+                        const statusClass = e.status_alerta === 'CRÍTICO' || e.status_alerta === 'MUITO BAIXO' ? 'critico' : 
+                                           e.status_alerta === 'BAIXO' ? 'baixo' : 'ok';
+                        return `
+                            <tr>
+                                <td><strong>${e.ingrediente_nome}</strong></td>
+                                <td>${e.loja_nome}</td>
+                                <td>${parseFloat(e.quantidade_atual).toFixed(1)} ${e.unidade_medida}</td>
+                                <td>${parseFloat(e.estoque_minimo).toFixed(1)} ${e.unidade_medida}</td>
+                                <td><span class="status-badge status-${statusClass}">${e.status_alerta}</span></td>
+                                <td>
+                                    <button class="btn btn-success btn-sm" onclick="reporEstoque(${e.id})">➕ Repor</button>
+                                </td>
+                            </tr>
+                        `;
+                    }).join('');
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Nenhum item no estoque</td></tr>';
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+                showAlert('Erro ao carregar estoque', 'danger');
+            }
+        }
+
+        async function reporEstoque(id) {
+            const qtd = prompt('Digite a quantidade a repor:');
+            if (qtd !== null && qtd > 0) {
+                try {
+                    const response = await fetch(`${API_URL}/estoque/${id}/repor`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ quantidade: parseFloat(qtd) })
+                    });
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        showAlert(result.message, 'success');
+                        loadEstoque();
+                    } else {
+                        showAlert(result.error || 'Erro ao repor estoque', 'danger');
+                    }
+                } catch (error) {
+                    showAlert('Erro ao repor estoque', 'danger');
+                }
+            }
+        }
+
+        // ============= RELATÓRIOS =============
+        async function gerarRelatorio(tipo) {
+            const content = document.getElementById('relatorioContent');
+            content.innerHTML = '<div class="loading"><div class="spinner"></div><p>Gerando relatório...</p></div>';
+            
+            try {
+                let html = '';
+                
+                if (tipo === 'vendas') {
+                    const response = await fetch(`${API_URL}/relatorio/vendas?periodo=30`);
+                    const dados = await response.json();
+                    
+                    html = '<div class="content-card" style="margin-top: 20px;"><h3>Relatório de Vendas - Últimos 30 dias</h3>';
+                    html += '<table class="data-table"><thead><tr><th>Data</th><th>Pedidos</th><th>Receita</th><th>Ticket Médio</th></tr></thead><tbody>';
+                    
+                    if (dados && dados.length > 0) {
+                        dados.forEach(d => {
+                            html += `<tr>
+                                <td>${d.data}</td>
+                                <td>${d.total_pedidos}</td>
+                                <td>R$ ${parseFloat(d.receita).toFixed(2)}</td>
+                                <td>R$ ${parseFloat(d.ticket_medio).toFixed(2)}</td>
+                            </tr>`;
+                        });
+                    } else {
+                        html += '<tr><td colspan="4" class="empty-state">Nenhum dado disponível</td></tr>';
+                    }
+                    
+                    html += '</tbody></table></div>';
+                } else if (tipo === 'produtos') {
+                    const response = await fetch(`${API_URL}/produtos`);
+                    const produtos = await response.json();
+                    
+                    html = '<div class="content-card" style="margin-top: 20px;"><h3>Relatório de Produtos</h3>';
+                    html += '<table class="data-table"><thead><tr><th>Nome</th><th>Categoria</th><th>Preço</th><th>Margem</th><th>Status</th></tr></thead><tbody>';
+                    
+                    if (produtos && produtos.length > 0) {
+                        produtos.forEach(p => {
+                            html += `<tr>
+                                <td>${p.nome}</td>
+                                <td>${p.categoria_nome}</td>
+                                <td>R$ ${parseFloat(p.preco).toFixed(2)}</td>
+                                <td>${parseFloat(p.margem_percentual || 0).toFixed(1)}%</td>
+                                <td><span class="status-badge ${p.ativo ? 'status-active' : 'status-inactive'}">
+                                    ${p.ativo ? 'Ativo' : 'Inativo'}</span></td>
+                            </tr>`;
+                        });
+                    } else {
+                        html += '<tr><td colspan="5" class="empty-state">Nenhum produto cadastrado</td></tr>';
+                    }
+                    
+                    html += '</tbody></table></div>';
+                } else if (tipo === 'clientes') {
+                    const response = await fetch(`${API_URL}/clientes`);
+                    const clientes = await response.json();
+                    
+                    html = '<div class="content-card" style="margin-top: 20px;"><h3>Relatório de Clientes</h3>';
+                    html += '<table class="data-table"><thead><tr><th>Nome</th><th>Email</th><th>Pontos</th><th>Total Gasto</th><th>Nível</th></tr></thead><tbody>';
+                    
+                    if (clientes && clientes.length > 0) {
+                        clientes.forEach(c => {
+                            html += `<tr>
+                                <td>${c.nome}</td>
+                                <td>${c.email}</td>
+                                <td>${c.pontos_fidelidade}</td>
+                                <td>R$ ${parseFloat(c.total_gasto || 0).toFixed(2)}</td>
+                                <td><span class="status-badge status-${c.nivel.toLowerCase()}">${c.nivel}</span></td>
+                            </tr>`;
+                        });
+                    } else {
+                        html += '<tr><td colspan="5" class="empty-state">Nenhum cliente cadastrado</td></tr>';
+                    }
+                    
+                    html += '</tbody></table></div>';
+                } else if (tipo === 'estoque') {
+                    const response = await fetch(`${API_URL}/estoque`);
+                    const estoque = await response.json();
+                    
+                    html = '<div class="content-card" style="margin-top: 20px;"><h3>Relatório de Estoque</h3>';
+                    html += '<table class="data-table"><thead><tr><th>Ingrediente</th><th>Loja</th><th>Qtd Atual</th><th>Status</th></tr></thead><tbody>';
+                    
+                    if (estoque && estoque.length > 0) {
+                        estoque.forEach(e => {
+                            const statusClass = e.status_alerta === 'CRÍTICO' ? 'critico' : 
+                                               e.status_alerta === 'BAIXO' ? 'baixo' : 'ok';
+                            html += `<tr>
+                                <td>${e.ingrediente_nome}</td>
+                                <td>${e.loja_nome}</td>
+                                <td>${parseFloat(e.quantidade_atual).toFixed(1)} ${e.unidade_medida}</td>
+                                <td><span class="status-badge status-${statusClass}">${e.status_alerta}</span></td>
+                            </tr>`;
+                        });
+                    } else {
+                        html += '<tr><td colspan="4" class="empty-state">Nenhum item no estoque</td></tr>';
+                    }
+                    
+                    html += '</tbody></table></div>';
+                }
+                
+                content.innerHTML = html;
+                showAlert(`Relatório de ${tipo} gerado com sucesso!`, 'success');
+            } catch (error) {
+                console.error('Erro:', error);
+                content.innerHTML = '<div class="alert alert-danger">Erro ao gerar relatório</div>';
+            }
+        }
+
+        // ============= AUXILIARES =============
+        async function carregarCategorias() {
+            try {
+                const response = await fetch(`${API_URL}/categorias`);
+                const categorias = await response.json();
+                
+                const select = document.getElementById('selectCategoria');
+                if (categorias && categorias.length > 0) {
+                    select.innerHTML = '<option value="">Selecione...</option>' +
+                        categorias.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
+                } else {
+                    select.innerHTML = '<option value="">Nenhuma categoria disponível</option>';
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+            }
+        }
+
+        async function carregarLojasSelect() {
+            try {
+                const response = await fetch(`${API_URL}/lojas`);
+                const lojas = await response.json();
+                
+                const select = document.getElementById('selectLojaFunc');
+                if (lojas && lojas.length > 0) {
+                    select.innerHTML = '<option value="">Selecione...</option>' +
+                        lojas.map(l => `<option value="${l.id}">${l.nome}</option>`).join('');
+                } else {
+                    select.innerHTML = '<option value="">Nenhuma loja disponível</option>';
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+            }
+        }
+
+        function aplicarRestricoesUI() {
+            if (!permissoesUsuario.funcionarios) {
+                const btnNovoFunc = document.querySelector('button[onclick*="modalFuncionario"]');
+                if (btnNovoFunc) btnNovoFunc.style.display = 'none';
+            }
+            
+            if (!permissoesUsuario.lojas) {
+                const btnNovaLoja = document.querySelector('button[onclick*="modalLoja"]');
+                if (btnNovaLoja) btnNovaLoja.style.display = 'none';
+            }
+            
+            if (!permissoesUsuario.funcionarios) {
+                const acoesFunc = document.querySelectorAll('button[onclick*="editarFuncionario"], button[onclick*="excluirFuncionario"]');
+                acoesFunc.forEach(btn => btn.style.display = 'none');
+            }
+        }
+
+        function mostrarBoasVindas() {
+            const mensagens = {
+                'gerente_geral': '👑 Bem-vindo, Gerente Geral! Você tem acesso total ao sistema.',
+                'gerente': '🎯 Bem-vindo, Gerente! Gerencie sua loja com eficiência.',
+                'atendente': '👋 Bem-vindo! Você pode gerenciar produtos, clientes e estoque.',
+                'caixa': '💰 Bem-vindo! Foque em vendas e atendimento ao cliente.',
+                'entregador': '🚗 Bem-vindo! Gerencie suas entregas com eficiência.'
+            };
+            
+            const mensagem = mensagens[usuarioLogado.cargo] || 'Bem-vindo ao sistema!';
+            
+            setTimeout(() => {
+                showAlert(mensagem, 'success');
+            }, 500);
+        }
+
+        // ============= CLOSE MODAL ON OUTSIDE CLICK =============
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    closeModal(modal.id);
+                }
+            });
+        });
+
+        // ============= KEYBOARD SHORTCUTS =============
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.modal.active').forEach(modal => {
+                    closeModal(modal.id);
+                });
+            }
+        });
+
+        // ============= EVENT LISTENERS PARA NAVEGAÇÃO =============
+        document.addEventListener('DOMContentLoaded', function() {
+            // Adicionar event listeners para os itens do menu
+            document.querySelectorAll('.menu-item[data-section]').forEach(item => {
+                item.addEventListener('click', function() {
+                    const sectionId = this.getAttribute('data-section');
+                    showSection(sectionId);
+                });
+            });
+            
+            // Adicionar event listeners para os cards de relatório
+            document.querySelectorAll('.metric-card[onclick*="gerarRelatorio"]').forEach(card => {
+                card.addEventListener('click', function() {
+                    const onclickAttr = this.getAttribute('onclick');
+                    const match = onclickAttr.match(/gerarRelatorio\('([^']+)'\)/);
+                    if (match && typeof gerarRelatorio === 'function') {
+                        gerarRelatorio(match[1]);
+                    }
+                });
+            });
+        });
+
+        // ============= INICIALIZATION =============
+        window.addEventListener('DOMContentLoaded', async function() {
+            await verificarPermissoes();
+            aplicarRestricoesUI();
+            loadDashboard();
+            carregarCategorias();
+            carregarLojasSelect();
+            mostrarBoasVindas();
+            console.log('🍦 Painel Administrativo Paraíso Gelado - Carregado!');
+            
+            // Verificar se o usuário está carregado
+            if (usuarioLogado.nome) {
+                console.log('👤 Usuário:', usuarioLogado.nome, '| Cargo:', usuarioLogado.cargo);
+            }
+        });
+
+        // ============= GARANTIR QUE AS FUNÇÕES ESTEJAM NO ESCOPO GLOBAL =============
+        window.showSection = showSection;
+        window.openModal = openModal;
+        window.closeModal = closeModal;
+    </script>
+</body>
+</html>

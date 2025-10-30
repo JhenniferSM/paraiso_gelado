@@ -159,27 +159,11 @@ class PriorityOrderQueue:
 - **MySQL 8.0** - Banco de dados relacional
 - **Triggers** - Para automatizações
 
-### Análise de Performance
-- **NumPy** - Computação numérica
-- **Pandas** - Manipulação de dados
-- **Matplotlib** - Geração de gráficos
-- **Seaborn** - Visualizações estatísticas
-
 O servidor estará disponível em: **https://paraiso-gelado.onrender.com/**
-
-### Credenciais Padrão
-
-**Usuário Admin:**
-- **Email:** admin@paraisogelado.com
-- **Senha:** admin123
-
-**Gerentes (podem fazer login):**
-- Qualquer gerente cadastrado no sistema pode usar seu CPF como login
 
 ### Acessando o Sistema
 
 1. **Página de Login**: https://paraiso-gelado.onrender.com/
-2. **Painel Administrativo**: https://paraiso-gelado.onrender.com/admin (após login)
 
 ### Navegação
 

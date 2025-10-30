@@ -1,4 +1,5 @@
 import os
+from functools import wraps
 from flask import Flask, render_template, request, jsonify, session
 from flask_cors import CORS
 from datetime import datetime
@@ -8,15 +9,12 @@ from collections import deque
 import heapq
 from paraiso_config import Config
 
-# Tenta carregar variáveis de ambiente
 try:
     from dotenv import load_dotenv
     load_dotenv()
     print("✓ Variáveis de ambiente carregadas do .env")
 except Exception as e:
     print(f"⚠️ Usando configurações padrão (erro ao carregar .env: {e})")
-
-# Tenta importar mysql.connector
 try:
     import mysql.connector
 except ImportError:
@@ -236,8 +234,9 @@ def admin_panel():
 
 @app.route('/')
 def index():
-    """Página de login"""
-    return render_template('login.html')
+    if session.get('logged_in'):
+        return redirect(url_for('admin_page'))
+    return redirect(url_for('login_page'))
 
 @app.route('/test-db')
 def test_db():
@@ -1112,8 +1111,6 @@ def relatorio_vendas():
             return jsonify({'error': 'Erro ao conectar ao banco'}), 500
         
         cursor = conn.cursor(dictionary=True)
-        
-        # Tenta buscar de pedidos
         try:
             cursor.execute("""
                 SELECT 
@@ -1195,6 +1192,39 @@ def admin_get_categorias():
 @app.route('/api/admin/estoque', methods=['GET'])
 def admin_get_estoque():
     return get_estoque()
+
+ACCESS_HIERARCHY = {
+    'gerente geral': 4,
+    'gerente': 3,
+    'caixa': 2,
+    'atendente': 1,
+    'entregador': 0,
+    'convidado': -1 
+}
+
+def requires_access_level(required_level_key):
+    """Decorador que verifica o nível de acesso na sessão."""
+    required_rank = ACCESS_HIERARCHY.get(required_level_key, 99)
+
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            user_level = session.get('nivel_acesso')
+            user_rank = ACCESS_HIERARCHY.get(user_level, -1)
+            
+            if not session.get('logged_in'):
+                if request.path.startswith('/api/'):
+                    return jsonify({'success': False, 'message': 'Não autorizado. Faça login.'}), 401
+                return redirect(url_for('login_page'))
+            if user_rank < required_rank:
+                print(f"🚫 Acesso negado: {user_level} tentou acessar {required_level_key}")
+                if request.path.startswith('/api/'):
+                    return jsonify({'success': False, 'message': 'Acesso negado. Nível insuficiente.'}), 403
+                return render_template('admin.html', user_level=user_level, error_message='Acesso negado. Nível insuficiente.'), 403
+                
+            return f(*args, **kwargs)
+        return decorated_function
+    return decorator
 
 # ============= INICIALIZAÇÃO =============
 
