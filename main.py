@@ -631,13 +631,15 @@ def criar_funcionario():
         
         cursor = conn.cursor()
         
+        # Verificar se CPF já existe
         cursor.execute("SELECT id FROM funcionarios WHERE cpf = %s", (dados.get('cpf'),))
         if cursor.fetchone():
             cursor.close()
             conn.close()
             return jsonify({'success': False, 'error': 'CPF já cadastrado'}), 400
         
-            cursor.execute("""
+        # Inserir novo funcionário (CORRIGIDO - indentação)
+        cursor.execute("""
             INSERT INTO funcionarios (nome, cpf, cargo, loja_id, salario, data_admissao, ativo)
             VALUES (%s, %s, %s, %s, %s, %s, 1)
         """, (
@@ -718,8 +720,9 @@ def deletar_funcionario(id):
         print(f"Erro deletar_funcionario: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
-@app.route('/api/funcionarios/<int:id>', methods=['GET'])
-def get_funcionario(id):
+@app.route('/api/funcionarios', methods=['GET'])
+def get_funcionarios():
+    """Lista todos os funcionários"""
     try:
         conn = get_db_connection()
         if not conn:
@@ -732,20 +735,17 @@ def get_funcionario(id):
                 COALESCE(l.nome, 'Sem loja') as loja_nome
             FROM funcionarios f
             LEFT JOIN lojas l ON f.loja_id = l.id
-            WHERE f.id = %s
-        """, (id,))
-        funcionario = cursor.fetchone()
+            ORDER BY f.nome
+        """)
+        funcionarios = cursor.fetchall()
         
         cursor.close()
         conn.close()
         
-        if funcionario:
-            return jsonify(funcionario)
-        else:
-            return jsonify({'error': 'Funcionário não encontrado'}), 404
-            
+        return jsonify(funcionarios)
+        
     except Exception as e:
-        print(f"❌ Erro get_funcionario: {e}")
+        print(f"❌ Erro get_funcionarios: {e}")
         return jsonify({'error': str(e)}), 500
     
 @app.route('/api/lojas', methods=['GET'])
