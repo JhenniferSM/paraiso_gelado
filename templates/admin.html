@@ -1,865 +1,4 @@
-<div class="metric-card" style="cursor: pointer;" onclick="gerarRelatorio('vendas')">
-                        <div class="metric-header">
-                            <div class="metric-icon">💰</div>
-                        </div>
-                        <div class="metric-label" style="font-size: 16px; font-weight: 600; margin: 15px 0;">Relatório de Vendas</div>
-                        <button class="btn btn-primary btn-sm">📄 Ver Relatório</button>
-                    </div>
-
-                    <div class="metric-card" style="cursor: pointer;" onclick="gerarRelatorio('produtos')">
-                        <div class="metric-header">
-                            <div class="metric-icon">🍨</div>
-                        </div>
-                        <div class="metric-label" style="font-size: 16px; font-weight: 600; margin: 15px 0;">Relatório de Produtos</div>
-                        <button class="btn btn-primary btn-sm">📄 Ver Relatório</button>
-                    </div>
-
-                    <div class="metric-card" style="cursor: pointer;" onclick="gerarRelatorio('clientes')">
-                        <div class="metric-header">
-                            <div class="metric-icon">👥</div>
-                        </div>
-                        <div class="metric-label" style="font-size: 16px; font-weight: 600; margin: 15px 0;">Relatório de Clientes</div>
-                        <button class="btn btn-primary btn-sm">📄 Ver Relatório</button>
-                    </div>
-
-                    <div class="metric-card" style="cursor: pointer;" onclick="gerarRelatorio('estoque')">
-                        <div class="metric-header">
-                            <div class="metric-icon">📦</div>
-                        </div>
-                        <div class="metric-label" style="font-size: 16px; font-weight: 600; margin: 15px 0;">Relatório de Estoque</div>
-                        <button class="btn btn-primary btn-sm">📄 Ver Relatório</button>
-                    </div>
-                </div>
-
-                <div id="relatorioContent"></div>
-            </div>
-        </div>
-    </div>
-
-    <!-- MODALS -->
-    
-    <!-- Modal Produto -->
-    <div class="modal" id="modalProduto">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 class="modal-title">Cadastrar Produto</h3>
-                <button class="close-modal" onclick="closeModal('modalProduto')">×</button>
-            </div>
-
-            <form id="formProduto" onsubmit="salvarProduto(event)">
-                <div class="form-group">
-                    <label class="form-label">Nome do Produto *</label>
-                    <input type="text" class="form-control" required name="nome">
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">Categoria *</label>
-                        <select class="form-control" required name="categoria_id" id="selectCategoria">
-                            <option value="">Carregando...</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Tamanho *</label>
-                        <select class="form-control" required name="tamanho">
-                            <option value="P">Pequeno</option>
-                            <option value="M">Médio</option>
-                            <option value="G">Grande</option>
-                            <option value="ÚNICO">Único</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Descrição</label>
-                    <textarea class="form-control" rows="3" name="descricao"></textarea>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">Preço de Venda (R$) *</label>
-                        <input type="number" step="0.01" class="form-control" required name="preco">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Custo (R$)</label>
-                        <input type="number" step="0.01" class="form-control" name="custo">
-                    </div>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">Calorias</label>
-                        <input type="number" class="form-control" name="calorias">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Status</label>
-                        <select class="form-control" name="ativo">
-                            <option value="1">Ativo</option>
-                            <option value="0">Inativo</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div style="display: flex; gap: 10px; margin-top: 20px;">
-                    <button type="submit" class="btn btn-success">💾 Salvar</button>
-                    <button type="button" class="btn btn-secondary" onclick="closeModal('modalProduto')">Cancelar</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Modal Funcionário -->
-    <div class="modal" id="modalFuncionario">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 class="modal-title">Cadastrar Funcionário</h3>
-                <button class="close-modal" onclick="closeModal('modalFuncionario')">×</button>
-            </div>
-
-            <form id="formFuncionario" onsubmit="salvarFuncionario(event)">
-                <div class="form-group">
-                    <label class="form-label">Nome Completo *</label>
-                    <input type="text" class="form-control" required name="nome">
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">CPF *</label>
-                        <input type="text" class="form-control" required name="cpf" placeholder="000.000.000-00">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Data de Admissão *</label>
-                        <input type="date" class="form-control" required name="data_admissao">
-                    </div>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">Cargo *</label>
-                        <select class="form-control" required name="cargo">
-                            <option value="">Selecione...</option>
-                            <option value="gerente">Gerente</option>
-                            <option value="atendente">Atendente</option>
-                            <option value="caixa">Caixa</option>
-                            <option value="entregador">Entregador</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Loja *</label>
-                        <select class="form-control" required name="loja_id" id="selectLojaFunc">
-                            <option value="">Carregando...</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Salário (R$) *</label>
-                    <input type="number" step="0.01" class="form-control" required name="salario">
-                </div>
-
-                <div style="display: flex; gap: 10px; margin-top: 20px;">
-                    <button type="submit" class="btn btn-success">💾 Salvar</button>
-                    <button type="button" class="btn btn-secondary" onclick="closeModal('modalFuncionario')">Cancelar</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Modal Loja -->
-    <div class="modal" id="modalLoja">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 class="modal-title">Cadastrar Loja/Franquia</h3>
-                <button class="close-modal" onclick="closeModal('modalLoja')">×</button>
-            </div>
-
-            <form id="formLoja" onsubmit="salvarLoja(event)">
-                <div class="form-group">
-                    <label class="form-label">Nome da Loja *</label>
-                    <input type="text" class="form-control" required name="nome">
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Endereço *</label>
-                    <input type="text" class="form-control" required name="endereco">
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">Cidade *</label>
-                        <input type="text" class="form-control" required name="cidade">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Estado *</label>
-                        <select class="form-control" required name="estado">
-                            <option value="GO">Goiás</option>
-                            <option value="SP">São Paulo</option>
-                            <option value="RJ">Rio de Janeiro</option>
-                            <option value="MG">Minas Gerais</option>
-                            <option value="DF">Distrito Federal</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">CEP *</label>
-                        <input type="text" class="form-control" required name="cep" placeholder="00000-000">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Telefone *</label>
-                        <input type="tel" class="form-control" required name="telefone">
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Email *</label>
-                    <input type="email" class="form-control" required name="email">
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Data de Abertura *</label>
-                    <input type="date" class="form-control" required name="data_abertura">
-                </div>
-
-                <div style="display: flex; gap: 10px; margin-top: 20px;">
-                    <button type="submit" class="btn btn-success">💾 Salvar</button>
-                    <button type="button" class="btn btn-secondary" onclick="closeModal('modalLoja')">Cancelar</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <script>
-        // ============= CONFIGURAÇÃO DA API =============
-        const API_URL = '/api';
-
-        // ============= SIDEBAR =============
-        function toggleSidebar() {
-            document.getElementById('sidebar').classList.toggle('collapsed');
-        }
-
-        // ============= NAVIGATION =============
-        function showSection(sectionId) {
-            document.querySelectorAll('.content-section').forEach(section => {
-                section.classList.remove('active');
-            });
-            document.querySelectorAll('.menu-item').forEach(item => {
-                item.classList.remove('active');
-            });
-            
-            document.getElementById(sectionId).classList.add('active');
-            event.target.closest('.menu-item').classList.add('active');
-            
-            const titles = {
-                'dashboard': 'Dashboard Gerencial',
-                'produtos': 'Gestão de Produtos',
-                'funcionarios': 'Gestão de Funcionários',
-                'lojas': 'Gestão de Lojas/Franquias',
-                'clientes': 'Gestão de Clientes',
-                'estoque': 'Controle de Estoque',
-                'relatorios': 'Relatórios'
-            };
-            document.getElementById('pageTitle').textContent = titles[sectionId];
-            
-            loadSectionData(sectionId);
-        }
-
-        // ============= MODAL =============
-        function openModal(modalId) {
-            document.getElementById(modalId).classList.add('active');
-            if (modalId === 'modalProduto') carregarCategorias();
-            if (modalId === 'modalFuncionario') carregarLojasSelect();
-        }
-
-        function closeModal(modalId) {
-            document.getElementById(modalId).classList.remove('active');
-        }
-
-        // ============= ALERTS =============
-        function showAlert(message, type = 'success') {
-            const alertDiv = document.createElement('div');
-            alertDiv.className = `alert alert-${type}`;
-            alertDiv.innerHTML = `
-                <span style="font-size: 20px;">${type === 'success' ? '✅' : type === 'danger' ? '❌' : '⚠️'}</span>
-                <span>${message}</span>
-            `;
-            alertDiv.style.position = 'fixed';
-            alertDiv.style.top = '20px';
-            alertDiv.style.right = '20px';
-            alertDiv.style.zIndex = '3000';
-            alertDiv.style.minWidth = '300px';
-            
-            document.body.appendChild(alertDiv);
-            
-            setTimeout(() => {
-                alertDiv.remove();
-            }, 3000);
-        }
-
-        // ============= DATA LOADING =============
-        function loadSectionData(section) {
-            switch(section) {
-                case 'dashboard':
-                    loadDashboard();
-                    break;
-                case 'produtos':
-                    loadProdutos();
-                    break;
-                case 'funcionarios':
-                    loadFuncionarios();
-                    break;
-                case 'lojas':
-                    loadLojas();
-                    break;
-                case 'clientes':
-                    loadClientes();
-                    break;
-                case 'estoque':
-                    loadEstoque();
-                    break;
-            }
-        }
-
-        // ============= DASHBOARD =============
-        async function loadDashboard() {
-            try {
-                const response = await fetch(`${API_URL}/dashboard`);
-                const data = await response.json();
-                
-                document.getElementById('vendasHoje').textContent = 
-                    `R$ ${parseFloat(data.vendas_hoje.receita_total || 0).toFixed(2)}`;
-                document.getElementById('pedidosHoje').textContent = 
-                    data.vendas_hoje.total_pedidos || 0;
-                document.getElementById('totalPedidos').textContent = 
-                    data.vendas_hoje.total_pedidos || 0;
-                document.getElementById('clientesAtivos').textContent = 
-                    data.clientes_ativos || 0;
-                document.getElementById('totalAlertas').textContent = 
-                    data.alertas_estoque || 0;
-                
-                const tbody = document.getElementById('performanceLojas');
-                if (data.performance_lojas && data.performance_lojas.length > 0) {
-                    tbody.innerHTML = data.performance_lojas.map(loja => `
-                        <tr>
-                            <td><strong>${loja.nome}</strong></td>
-                            <td>R$ ${parseFloat(loja.receita || 0).toFixed(2)}</td>
-                            <td>${loja.total_pedidos || 0}</td>
-                            <td>R$ ${parseFloat(loja.ticket_medio || 0).toFixed(2)}</td>
-                            <td><span class="status-badge status-active">Operando</span></td>
-                        </tr>
-                    `).join('');
-                } else {
-                    tbody.innerHTML = '<tr><td colspan="5" class="empty-state">Nenhum dado disponível</td></tr>';
-                }
-            } catch (error) {
-                console.error('Erro:', error);
-                showAlert('Erro ao carregar dashboard', 'danger');
-            }
-        }
-
-        // ============= PRODUTOS =============
-        async function loadProdutos() {
-            try {
-                const response = await fetch(`${API_URL}/produtos`);
-                const produtos = await response.json();
-                
-                const grid = document.getElementById('productGrid');
-                if (produtos && produtos.length > 0) {
-                    grid.innerHTML = produtos.map(p => {
-                        const margem = p.margem_percentual ? parseFloat(p.margem_percentual).toFixed(1) : '0.0';
-                        return `
-                            <div class="product-card" data-nome="${p.nome.toLowerCase()}">
-                                <div class="product-image">🍦</div>
-                                <div class="product-info">
-                                    <div class="product-name">${p.nome}</div>
-                                    <div class="product-price">R$ ${parseFloat(p.preco).toFixed(2)}</div>
-                                    <div style="font-size: 12px; margin: 5px 0;">
-                                        <span class="status-badge ${p.ativo ? 'status-active' : 'status-inactive'}">
-                                            ${p.ativo ? 'Ativo' : 'Inativo'}
-                                        </span>
-                                    </div>
-                                    <div style="font-size: 12px; color: #27AE60; margin-top: 5px;">
-                                        <strong>Margem: ${margem}%</strong>
-                                    </div>
-                                    <div class="product-actions">
-                                        <button class="btn btn-danger btn-sm" onclick="excluirProduto(${p.id})">🗑️ Excluir</button>
-                                    </div>
-                                </div>
-                            </div>
-                        `;
-                    }).join('');
-                } else {
-                    grid.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🍨</div><p>Nenhum produto cadastrado</p></div>';
-                }
-            } catch (error) {
-                console.error('Erro:', error);
-                showAlert('Erro ao carregar produtos', 'danger');
-            }
-        }
-
-        async function salvarProduto(event) {
-            event.preventDefault();
-            const formData = new FormData(event.target);
-            const data = Object.fromEntries(formData);
-            
-            try {
-                const response = await fetch(`${API_URL}/produtos`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(data)
-                });
-                
-                const result = await response.json();
-                if (result.success) {
-                    showAlert('Produto cadastrado com sucesso!', 'success');
-                    closeModal('modalProduto');
-                    event.target.reset();
-                    loadProdutos();
-                } else {
-                    showAlert(result.error || 'Erro ao cadastrar produto', 'danger');
-                }
-            } catch (error) {
-                console.error('Erro:', error);
-                showAlert('Erro ao cadastrar produto', 'danger');
-            }
-        }
-
-        async function excluirProduto(id) {
-            if (!confirm('Tem certeza que deseja excluir este produto?')) return;
-            
-            try {
-                const response = await fetch(`${API_URL}/produtos/${id}`, {
-                    method: 'DELETE'
-                });
-                const result = await response.json();
-                
-                if (result.success) {
-                    showAlert('Produto removido com sucesso!', 'success');
-                    loadProdutos();
-                } else {
-                    showAlert(result.error || 'Erro ao excluir produto', 'danger');
-                }
-            } catch (error) {
-                console.error('Erro:', error);
-                showAlert('Erro ao excluir produto', 'danger');
-            }
-        }
-
-        function filtrarProdutos() {
-            const search = document.getElementById('searchProduto').value.toLowerCase();
-            document.querySelectorAll('.product-card').forEach(card => {
-                const nome = card.getAttribute('data-nome');
-                card.style.display = nome.includes(search) ? 'block' : 'none';
-            });
-        }
-
-        // ============= FUNCIONÁRIOS =============
-        async function loadFuncionarios() {
-            try {
-                const response = await fetch(`${API_URL}/funcionarios`);
-                const funcionarios = await response.json();
-                
-                const tbody = document.getElementById('funcionariosTable');
-                if (funcionarios && funcionarios.length > 0) {
-                    tbody.innerHTML = funcionarios.map(f => `
-                        <tr>
-                            <td><strong>${f.nome}</strong></td>
-                            <td>${f.cpf}</td>
-                            <td>${f.cargo.charAt(0).toUpperCase() + f.cargo.slice(1)}</td>
-                            <td>${f.loja_nome || 'N/A'}</td>
-                            <td>R$ ${parseFloat(f.salario).toFixed(2)}</td>
-                            <td><span class="status-badge ${f.ativo ? 'status-active' : 'status-inactive'}">
-                                ${f.ativo ? 'Ativo' : 'Inativo'}</span></td>
-                            <td>
-                                <button class="btn btn-danger btn-sm" onclick="excluirFuncionario(${f.id})">🗑️</button>
-                            </td>
-                        </tr>
-                    `).join('');
-                } else {
-                    tbody.innerHTML = '<tr><td colspan="7" class="empty-state">Nenhum funcionário cadastrado</td></tr>';
-                }
-            } catch (error) {
-                console.error('Erro:', error);
-                showAlert('Erro ao carregar funcionários', 'danger');
-            }
-        }
-
-        async function salvarFuncionario(event) {
-            event.preventDefault();
-            const formData = new FormData(event.target);
-            const data = Object.fromEntries(formData);
-            
-            try {
-                const response = await fetch(`${API_URL}/funcionarios`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(data)
-                });
-                
-                const result = await response.json();
-                if (result.success) {
-                    showAlert('Funcionário cadastrado com sucesso!', 'success');
-                    closeModal('modalFuncionario');
-                    event.target.reset();
-                    loadFuncionarios();
-                } else {
-                    showAlert(result.error || 'Erro ao cadastrar funcionário', 'danger');
-                }
-            } catch (error) {
-                console.error('Erro:', error);
-                showAlert('Erro ao cadastrar funcionário', 'danger');
-            }
-        }
-
-        async function excluirFuncionario(id) {
-            if (!confirm('Tem certeza que deseja excluir este funcionário?')) return;
-            
-            try {
-                const response = await fetch(`${API_URL}/funcionarios/${id}`, {
-                    method: 'DELETE'
-                });
-                const result = await response.json();
-                
-                if (result.success) {
-                    showAlert('Funcionário removido com sucesso!', 'success');
-                    loadFuncionarios();
-                } else {
-                    showAlert(result.error || 'Erro ao excluir', 'danger');
-                }
-            } catch (error) {
-                showAlert('Erro ao excluir funcionário', 'danger');
-            }
-        }
-
-        // ============= LOJAS =============
-        async function loadLojas() {
-            try {
-                const response = await fetch(`${API_URL}/lojas`);
-                const lojas = await response.json();
-                
-                const grid = document.getElementById('lojasGrid');
-                if (lojas && lojas.length > 0) {
-                    grid.innerHTML = lojas.map(l => `
-                        <div class="metric-card">
-                            <div class="metric-header">
-                                <div class="metric-icon">🏪</div>
-                                <div class="metric-trend ${l.ativo ? 'trend-up' : 'trend-down'}">
-                                    ${l.ativo ? 'Ativo' : 'Inativo'}
-                                </div>
-                            </div>
-                            <div style="font-size: 18px; font-weight: 700; margin: 10px 0;">${l.nome}</div>
-                            <div style="font-size: 12px; color: #7F8C8D; margin-bottom: 10px;">${l.endereco}</div>
-                            <div style="font-size: 14px; color: var(--primary); font-weight: 600;">
-                                R$ ${parseFloat(l.receita_hoje || 0).toFixed(2)}
-                            </div>
-                            <div style="font-size: 12px; color: #7F8C8D;">
-                                ${l.total_pedidos_hoje || 0} pedidos hoje
-                            </div>
-                        </div>
-                    `).join('');
-                } else {
-                    grid.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🏪</div><p>Nenhuma loja cadastrada</p></div>';
-                }
-            } catch (error) {
-                console.error('Erro:', error);
-                showAlert('Erro ao carregar lojas', 'danger');
-            }
-        }
-
-        async function salvarLoja(event) {
-            event.preventDefault();
-            const formData = new FormData(event.target);
-            const data = Object.fromEntries(formData);
-            
-            try {
-                const response = await fetch(`${API_URL}/lojas`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(data)
-                });
-                
-                const result = await response.json();
-                if (result.success) {
-                    showAlert('Loja cadastrada com sucesso!', 'success');
-                    closeModal('modalLoja');
-                    event.target.reset();
-                    loadLojas();
-                    carregarLojasSelect(); // Atualizar select de lojas
-                } else {
-                    showAlert(result.error || 'Erro ao cadastrar loja', 'danger');
-                }
-            } catch (error) {
-                console.error('Erro:', error);
-                showAlert('Erro ao cadastrar loja', 'danger');
-            }
-        }
-
-        // ============= CLIENTES =============
-        async function loadClientes() {
-            try {
-                const response = await fetch(`${API_URL}/clientes`);
-                const clientes = await response.json();
-                
-                const tbody = document.getElementById('clientesTable');
-                if (clientes && clientes.length > 0) {
-                    tbody.innerHTML = clientes.map(c => `
-                        <tr data-nome="${c.nome.toLowerCase()}">
-                            <td><strong>${c.nome}</strong></td>
-                            <td>${c.email}</td>
-                            <td><strong style="color: var(--primary);">${c.pontos_fidelidade}</strong></td>
-                            <td>R$ ${parseFloat(c.total_gasto || 0).toFixed(2)}</td>
-                            <td><span class="status-badge status-${c.nivel.toLowerCase()}">${c.nivel}</span></td>
-                            <td>${c.total_pedidos || 0}</td>
-                        </tr>
-                    `).join('');
-                } else {
-                    tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Nenhum cliente cadastrado</td></tr>';
-                }
-            } catch (error) {
-                console.error('Erro:', error);
-                showAlert('Erro ao carregar clientes', 'danger');
-            }
-        }
-
-        function filtrarClientes() {
-            const search = document.getElementById('searchCliente').value.toLowerCase();
-            document.querySelectorAll('#clientesTable tr[data-nome]').forEach(row => {
-                const nome = row.getAttribute('data-nome');
-                row.style.display = nome.includes(search) ? '' : 'none';
-            });
-        }
-
-        function exportarClientes() {
-            showAlert('Gerando relatório de clientes...', 'info');
-            // Implementar export se necessário
-        }
-
-        // ============= ESTOQUE =============
-        async function loadEstoque() {
-            try {
-                const response = await fetch(`${API_URL}/estoque`);
-                const estoque = await response.json();
-                
-                const tbody = document.getElementById('estoqueTable');
-                if (estoque && estoque.length > 0) {
-                    tbody.innerHTML = estoque.map(e => {
-                        const statusClass = e.status_alerta === 'CRÍTICO' || e.status_alerta === 'MUITO BAIXO' ? 'critico' : 
-                                           e.status_alerta === 'BAIXO' ? 'baixo' : 'ok';
-                        return `
-                            <tr>
-                                <td><strong>${e.ingrediente_nome}</strong></td>
-                                <td>${e.loja_nome}</td>
-                                <td>${parseFloat(e.quantidade_atual).toFixed(1)} ${e.unidade_medida}</td>
-                                <td>${parseFloat(e.estoque_minimo).toFixed(1)} ${e.unidade_medida}</td>
-                                <td><span class="status-badge status-${statusClass}">${e.status_alerta}</span></td>
-                                <td>
-                                    <button class="btn btn-success btn-sm" onclick="reporEstoque(${e.id})">➕ Repor</button>
-                                </td>
-                            </tr>
-                        `;
-                    }).join('');
-                } else {
-                    tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Nenhum item no estoque</td></tr>';
-                }
-            } catch (error) {
-                console.error('Erro:', error);
-                showAlert('Erro ao carregar estoque', 'danger');
-            }
-        }
-
-        async function reporEstoque(id) {
-            const qtd = prompt('Digite a quantidade a repor:');
-            if (qtd !== null && qtd > 0) {
-                try {
-                    const response = await fetch(`${API_URL}/estoque/${id}/repor`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ quantidade: parseFloat(qtd) })
-                    });
-                    const result = await response.json();
-                    
-                    if (result.success) {
-                        showAlert(result.message, 'success');
-                        loadEstoque();
-                    } else {
-                        showAlert(result.error || 'Erro ao repor estoque', 'danger');
-                    }
-                } catch (error) {
-                    showAlert('Erro ao repor estoque', 'danger');
-                }
-            }
-        }
-
-        // ============= RELATÓRIOS =============
-        async function gerarRelatorio(tipo) {
-            const content = document.getElementById('relatorioContent');
-            content.innerHTML = '<div class="loading"><div class="spinner"></div><p>Gerando relatório...</p></div>';
-            
-            try {
-                let html = '';
-                
-                if (tipo === 'vendas') {
-                    const response = await fetch(`${API_URL}/relatorio/vendas?periodo=30`);
-                    const dados = await response.json();
-                    
-                    html = '<div class="content-card" style="margin-top: 20px;"><h3>Relatório de Vendas - Últimos 30 dias</h3>';
-                    html += '<table class="data-table"><thead><tr><th>Data</th><th>Pedidos</th><th>Receita</th><th>Ticket Médio</th></tr></thead><tbody>';
-                    
-                    if (dados && dados.length > 0) {
-                        dados.forEach(d => {
-                            html += `<tr>
-                                <td>${d.data}</td>
-                                <td>${d.total_pedidos}</td>
-                                <td>R$ ${parseFloat(d.receita).toFixed(2)}</td>
-                                <td>R$ ${parseFloat(d.ticket_medio).toFixed(2)}</td>
-                            </tr>`;
-                        });
-                    } else {
-                        html += '<tr><td colspan="4" class="empty-state">Nenhum dado disponível</td></tr>';
-                    }
-                    
-                    html += '</tbody></table></div>';
-                } else if (tipo === 'produtos') {
-                    const response = await fetch(`${API_URL}/produtos`);
-                    const produtos = await response.json();
-                    
-                    html = '<div class="content-card" style="margin-top: 20px;"><h3>Relatório de Produtos</h3>';
-                    html += '<table class="data-table"><thead><tr><th>Nome</th><th>Categoria</th><th>Preço</th><th>Margem</th><th>Status</th></tr></thead><tbody>';
-                    
-                    if (produtos && produtos.length > 0) {
-                        produtos.forEach(p => {
-                            html += `<tr>
-                                <td>${p.nome}</td>
-                                <td>${p.categoria_nome}</td>
-                                <td>R$ ${parseFloat(p.preco).toFixed(2)}</td>
-                                <td>${parseFloat(p.margem_percentual || 0).toFixed(1)}%</td>
-                                <td><span class="status-badge ${p.ativo ? 'status-active' : 'status-inactive'}">
-                                    ${p.ativo ? 'Ativo' : 'Inativo'}</span></td>
-                            </tr>`;
-                        });
-                    } else {
-                        html += '<tr><td colspan="5" class="empty-state">Nenhum produto cadastrado</td></tr>';
-                    }
-                    
-                    html += '</tbody></table></div>';
-                } else if (tipo === 'clientes') {
-                    const response = await fetch(`${API_URL}/clientes`);
-                    const clientes = await response.json();
-                    
-                    html = '<div class="content-card" style="margin-top: 20px;"><h3>Relatório de Clientes</h3>';
-                    html += '<table class="data-table"><thead><tr><th>Nome</th><th>Email</th><th>Pontos</th><th>Total Gasto</th><th>Nível</th></tr></thead><tbody>';
-                    
-                    if (clientes && clientes.length > 0) {
-                        clientes.forEach(c => {
-                            html += `<tr>
-                                <td>${c.nome}</td>
-                                <td>${c.email}</td>
-                                <td>${c.pontos_fidelidade}</td>
-                                <td>R$ ${parseFloat(c.total_gasto || 0).toFixed(2)}</td>
-                                <td><span class="status-badge status-${c.nivel.toLowerCase()}">${c.nivel}</span></td>
-                            </tr>`;
-                        });
-                    } else {
-                        html += '<tr><td colspan="5" class="empty-state">Nenhum cliente cadastrado</td></tr>';
-                    }
-                    
-                    html += '</tbody></table></div>';
-                } else if (tipo === 'estoque') {
-                    const response = await fetch(`${API_URL}/estoque`);
-                    const estoque = await response.json();
-                    
-                    html = '<div class="content-card" style="margin-top: 20px;"><h3>Relatório de Estoque</h3>';
-                    html += '<table class="data-table"><thead><tr><th>Ingrediente</th><th>Loja</th><th>Qtd Atual</th><th>Status</th></tr></thead><tbody>';
-                    
-                    if (estoque && estoque.length > 0) {
-                        estoque.forEach(e => {
-                            const statusClass = e.status_alerta === 'CRÍTICO' ? 'critico' : 
-                                               e.status_alerta === 'BAIXO' ? 'baixo' : 'ok';
-                            html += `<tr>
-                                <td>${e.ingrediente_nome}</td>
-                                <td>${e.loja_nome}</td>
-                                <td>${parseFloat(e.quantidade_atual).toFixed(1)} ${e.unidade_medida}</td>
-                                <td><span class="status-badge status-${statusClass}">${e.status_alerta}</span></td>
-                            </tr>`;
-                        });
-                    } else {
-                        html += '<tr><td colspan="4" class="empty-state">Nenhum item no estoque</td></tr>';
-                    }
-                    
-                    html += '</tbody></table></div>';
-                }
-                
-                content.innerHTML = html;
-                showAlert(`Relatório de ${tipo} gerado com sucesso!`, 'success');
-            } catch (error) {
-                console.error('Erro:', error);
-                content.innerHTML = '<div class="alert alert-danger">Erro ao gerar relatório</div>';
-            }
-        }
-
-        // ============= AUXILIARES =============
-        async function carregarCategorias() {
-            try {
-                const response = await fetch(`${API_URL}/categorias`);
-                const categorias = await response.json();
-                
-                const select = document.getElementById('selectCategoria');
-                if (categorias && categorias.length > 0) {
-                    select.innerHTML = '<option value="">Selecione...</option>' +
-                        categorias.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
-                } else {
-                    select.innerHTML = '<option value="">Nenhuma categoria disponível</option>';
-                }
-            } catch (error) {
-                console.error('Erro:', error);
-            }
-        }
-
-        async function carregarLojasSelect() {
-            try {
-                const response = await fetch(`${API_URL}/lojas`);
-                const lojas = await response.json();
-                
-                const select = document.getElementById('selectLojaFunc');
-                if (lojas && lojas.length > 0) {
-                    select.innerHTML = '<option value="">Selecione...</option>' +
-                        lojas.map(l => `<option value="${l.id}">${l.nome}</option>`).join('');
-                } else {
-                    select.innerHTML = '<option value="">Nenhuma loja disponível</option>';
-                }
-            } catch (error) {
-                console.error('Erro:', error);
-            }
-        }
-
-        // ============= CLOSE MODAL ON OUTSIDE CLICK =============
-        document.querySelectorAll('.modal').forEach(modal => {
-            modal.addEventListener('click', function(e) {
-                if (e.target === modal) {
-                    closeModal(modal.id);
-                }
-            });
-        });
-
-        // ============= KEYBOARD SHORTCUTS =============
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                document.querySelectorAll('.modal.active').forEach(modal => {
-                    closeModal(modal.id);
-                });
-            }
-        });
-
-        // ============= INITIALIZATION =============
-        window.addEventListener('DOMContentLoaded', function() {
-            loadDashboard();
-            console.log('🍦 Painel Administrativo Paraíso Gelado - Carregado!');
-            showAlert('Bem-vindo ao Painel Administrativo!', 'success');
-        });
-    </script>
-</body>
-</html><!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
@@ -882,57 +21,44 @@
             --dark: #2C3E50;
             --light: #ECF0F1;
             --white: #FFFFFF;
-            --sidebar-width: 280px;
-            --sidebar-collapsed: 70px;
         }
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
-            overflow-x: hidden;
         }
 
-        /* SIDEBAR */
         .sidebar {
             position: fixed;
             left: 0;
             top: 0;
             height: 100vh;
-            width: var(--sidebar-width);
+            width: 280px;
             background: linear-gradient(180deg, #2C3E50 0%, #1a252f 100%);
-            transition: all 0.3s ease;
             z-index: 1000;
             box-shadow: 4px 0 20px rgba(0,0,0,0.3);
-        }
-
-        .sidebar.collapsed {
-            width: var(--sidebar-collapsed);
+            overflow-y: auto;
         }
 
         .sidebar-header {
             padding: 25px 20px;
             background: rgba(255,107,157,0.1);
             border-bottom: 2px solid rgba(255,107,157,0.3);
-            display: flex;
-            align-items: center;
-            gap: 15px;
         }
 
         .sidebar-logo {
             font-size: 32px;
-            min-width: 32px;
+            color: white;
+            text-align: center;
         }
 
         .sidebar-title {
             color: var(--white);
             font-size: 20px;
             font-weight: 700;
-            white-space: nowrap;
-        }
-
-        .sidebar.collapsed .sidebar-title {
-            display: none;
+            text-align: center;
+            margin-top: 10px;
         }
 
         .sidebar-menu {
@@ -966,49 +92,12 @@
         .menu-icon {
             font-size: 24px;
             min-width: 24px;
-            text-align: center;
         }
 
-        .menu-text {
-            white-space: nowrap;
-        }
-
-        .sidebar.collapsed .menu-text {
-            display: none;
-        }
-
-        .toggle-sidebar {
-            position: absolute;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: var(--primary);
-            color: white;
-            border: none;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            cursor: pointer;
-            font-size: 20px;
-            transition: all 0.3s;
-            box-shadow: 0 4px 15px rgba(255,107,157,0.3);
-        }
-
-        .toggle-sidebar:hover {
-            background: var(--primary-dark);
-            transform: translateX(-50%) scale(1.1);
-        }
-
-        /* MAIN CONTENT */
         .main-content {
-            margin-left: var(--sidebar-width);
+            margin-left: 280px;
             padding: 30px;
-            transition: margin-left 0.3s ease;
             min-height: 100vh;
-        }
-
-        .sidebar.collapsed ~ .main-content {
-            margin-left: var(--sidebar-collapsed);
         }
 
         .top-bar {
@@ -1028,26 +117,6 @@
             font-weight: 700;
         }
 
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .user-avatar {
-            width: 45px;
-            height: 45px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: 700;
-            font-size: 18px;
-        }
-
-        /* DASHBOARD CARDS */
         .dashboard-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -1069,44 +138,9 @@
             transform: translateY(-5px);
         }
 
-        .metric-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            right: 0;
-            width: 100px;
-            height: 100px;
-            background: linear-gradient(135deg, rgba(255,107,157,0.1), rgba(74,144,226,0.1));
-            border-radius: 50%;
-            transform: translate(30px, -30px);
-        }
-
-        .metric-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-
         .metric-icon {
             font-size: 36px;
-        }
-
-        .metric-trend {
-            padding: 5px 10px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-        }
-
-        .trend-up {
-            background: #D4EDDA;
-            color: #155724;
-        }
-
-        .trend-down {
-            background: #F8D7DA;
-            color: #721C24;
+            margin-bottom: 10px;
         }
 
         .metric-value {
@@ -1119,21 +153,6 @@
         .metric-label {
             color: #7F8C8D;
             font-size: 14px;
-        }
-
-        /* CONTENT SECTIONS */
-        .content-section {
-            display: none;
-        }
-
-        .content-section.active {
-            display: block;
-            animation: fadeIn 0.3s;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
         }
 
         .content-card {
@@ -1159,7 +178,6 @@
             color: var(--dark);
         }
 
-        /* BUTTONS */
         .btn {
             padding: 12px 24px;
             border: none;
@@ -1168,9 +186,9 @@
             font-size: 14px;
             font-weight: 600;
             transition: all 0.3s;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
+            display: inline-block;
+            text-decoration: none;
+            text-align: center;
         }
 
         .btn-primary {
@@ -1204,11 +222,10 @@
         }
 
         .btn-sm {
-            padding: 6px 12px;
+            padding: 8px 16px;
             font-size: 12px;
         }
 
-        /* TABLES */
         .data-table {
             width: 100%;
             border-collapse: collapse;
@@ -1232,15 +249,10 @@
             border-bottom: 1px solid var(--light);
         }
 
-        .data-table tbody tr {
-            transition: background 0.2s;
-        }
-
         .data-table tbody tr:hover {
             background: #F8F9FA;
         }
 
-        /* STATUS BADGES */
         .status-badge {
             padding: 6px 12px;
             border-radius: 20px;
@@ -1289,7 +301,6 @@
             color: var(--dark);
         }
 
-        /* MODAL */
         .modal {
             display: none;
             position: fixed;
@@ -1299,13 +310,12 @@
             height: 100%;
             background: rgba(0,0,0,0.7);
             z-index: 2000;
-            animation: fadeIn 0.3s;
+            justify-content: center;
+            align-items: center;
         }
 
         .modal.active {
             display: flex;
-            justify-content: center;
-            align-items: center;
         }
 
         .modal-content {
@@ -1316,7 +326,6 @@
             width: 90%;
             max-height: 90vh;
             overflow-y: auto;
-            position: relative;
         }
 
         .modal-header {
@@ -1347,7 +356,6 @@
             color: var(--danger);
         }
 
-        /* FORMS */
         .form-group {
             margin-bottom: 20px;
         }
@@ -1380,84 +388,6 @@
             gap: 15px;
         }
 
-        /* SEARCH BAR */
-        .search-bar {
-            position: relative;
-            margin-bottom: 20px;
-        }
-
-        .search-input {
-            width: 100%;
-            padding: 12px 45px 12px 15px;
-            border: 2px solid var(--light);
-            border-radius: 25px;
-            font-size: 14px;
-        }
-
-        .search-icon {
-            position: absolute;
-            right: 15px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #95a5a6;
-        }
-
-        /* LOADING */
-        .loading {
-            text-align: center;
-            padding: 40px;
-        }
-
-        .spinner {
-            border: 4px solid var(--light);
-            border-top: 4px solid var(--primary);
-            border-radius: 50%;
-            width: 50px;
-            height: 50px;
-            animation: spin 1s linear infinite;
-            margin: 20px auto;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        /* ALERTS */
-        .alert {
-            padding: 15px 20px;
-            border-radius: 10px;
-            margin: 15px 0;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .alert-success {
-            background: #D4EDDA;
-            color: #155724;
-            border-left: 4px solid var(--success);
-        }
-
-        .alert-danger {
-            background: #F8D7DA;
-            color: #721C24;
-            border-left: 4px solid var(--danger);
-        }
-
-        .alert-warning {
-            background: #FFF3CD;
-            color: #856404;
-            border-left: 4px solid var(--warning);
-        }
-
-        .alert-info {
-            background: #D1ECF1;
-            color: #0C5460;
-            border-left: 4px solid var(--secondary);
-        }
-
-        /* PRODUCT GRID */
         .product-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
@@ -1471,6 +401,7 @@
             overflow: hidden;
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
             transition: transform 0.3s;
+            cursor: pointer;
         }
 
         .product-card:hover {
@@ -1510,27 +441,70 @@
             margin-top: 12px;
         }
 
-        /* RESPONSIVE */
-        @media (max-width: 768px) {
-            .sidebar {
-                transform: translateX(-100%);
-            }
+        .search-bar {
+            position: relative;
+            margin-bottom: 20px;
+        }
 
-            .sidebar.collapsed {
-                transform: translateX(0);
-            }
+        .search-input {
+            width: 100%;
+            padding: 12px 45px 12px 15px;
+            border: 2px solid var(--light);
+            border-radius: 25px;
+            font-size: 14px;
+        }
 
-            .main-content {
-                margin-left: 0;
-            }
+        .alert {
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin: 15px 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
 
-            .dashboard-grid {
-                grid-template-columns: 1fr;
-            }
+        .alert-success {
+            background: #D4EDDA;
+            color: #155724;
+            border-left: 4px solid var(--success);
+        }
 
-            .form-row {
-                grid-template-columns: 1fr;
-            }
+        .alert-danger {
+            background: #F8D7DA;
+            color: #721C24;
+            border-left: 4px solid var(--danger);
+        }
+
+        .alert-warning {
+            background: #FFF3CD;
+            color: #856404;
+            border-left: 4px solid var(--warning);
+        }
+
+        .alert-info {
+            background: #D1ECF1;
+            color: #0C5460;
+            border-left: 4px solid var(--secondary);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+        }
+
+        .spinner {
+            border: 4px solid var(--light);
+            border-top: 4px solid var(--primary);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
 
         .empty-state {
@@ -1544,48 +518,96 @@
             margin-bottom: 20px;
             opacity: 0.5;
         }
+
+        .content-section {
+            display: none;
+        }
+
+        .content-section.active {
+            display: block;
+        }
+
+        .ficha-tecnica {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+
+        .ficha-tecnica-title {
+            font-weight: 600;
+            color: var(--dark);
+            margin-bottom: 10px;
+        }
+
+        .ficha-tecnica-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .ficha-tecnica-list li {
+            padding: 5px 0;
+            color: #666;
+            font-size: 13px;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 70px;
+            }
+
+            .main-content {
+                margin-left: 70px;
+            }
+
+            .sidebar-title, .menu-text {
+                display: none;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 </head>
 <body>
     <!-- SIDEBAR -->
-    <div class="sidebar" id="sidebar">
+    <div class="sidebar">
         <div class="sidebar-header">
             <div class="sidebar-logo">🍦</div>
             <div class="sidebar-title">Paraíso Gelado</div>
         </div>
 
         <nav class="sidebar-menu">
-            <a class="menu-item active" onclick="showSection('dashboard')">
+            <a class="menu-item active" href="#dashboard" onclick="showSection('dashboard'); return false;">
                 <span class="menu-icon">📊</span>
                 <span class="menu-text">Dashboard</span>
             </a>
-            <a class="menu-item" onclick="showSection('produtos')">
+            <a class="menu-item" href="#produtos" onclick="showSection('produtos'); return false;">
                 <span class="menu-icon">🍨</span>
                 <span class="menu-text">Produtos</span>
             </a>
-            <a class="menu-item" onclick="showSection('funcionarios')">
+            <a class="menu-item" href="#funcionarios" onclick="showSection('funcionarios'); return false;">
                 <span class="menu-icon">👥</span>
                 <span class="menu-text">Funcionários</span>
             </a>
-            <a class="menu-item" onclick="showSection('lojas')">
+            <a class="menu-item" href="#lojas" onclick="showSection('lojas'); return false;">
                 <span class="menu-icon">🏪</span>
                 <span class="menu-text">Lojas/Franquias</span>
             </a>
-            <a class="menu-item" onclick="showSection('clientes')">
+            <a class="menu-item" href="#clientes" onclick="showSection('clientes'); return false;">
                 <span class="menu-icon">👤</span>
                 <span class="menu-text">Clientes</span>
             </a>
-            <a class="menu-item" onclick="showSection('estoque')">
+            <a class="menu-item" href="#estoque" onclick="showSection('estoque'); return false;">
                 <span class="menu-icon">📦</span>
                 <span class="menu-text">Estoque</span>
             </a>
-            <a class="menu-item" onclick="showSection('relatorios')">
+            <a class="menu-item" href="#relatorios" onclick="showSection('relatorios'); return false;">
                 <span class="menu-icon">📈</span>
                 <span class="menu-text">Relatórios</span>
             </a>
         </nav>
-
-        <button class="toggle-sidebar" onclick="toggleSidebar()">☰</button>
     </div>
 
     <!-- MAIN CONTENT -->
@@ -1593,243 +615,1366 @@
         <!-- TOP BAR -->
         <div class="top-bar">
             <h1 class="page-title" id="pageTitle">Dashboard Gerencial</h1>
-            <div class="user-info">
-                <div>
-                    <div style="font-weight: 600; color: var(--dark);">Admin</div>
-                    <div style="font-size: 12px; color: #7F8C8D;">Gerente Geral</div>
-                </div>
-                <div class="user-avatar">AG</div>
+            <div>
+                <span style="font-weight: 600; color: var(--dark);">Admin</span>
             </div>
         </div>
 
         <!-- DASHBOARD SECTION -->
         <div class="content-section active" id="dashboard">
-            <div class="dashboard-grid">
-                <div class="metric-card">
-                    <div class="metric-header">
-                        <div class="metric-icon">💰</div>
-                        <div class="metric-trend trend-up" id="trendVendas">↑ 0%</div>
-                    </div>
-                    <div class="metric-value" id="vendasHoje">R$ 0,00</div>
-                    <div class="metric-label">Vendas Hoje (<span id="pedidosHoje">0</span> pedidos)</div>
-                </div>
-
-                <div class="metric-card">
-                    <div class="metric-header">
-                        <div class="metric-icon">📦</div>
-                        <div class="metric-trend trend-up">↑ 0%</div>
-                    </div>
-                    <div class="metric-value" id="totalPedidos">0</div>
-                    <div class="metric-label">Total de Pedidos</div>
-                </div>
-
-                <div class="metric-card">
-                    <div class="metric-header">
-                        <div class="metric-icon">👥</div>
-                        <div class="metric-trend trend-up">↑ 0%</div>
-                    </div>
-                    <div class="metric-value" id="clientesAtivos">0</div>
-                    <div class="metric-label">Clientes Ativos</div>
-                </div>
-
-                <div class="metric-card">
-                    <div class="metric-header">
-                        <div class="metric-icon">⚠️</div>
-                        <div class="metric-trend" id="trendAlertas">0</div>
-                    </div>
-                    <div class="metric-value" id="totalAlertas">0</div>
-                    <div class="metric-label">Alertas de Estoque</div>
-                </div>
-            </div>
-
-            <div class="content-card">
-                <div class="card-header">
-                    <h2 class="card-title">Performance por Loja</h2>
-                </div>
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>Loja</th>
-                            <th>Vendas Hoje</th>
-                            <th>Pedidos</th>
-                            <th>Ticket Médio</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody id="performanceLojas">
-                        <tr>
-                            <td colspan="5">
-                                <div class="loading">
-                                    <div class="spinner"></div>
-                                    <p>Carregando dados...</p>
-                                </div>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+            <div id="dashboardContent"></div>
         </div>
 
         <!-- PRODUTOS SECTION -->
         <div class="content-section" id="produtos">
-            <div class="content-card">
-                <div class="card-header">
-                    <h2 class="card-title">Gestão de Produtos</h2>
-                    <button class="btn btn-primary" onclick="openModal('modalProduto')">
-                        ➕ Novo Produto
-                    </button>
-                </div>
-
-                <div class="search-bar">
-                    <input type="text" class="search-input" placeholder="Buscar produtos..." id="searchProduto" onkeyup="filtrarProdutos()">
-                    <span class="search-icon">🔍</span>
-                </div>
-
-                <div class="product-grid" id="productGrid">
-                    <div class="loading">
-                        <div class="spinner"></div>
-                        <p>Carregando produtos...</p>
-                    </div>
-                </div>
-            </div>
+            <div id="produtosContent"></div>
         </div>
 
         <!-- FUNCIONÁRIOS SECTION -->
         <div class="content-section" id="funcionarios">
-            <div class="content-card">
-                <div class="card-header">
-                    <h2 class="card-title">Gestão de Funcionários</h2>
-                    <button class="btn btn-primary" onclick="openModal('modalFuncionario')">
-                        ➕ Novo Funcionário
-                    </button>
-                </div>
-
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>Nome</th>
-                            <th>CPF</th>
-                            <th>Cargo</th>
-                            <th>Loja</th>
-                            <th>Salário</th>
-                            <th>Status</th>
-                            <th>Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody id="funcionariosTable">
-                        <tr>
-                            <td colspan="7">
-                                <div class="loading">
-                                    <div class="spinner"></div>
-                                    <p>Carregando funcionários...</p>
-                                </div>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+            <div id="funcionariosContent"></div>
         </div>
 
         <!-- LOJAS SECTION -->
         <div class="content-section" id="lojas">
-            <div class="content-card">
-                <div class="card-header">
-                    <h2 class="card-title">Gestão de Lojas/Franquias</h2>
-                    <button class="btn btn-primary" onclick="openModal('modalLoja')">
-                        ➕ Nova Loja
-                    </button>
-                </div>
-
-                <div class="dashboard-grid" id="lojasGrid">
-                    <div class="loading">
-                        <div class="spinner"></div>
-                        <p>Carregando lojas...</p>
-                    </div>
-                </div>
-            </div>
+            <div id="lojasContent"></div>
         </div>
 
         <!-- CLIENTES SECTION -->
         <div class="content-section" id="clientes">
-            <div class="content-card">
-                <div class="card-header">
-                    <h2 class="card-title">Gestão de Clientes</h2>
-                    <button class="btn btn-success" onclick="exportarClientes()">
-                        📊 Exportar Relatório
-                    </button>
-                </div>
-
-                <div class="search-bar">
-                    <input type="text" class="search-input" placeholder="Buscar clientes..." id="searchCliente" onkeyup="filtrarClientes()">
-                    <span class="search-icon">🔍</span>
-                </div>
-
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>Nome</th>
-                            <th>Email</th>
-                            <th>Pontos</th>
-                            <th>Total Gasto</th>
-                            <th>Nível</th>
-                            <th>Pedidos</th>
-                        </tr>
-                    </thead>
-                    <tbody id="clientesTable">
-                        <tr>
-                            <td colspan="6">
-                                <div class="loading">
-                                    <div class="spinner"></div>
-                                    <p>Carregando clientes...</p>
-                                </div>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+            <div id="clientesContent"></div>
         </div>
 
         <!-- ESTOQUE SECTION -->
         <div class="content-section" id="estoque">
-            <div class="content-card">
-                <div class="card-header">
-                    <h2 class="card-title">Controle de Estoque</h2>
-                    <button class="btn btn-warning" onclick="loadEstoque()">
-                        🔄 Atualizar
-                    </button>
-                </div>
-
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>Ingrediente</th>
-                            <th>Loja</th>
-                            <th>Qtd Atual</th>
-                            <th>Qtd Mínima</th>
-                            <th>Status</th>
-                            <th>Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody id="estoqueTable">
-                        <tr>
-                            <td colspan="6">
-                                <div class="loading">
-                                    <div class="spinner"></div>
-                                    <p>Verificando estoque...</p>
-                                </div>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+            <div id="estoqueContent"></div>
         </div>
 
         <!-- RELATÓRIOS SECTION -->
         <div class="content-section" id="relatorios">
-            <div class="content-card">
-                <div class="card-header">
-                    <h2 class="card-title">Relatórios</h2>
-                </div>
+            <div id="relatoriosContent"></div>
+        </div>
+    </div>
 
-                <div class="dashboard-grid">
-                    <div class="metric-card" style="cursor: pointer;" onclick="gerarRelatorio('vendas')">S
+    <!-- MODAIS -->
+    <div id="modals"></div>
+
+    <script>
+        const API_URL = '/api';
+
+        // NAVEGAÇÃO
+        function showSection(section) {
+            // Ocultar todas as seções
+            document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.menu-item').forEach(i => i.classList.remove('active'));
+            
+            // Mostrar seção selecionada
+            document.getElementById(section).classList.add('active');
+            event.target.closest('.menu-item').classList.add('active');
+            
+            // Atualizar título
+            const titles = {
+                'dashboard': 'Dashboard Gerencial',
+                'produtos': 'Gestão de Produtos',
+                'funcionarios': 'Gestão de Funcionários',
+                'lojas': 'Gestão de Lojas/Franquias',
+                'clientes': 'Gestão de Clientes',
+                'estoque': 'Controle de Estoque',
+                'relatorios': 'Relatórios'
+            };
+            document.getElementById('pageTitle').textContent = titles[section];
+            
+            // Carregar dados
+            loadSectionData(section);
+        }
+
+        // CARREGAR DADOS DA SEÇÃO
+        function loadSectionData(section) {
+            switch(section) {
+                case 'dashboard':
+                    loadDashboard();
+                    break;
+                case 'produtos':
+                    loadProdutos();
+                    break;
+                case 'funcionarios':
+                    loadFuncionarios();
+                    break;
+                case 'lojas':
+                    loadLojas();
+                    break;
+                case 'clientes':
+                    loadClientes();
+                    break;
+                case 'estoque':
+                    loadEstoque();
+                    break;
+                case 'relatorios':
+                    loadRelatorios();
+                    break;
+            }
+        }
+
+        // ========== DASHBOARD ==========
+        async function loadDashboard() {
+            try {
+                const response = await fetch(`${API_URL}/dashboard`);
+                const data = await response.json();
+                
+                document.getElementById('dashboardContent').innerHTML = `
+                    <div class="dashboard-grid">
+                        <div class="metric-card">
+                            <div class="metric-icon">💰</div>
+                            <div class="metric-value">R$ ${parseFloat(data.vendas_hoje.receita_total || 0).toFixed(2)}</div>
+                            <div class="metric-label">Vendas Hoje (${data.vendas_hoje.total_pedidos} pedidos)</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-icon">📦</div>
+                            <div class="metric-value">${data.total_pedidos || 0}</div>
+                            <div class="metric-label">Total de Pedidos</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-icon">👥</div>
+                            <div class="metric-value">${data.clientes_ativos || 0}</div>
+                            <div class="metric-label">Clientes Ativos</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-icon">⚠️</div>
+                            <div class="metric-value">${data.alertas_estoque || 0}</div>
+                            <div class="metric-label">Alertas de Estoque</div>
+                        </div>
+                    </div>
+
+                    <div class="content-card">
+                        <div class="card-header">
+                            <h2 class="card-title">Performance por Loja</h2>
+                        </div>
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Loja</th>
+                                    <th>Vendas Hoje</th>
+                                    <th>Pedidos</th>
+                                    <th>Ticket Médio</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${data.performance_lojas && data.performance_lojas.length > 0 ? 
+                                    data.performance_lojas.map(loja => `
+                                        <tr>
+                                            <td><strong>${loja.nome}</strong></td>
+                                            <td>R$ ${parseFloat(loja.receita || 0).toFixed(2)}</td>
+                                            <td>${loja.total_pedidos || 0}</td>
+                                            <td>R$ ${parseFloat(loja.ticket_medio || 0).toFixed(2)}</td>
+                                            <td><span class="status-badge status-active">Operando</span></td>
+                                        </tr>
+                                    `).join('') :
+                                    '<tr><td colspan="5" class="empty-state">Nenhum dado disponível</td></tr>'
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Erro:', error);
+                document.getElementById('dashboardContent').innerHTML = '<div class="alert alert-danger">Erro ao carregar dashboard</div>';
+            }
+        }
+
+        // ========== PRODUTOS ==========
+        async function loadProdutos() {
+            try {
+                const response = await fetch(`${API_URL}/produtos`);
+                const produtos = await response.json();
+                
+                document.getElementById('produtosContent').innerHTML = `
+                    <div class="content-card">
+                        <div class="card-header">
+                            <h2 class="card-title">Gestão de Produtos</h2>
+                            <button class="btn btn-primary" onclick="abrirModalProduto()">➕ Novo Produto</button>
+                        </div>
+
+                        <div class="search-bar">
+                            <input type="text" class="search-input" placeholder="Buscar produtos..." id="searchProduto" onkeyup="filtrarProdutos()">
+                        </div>
+
+                        <div class="product-grid">
+                            ${produtos && produtos.length > 0 ? 
+                                produtos.map(p => `
+                                    <div class="product-card" data-nome="${p.nome.toLowerCase()}" onclick="editarProduto(${p.id})">
+                                        <div class="product-image">🍦</div>
+                                        <div class="product-info">
+                                            <div class="product-name">${p.nome}</div>
+                                            <div class="product-price">R$ ${parseFloat(p.preco).toFixed(2)}</div>
+                                            <div style="font-size: 12px; margin: 5px 0;">
+                                                <span class="status-badge ${p.ativo ? 'status-active' : 'status-inactive'}">
+                                                    ${p.ativo ? 'Ativo' : 'Inativo'}
+                                                </span>
+                                            </div>
+                                            <div style="font-size: 12px; color: #27AE60; margin-top: 5px;">
+                                                <strong>Margem: ${parseFloat(p.margem_percentual || 0).toFixed(1)}%</strong>
+                                            </div>
+                                            ${p.calorias ? `<div style="font-size: 12px; color: #666; margin-top: 5px;">Cal: ${p.calorias} kcal</div>` : ''}
+                                            <div class="product-actions" onclick="event.stopPropagation();">
+                                                <button class="btn btn-danger btn-sm" onclick="excluirProduto(${p.id})">🗑️ Excluir</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                `).join('') :
+                                '<div class="empty-state"><div class="empty-state-icon">🍨</div><p>Nenhum produto cadastrado</p></div>'
+                            }
+                        </div>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Erro:', error);
+                document.getElementById('produtosContent').innerHTML = '<div class="alert alert-danger">Erro ao carregar produtos</div>';
+            }
+        }
+
+        async function editarProduto(id) {
+            try {
+                const response = await fetch(`${API_URL}/produtos/${id}`);
+                const produto = await response.json();
+                
+                const categorias = await fetch(`${API_URL}/categorias`).then(r => r.json());
+                
+                document.getElementById('modals').innerHTML = `
+                    <div class="modal active" id="modalEditarProduto">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h3 class="modal-title">Editar Produto</h3>
+                                <button class="close-modal" onclick="fecharModal('modalEditarProduto')">×</button>
+                            </div>
+
+                            <form id="formEditarProduto" onsubmit="salvarEdicaoProduto(event, ${id})">
+                                <div class="form-group">
+                                    <label class="form-label">Nome do Produto *</label>
+                                    <input type="text" class="form-control" required name="nome" value="${produto.nome}">
+                                </div>
+
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label class="form-label">Status</label>
+                                        <select class="form-control" name="ativo">
+                                            <option value="1" ${loja.ativo ? 'selected' : ''}>Ativo</option>
+                                            <option value="0" ${!loja.ativo ? 'selected' : ''}>Inativo</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                                    <button type="submit" class="btn btn-success">💾 Salvar</button>
+                                    <button type="button" class="btn btn-danger" onclick="excluirLoja(${id})">🗑️ Excluir</button>
+                                    <button type="button" class="btn btn-secondary" onclick="fecharModal('modalEditarLoja')">Cancelar</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Erro:', error);
+                alert('Erro ao carregar dados da loja');
+            }
+        }
+
+        async function salvarEdicaoLoja(event, id) {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+            const data = Object.fromEntries(formData);
+            
+            try {
+                const response = await fetch(`${API_URL}/lojas/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                if (result.success) {
+                    alert('Loja atualizada com sucesso!');
+                    fecharModal('modalEditarLoja');
+                    loadLojas();
+                } else {
+                    alert(result.error || 'Erro ao atualizar loja');
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+                alert('Erro ao atualizar loja');
+            }
+        }
+
+        async function excluirLoja(id) {
+            if (!confirm('Tem certeza que deseja excluir esta loja? Esta ação não pode ser desfeita.')) return;
+            
+            try {
+                const response = await fetch(`${API_URL}/lojas/${id}`, {
+                    method: 'DELETE'
+                });
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert('Loja removida com sucesso!');
+                    fecharModal('modalEditarLoja');
+                    loadLojas();
+                } else {
+                    alert(result.error || 'Erro ao excluir loja');
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+                alert('Erro ao excluir loja');
+            }
+        }
+
+        // ========== CLIENTES ==========
+        async function loadClientes() {
+            try {
+                const response = await fetch(`${API_URL}/clientes`);
+                const clientes = await response.json();
+                
+                document.getElementById('clientesContent').innerHTML = `
+                    <div class="content-card">
+                        <div class="card-header">
+                            <h2 class="card-title">Gestão de Clientes</h2>
+                            <button class="btn btn-success" onclick="exportarClientes()">📊 Exportar Relatório</button>
+                        </div>
+
+                        <div class="search-bar">
+                            <input type="text" class="search-input" placeholder="Buscar clientes..." id="searchCliente" onkeyup="filtrarClientes()">
+                        </div>
+
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Nome</th>
+                                    <th>Email</th>
+                                    <th>Pontos</th>
+                                    <th>Total Gasto</th>
+                                    <th>Nível</th>
+                                    <th>Pedidos</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${clientes && clientes.length > 0 ? 
+                                    clientes.map(c => `
+                                        <tr data-nome="${c.nome.toLowerCase()}">
+                                            <td><strong>${c.nome}</strong></td>
+                                            <td>${c.email}</td>
+                                            <td><strong style="color: var(--primary);">${c.pontos_fidelidade || 0}</strong></td>
+                                            <td>R$ ${parseFloat(c.total_gasto || 0).toFixed(2)}</td>
+                                            <td><span class="status-badge status-${c.nivel ? c.nivel.toLowerCase() : 'regular'}">${c.nivel || 'Regular'}</span></td>
+                                            <td>${c.total_pedidos || 0}</td>
+                                        </tr>
+                                    `).join('') :
+                                    '<tr><td colspan="6" class="empty-state">Nenhum cliente cadastrado</td></tr>'
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Erro:', error);
+                document.getElementById('clientesContent').innerHTML = '<div class="alert alert-danger">Erro ao carregar clientes</div>';
+            }
+        }
+
+        function filtrarClientes() {
+            const search = document.getElementById('searchCliente').value.toLowerCase();
+            document.querySelectorAll('#clientesContent tbody tr[data-nome]').forEach(row => {
+                const nome = row.getAttribute('data-nome');
+                row.style.display = nome.includes(search) ? '' : 'none';
+            });
+        }
+
+        function exportarClientes() {
+            alert('Gerando relatório de clientes...');
+        }
+
+        // ========== ESTOQUE ==========
+        async function loadEstoque() {
+            try {
+                const response = await fetch(`${API_URL}/estoque`);
+                const estoque = await response.json();
+                
+                // Contar alertas por status
+                const criticos = estoque.filter(e => e.status_alerta === 'CRÍTICO').length;
+                const baixos = estoque.filter(e => e.status_alerta === 'BAIXO' || e.status_alerta === 'MUITO BAIXO').length;
+                const ok = estoque.filter(e => e.status_alerta === 'OK').length;
+                
+                document.getElementById('estoqueContent').innerHTML = `
+                    <div class="content-card">
+                        <div class="card-header">
+                            <h2 class="card-title">Controle de Estoque</h2>
+                            <button class="btn btn-warning" onclick="loadEstoque()">🔄 Atualizar</button>
+                        </div>
+
+                        <!-- Resumo de Alertas -->
+                        <div class="dashboard-grid" style="margin-bottom: 20px;">
+                            <div class="metric-card">
+                                <div class="metric-icon">🔴</div>
+                                <div class="metric-value">${criticos}</div>
+                                <div class="metric-label">Itens Críticos</div>
+                            </div>
+                            <div class="metric-card">
+                                <div class="metric-icon">🟡</div>
+                                <div class="metric-value">${baixos}</div>
+                                <div class="metric-label">Itens Baixos</div>
+                            </div>
+                            <div class="metric-card">
+                                <div class="metric-icon">🟢</div>
+                                <div class="metric-value">${ok}</div>
+                                <div class="metric-label">Itens OK</div>
+                            </div>
+                            <div class="metric-card">
+                                <div class="metric-icon">📦</div>
+                                <div class="metric-value">${estoque.length}</div>
+                                <div class="metric-label">Total de Itens</div>
+                            </div>
+                        </div>
+
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Ingrediente</th>
+                                    <th>Loja</th>
+                                    <th>Qtd Atual</th>
+                                    <th>Qtd Mínima</th>
+                                    <th>Status</th>
+                                    <th>Previsão</th>
+                                    <th>Fornecedor</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${estoque && estoque.length > 0 ? 
+                                    estoque.map(e => {
+                                        const statusClass = e.status_alerta === 'CRÍTICO' ? 'critico' : 
+                                                           (e.status_alerta === 'MUITO BAIXO' || e.status_alerta === 'BAIXO') ? 'baixo' : 'ok';
+                                        return `
+                                            <tr>
+                                                <td>
+                                                    <strong>${e.ingrediente_nome}</strong>
+                                                    ${e.produtos_utilizam && e.produtos_utilizam.length > 0 ? `
+                                                        <div class="ficha-tecnica">
+                                                            <div class="ficha-tecnica-title">📋 Usado em:</div>
+                                                            <ul class="ficha-tecnica-list">
+                                                                ${e.produtos_utilizam.slice(0, 3).map(p => `<li>• ${p}</li>`).join('')}
+                                                                ${e.produtos_utilizam.length > 3 ? `<li>• +${e.produtos_utilizam.length - 3} produtos</li>` : ''}
+                                                            </ul>
+                                                        </div>
+                                                    ` : ''}
+                                                </td>
+                                                <td>${e.loja_nome}</td>
+                                                <td><strong>${parseFloat(e.quantidade_atual).toFixed(1)} ${e.unidade_medida}</strong></td>
+                                                <td>${parseFloat(e.estoque_minimo).toFixed(1)} ${e.unidade_medida}</td>
+                                                <td><span class="status-badge status-${statusClass}">${e.status_alerta}</span></td>
+                                                <td style="font-size: 12px; color: ${e.status_alerta === 'CRÍTICO' ? '#E74C3C' : '#666'};">
+                                                    ${e.previsao_reposicao || 'N/A'}
+                                                </td>
+                                                <td style="font-size: 12px;">${e.fornecedor || 'N/A'}</td>
+                                                <td>
+                                                    <button class="btn btn-success btn-sm" onclick="reporEstoque(${e.id})">➕ Repor</button>
+                                                </td>
+                                            </tr>
+                                        `;
+                                    }).join('') :
+                                    '<tr><td colspan="8" class="empty-state">Nenhum item no estoque</td></tr>'
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Erro:', error);
+                document.getElementById('estoqueContent').innerHTML = '<div class="alert alert-danger">Erro ao carregar estoque</div>';
+            }
+        }
+
+        async function reporEstoque(id) {
+            const qtd = prompt('Digite a quantidade a repor:');
+            if (qtd !== null && parseFloat(qtd) > 0) {
+                try {
+                    const response = await fetch(`${API_URL}/estoque/${id}/repor`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ quantidade: parseFloat(qtd) })
+                    });
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        alert(result.message);
+                        loadEstoque();
+                    } else {
+                        alert(result.error || 'Erro ao repor estoque');
+                    }
+                } catch (error) {
+                    alert('Erro ao repor estoque');
+                }
+            }
+        }
+
+        // ========== RELATÓRIOS ==========
+        async function loadRelatorios() {
+            document.getElementById('relatoriosContent').innerHTML = `
+                <div class="content-card">
+                    <div class="card-header">
+                        <h2 class="card-title">Relatórios</h2>
+                    </div>
+
+                    <div class="dashboard-grid">
+                        <div class="metric-card" style="cursor: pointer;" onclick="gerarRelatorio('vendas')">
+                            <div class="metric-icon">💰</div>
+                            <div style="font-size: 16px; font-weight: 600; margin: 15px 0;">Relatório de Vendas</div>
+                            <button class="btn btn-primary btn-sm">📄 Ver Relatório</button>
+                        </div>
+
+                        <div class="metric-card" style="cursor: pointer;" onclick="gerarRelatorio('produtos')">
+                            <div class="metric-icon">🍨</div>
+                            <div style="font-size: 16px; font-weight: 600; margin: 15px 0;">Relatório de Produtos</div>
+                            <button class="btn btn-primary btn-sm">📄 Ver Relatório</button>
+                        </div>
+
+                        <div class="metric-card" style="cursor: pointer;" onclick="gerarRelatorio('clientes')">
+                            <div class="metric-icon">👥</div>
+                            <div style="font-size: 16px; font-weight: 600; margin: 15px 0;">Relatório de Clientes</div>
+                            <button class="btn btn-primary btn-sm">📄 Ver Relatório</button>
+                        </div>
+
+                        <div class="metric-card" style="cursor: pointer;" onclick="gerarRelatorio('estoque')">
+                            <div class="metric-icon">📦</div>
+                            <div style="font-size: 16px; font-weight: 600; margin: 15px 0;">Relatório de Estoque</div>
+                            <button class="btn btn-primary btn-sm">📄 Ver Relatório</button>
+                        </div>
+                    </div>
+
+                    <div id="relatorioContent"></div>
+                </div>
+            `;
+        }
+
+        async function gerarRelatorio(tipo) {
+            const content = document.querySelector('#relatorioContent');
+            content.innerHTML = '<div class="loading"><div class="spinner"></div><p>Gerando relatório...</p></div>';
+            
+            try {
+                let html = '';
+                
+                if (tipo === 'vendas') {
+                    const response = await fetch(`${API_URL}/relatorio/vendas?periodo=30`);
+                    const dados = await response.json();
+                    
+                    html = '<div class="content-card" style="margin-top: 20px;"><h3>Relatório de Vendas - Últimos 30 dias</h3>';
+                    html += '<table class="data-table"><thead><tr><th>Data</th><th>Pedidos</th><th>Receita</th><th>Ticket Médio</th></tr></thead><tbody>';
+                    
+                    if (dados && dados.length > 0) {
+                        dados.forEach(d => {
+                            html += `<tr>
+                                <td>${d.data}</td>
+                                <td>${d.total_pedidos}</td>
+                                <td>R$ ${parseFloat(d.receita).toFixed(2)}</td>
+                                <td>R$ ${parseFloat(d.ticket_medio).toFixed(2)}</td>
+                            </tr>`;
+                        });
+                    } else {
+                        html += '<tr><td colspan="4" class="empty-state">Nenhum dado disponível</td></tr>';
+                    }
+                    
+                    html += '</tbody></table></div>';
+                } else if (tipo === 'produtos') {
+                    const response = await fetch(`${API_URL}/produtos`);
+                    const produtos = await response.json();
+                    
+                    html = '<div class="content-card" style="margin-top: 20px;"><h3>Relatório de Produtos</h3>';
+                    html += '<table class="data-table"><thead><tr><th>Nome</th><th>Categoria</th><th>Preço</th><th>Custo</th><th>Margem</th><th>Status</th></tr></thead><tbody>';
+                    
+                    if (produtos && produtos.length > 0) {
+                        produtos.forEach(p => {
+                            html += `<tr>
+                                <td>${p.nome}</td>
+                                <td>${p.categoria_nome || 'N/A'}</td>
+                                <td>R$ ${parseFloat(p.preco).toFixed(2)}</td>
+                                <td>R$ ${parseFloat(p.custo || 0).toFixed(2)}</td>
+                                <td><strong style="color: ${parseFloat(p.margem_percentual || 0) > 50 ? '#27AE60' : '#E74C3C'};">${parseFloat(p.margem_percentual || 0).toFixed(1)}%</strong></td>
+                                <td><span class="status-badge ${p.ativo ? 'status-active' : 'status-inactive'}">
+                                    ${p.ativo ? 'Ativo' : 'Inativo'}</span></td>
+                            </tr>`;
+                        });
+                    } else {
+                        html += '<tr><td colspan="6" class="empty-state">Nenhum produto cadastrado</td></tr>';
+                    }
+                    
+                    html += '</tbody></table></div>';
+                } else if (tipo === 'clientes') {
+                    const response = await fetch(`${API_URL}/clientes`);
+                    const clientes = await response.json();
+                    
+                    html = '<div class="content-card" style="margin-top: 20px;"><h3>Relatório de Clientes</h3>';
+                    html += '<table class="data-table"><thead><tr><th>Nome</th><th>Email</th><th>Pontos</th><th>Total Gasto</th><th>Nível</th><th>Pedidos</th></tr></thead><tbody>';
+                    
+                    if (clientes && clientes.length > 0) {
+                        clientes.forEach(c => {
+                            html += `<tr>
+                                <td>${c.nome}</td>
+                                <td>${c.email}</td>
+                                <td>${c.pontos_fidelidade || 0}</td>
+                                <td>R$ ${parseFloat(c.total_gasto || 0).toFixed(2)}</td>
+                                <td><span class="status-badge status-${c.nivel ? c.nivel.toLowerCase() : 'regular'}">${c.nivel || 'Regular'}</span></td>
+                                <td>${c.total_pedidos || 0}</td>
+                            </tr>`;
+                        });
+                    } else {
+                        html += '<tr><td colspan="6" class="empty-state">Nenhum cliente cadastrado</td></tr>';
+                    }
+                    
+                    html += '</tbody></table></div>';
+                } else if (tipo === 'estoque') {
+                    const response = await fetch(`${API_URL}/estoque`);
+                    const estoque = await response.json();
+                    
+                    html = '<div class="content-card" style="margin-top: 20px;"><h3>Relatório de Estoque</h3>';
+                    html += '<table class="data-table"><thead><tr><th>Ingrediente</th><th>Loja</th><th>Qtd Atual</th><th>Qtd Mínima</th><th>Status</th><th>Fornecedor</th></tr></thead><tbody>';
+                    
+                    if (estoque && estoque.length > 0) {
+                        estoque.forEach(e => {
+                            const statusClass = e.status_alerta === 'CRÍTICO' ? 'critico' : 
+                                               (e.status_alerta === 'BAIXO' || e.status_alerta === 'MUITO BAIXO') ? 'baixo' : 'ok';
+                            html += `<tr>
+                                <td>${e.ingrediente_nome}</td>
+                                <td>${e.loja_nome}</td>
+                                <td>${parseFloat(e.quantidade_atual).toFixed(1)} ${e.unidade_medida}</td>
+                                <td>${parseFloat(e.estoque_minimo).toFixed(1)} ${e.unidade_medida}</td>
+                                <td><span class="status-badge status-${statusClass}">${e.status_alerta}</span></td>
+                                <td>${e.fornecedor || 'N/A'}</td>
+                            </tr>`;
+                        });
+                    } else {
+                        html += '<tr><td colspan="6" class="empty-state">Nenhum item no estoque</td></tr>';
+                    }
+                    
+                    html += '</tbody></table></div>';
+                }
+                
+                content.innerHTML = html;
+                alert(`Relatório de ${tipo} gerado com sucesso!`);
+            } catch (error) {
+                console.error('Erro:', error);
+                content.innerHTML = '<div class="alert alert-danger">Erro ao gerar relatório</div>';
+            }
+        }
+
+        // ========== FUNÇÕES AUXILIARES ==========
+        function fecharModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.classList.remove('active');
+                setTimeout(() => modal.remove(), 300);
+            }
+        }
+
+        // Fechar modal ao clicar fora
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('modal')) {
+                e.target.classList.remove('active');
+                setTimeout(() => e.target.remove(), 300);
+            }
+        });
+
+        // Fechar modal com ESC
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.modal.active').forEach(modal => {
+                    modal.classList.remove('active');
+                    setTimeout(() => modal.remove(), 300);
+                });
+            }
+        });
+
+        // ========== INICIALIZAÇÃO ==========
+        window.addEventListener('DOMContentLoaded', function() {
+            loadDashboard();
+            console.log('🍦 Paraíso Gelado - Painel Administrativo Carregado!');
+        });
+    </script>
+</body>
+</html>form-label">Calorias</label>
+                                        <input type="number" class="form-control" name="calorias" value="${produto.calorias || 0}">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Status</label>
+                                        <select class="form-control" name="ativo">
+                                            <option value="1" ${produto.ativo ? 'selected' : ''}>Ativo</option>
+                                            <option value="0" ${!produto.ativo ? 'selected' : ''}>Inativo</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                                    <button type="submit" class="btn btn-success">💾 Salvar</button>
+                                    <button type="button" class="btn btn-secondary" onclick="fecharModal('modalEditarProduto')">Cancelar</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Erro:', error);
+                alert('Erro ao carregar dados do produto');
+            }
+        }
+
+        async function salvarEdicaoProduto(event, id) {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+            const data = Object.fromEntries(formData);
+            
+            try {
+                const response = await fetch(`${API_URL}/produtos/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                if (result.success) {
+                    alert('Produto atualizado com sucesso!');
+                    fecharModal('modalEditarProduto');
+                    loadProdutos();
+                } else {
+                    alert(result.error || 'Erro ao atualizar produto');
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+                alert('Erro ao atualizar produto');
+            }
+        }
+
+        async function abrirModalProduto() {
+            const categorias = await fetch(`${API_URL}/categorias`).then(r => r.json());
+            
+            document.getElementById('modals').innerHTML = `
+                <div class="modal active" id="modalProduto">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h3 class="modal-title">Cadastrar Produto</h3>
+                            <button class="close-modal" onclick="fecharModal('modalProduto')">×</button>
+                        </div>
+
+                        <form id="formProduto" onsubmit="salvarProduto(event)">
+                            <div class="form-group">
+                                <label class="form-label">Nome do Produto *</label>
+                                <input type="text" class="form-control" required name="nome">
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Categoria *</label>
+                                    <select class="form-control" required name="categoria_id">
+                                        <option value="">Selecione...</option>
+                                        ${categorias.map(c => `<option value="${c.id}">${c.nome}</option>`).join('')}
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Tamanho *</label>
+                                    <select class="form-control" required name="tamanho">
+                                        <option value="P">Pequeno</option>
+                                        <option value="M">Médio</option>
+                                        <option value="G">Grande</option>
+                                        <option value="ÚNICO">Único</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Descrição</label>
+                                <textarea class="form-control" rows="3" name="descricao"></textarea>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Preço de Venda (R$) *</label>
+                                    <input type="number" step="0.01" class="form-control" required name="preco">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Custo (R$)</label>
+                                    <input type="number" step="0.01" class="form-control" name="custo">
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Calorias</label>
+                                    <input type="number" class="form-control" name="calorias">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Status</label>
+                                    <select class="form-control" name="ativo">
+                                        <option value="1">Ativo</option>
+                                        <option value="0">Inativo</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                                <button type="submit" class="btn btn-success">💾 Salvar</button>
+                                <button type="button" class="btn btn-secondary" onclick="fecharModal('modalProduto')">Cancelar</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            `;
+        }
+
+        async function salvarProduto(event) {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+            const data = Object.fromEntries(formData);
+            
+            try {
+                const response = await fetch(`${API_URL}/produtos`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                if (result.success) {
+                    alert('Produto cadastrado com sucesso!');
+                    fecharModal('modalProduto');
+                    loadProdutos();
+                } else {
+                    alert(result.error || 'Erro ao cadastrar produto');
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+                alert('Erro ao cadastrar produto');
+            }
+        }
+
+        async function excluirProduto(id) {
+            if (!confirm('Tem certeza que deseja excluir este produto?')) return;
+            
+            try {
+                const response = await fetch(`${API_URL}/produtos/${id}`, {
+                    method: 'DELETE'
+                });
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert('Produto removido com sucesso!');
+                    loadProdutos();
+                } else {
+                    alert(result.error || 'Erro ao excluir produto');
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+                alert('Erro ao excluir produto');
+            }
+        }
+
+        function filtrarProdutos() {
+            const search = document.getElementById('searchProduto').value.toLowerCase();
+            document.querySelectorAll('.product-card').forEach(card => {
+                const nome = card.getAttribute('data-nome');
+                card.style.display = nome.includes(search) ? 'block' : 'none';
+            });
+        }
+
+        // ========== FUNCIONÁRIOS ==========
+        async function loadFuncionarios() {
+            try {
+                const response = await fetch(`${API_URL}/funcionarios`);
+                const funcionarios = await response.json();
+                
+                document.getElementById('funcionariosContent').innerHTML = `
+                    <div class="content-card">
+                        <div class="card-header">
+                            <h2 class="card-title">Gestão de Funcionários</h2>
+                            <button class="btn btn-primary" onclick="abrirModalFuncionario()">➕ Novo Funcionário</button>
+                        </div>
+
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Nome</th>
+                                    <th>CPF</th>
+                                    <th>Cargo</th>
+                                    <th>Loja</th>
+                                    <th>Salário</th>
+                                    <th>Status</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${funcionarios && funcionarios.length > 0 ? 
+                                    funcionarios.map(f => `
+                                        <tr>
+                                            <td><strong>${f.nome}</strong></td>
+                                            <td>${f.cpf}</td>
+                                            <td>${f.cargo.charAt(0).toUpperCase() + f.cargo.slice(1)}</td>
+                                            <td>${f.loja_nome || 'N/A'}</td>
+                                            <td>R$ ${parseFloat(f.salario).toFixed(2)}</td>
+                                            <td><span class="status-badge ${f.ativo ? 'status-active' : 'status-inactive'}">
+                                                ${f.ativo ? 'Ativo' : 'Inativo'}</span></td>
+                                            <td>
+                                                <button class="btn btn-warning btn-sm" onclick="editarFuncionario(${f.id})">✏️</button>
+                                                <button class="btn btn-danger btn-sm" onclick="excluirFuncionario(${f.id})">🗑️</button>
+                                            </td>
+                                        </tr>
+                                    `).join('') :
+                                    '<tr><td colspan="7" class="empty-state">Nenhum funcionário cadastrado</td></tr>'
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Erro:', error);
+                document.getElementById('funcionariosContent').innerHTML = '<div class="alert alert-danger">Erro ao carregar funcionários</div>';
+            }
+        }
+
+        async function abrirModalFuncionario() {
+            const lojas = await fetch(`${API_URL}/lojas`).then(r => r.json());
+            
+            document.getElementById('modals').innerHTML = `
+                <div class="modal active" id="modalFuncionario">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h3 class="modal-title">Cadastrar Funcionário</h3>
+                            <button class="close-modal" onclick="fecharModal('modalFuncionario')">×</button>
+                        </div>
+
+                        <form id="formFuncionario" onsubmit="salvarFuncionario(event)">
+                            <div class="form-group">
+                                <label class="form-label">Nome Completo *</label>
+                                <input type="text" class="form-control" required name="nome">
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">CPF *</label>
+                                    <input type="text" class="form-control" required name="cpf" placeholder="000.000.000-00">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Data de Admissão *</label>
+                                    <input type="date" class="form-control" required name="data_admissao">
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Cargo *</label>
+                                    <select class="form-control" required name="cargo">
+                                        <option value="">Selecione...</option>
+                                        <option value="gerente">Gerente</option>
+                                        <option value="atendente">Atendente</option>
+                                        <option value="caixa">Caixa</option>
+                                        <option value="entregador">Entregador</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Loja *</label>
+                                    <select class="form-control" required name="loja_id">
+                                        <option value="">Selecione...</option>
+                                        ${lojas.map(l => `<option value="${l.id}">${l.nome}</option>`).join('')}
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Salário (R$) *</label>
+                                <input type="number" step="0.01" class="form-control" required name="salario">
+                            </div>
+
+                            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                                <button type="submit" class="btn btn-success">💾 Salvar</button>
+                                <button type="button" class="btn btn-secondary" onclick="fecharModal('modalFuncionario')">Cancelar</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            `;
+        }
+
+        async function salvarFuncionario(event) {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+            const data = Object.fromEntries(formData);
+            
+            try {
+                const response = await fetch(`${API_URL}/funcionarios`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                if (result.success) {
+                    alert('Funcionário cadastrado com sucesso!');
+                    fecharModal('modalFuncionario');
+                    loadFuncionarios();
+                } else {
+                    alert(result.error || 'Erro ao cadastrar funcionário');
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+                alert('Erro ao cadastrar funcionário');
+            }
+        }
+
+        async function editarFuncionario(id) {
+            try {
+                const response = await fetch(`${API_URL}/funcionarios/${id}`);
+                const funcionario = await response.json();
+                const lojas = await fetch(`${API_URL}/lojas`).then(r => r.json());
+                
+                document.getElementById('modals').innerHTML = `
+                    <div class="modal active" id="modalEditarFuncionario">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h3 class="modal-title">Editar Funcionário</h3>
+                                <button class="close-modal" onclick="fecharModal('modalEditarFuncionario')">×</button>
+                            </div>
+
+                            <form id="formEditarFuncionario" onsubmit="salvarEdicaoFuncionario(event, ${id})">
+                                <div class="form-group">
+                                    <label class="form-label">Nome Completo *</label>
+                                    <input type="text" class="form-control" required name="nome" value="${funcionario.nome}">
+                                </div>
+
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label class="form-label">CPF *</label>
+                                        <input type="text" class="form-control" required name="cpf" value="${funcionario.cpf}">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Data de Admissão *</label>
+                                        <input type="date" class="form-control" required name="data_admissao" value="${funcionario.data_admissao}">
+                                    </div>
+                                </div>
+
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label class="form-label">Cargo *</label>
+                                        <select class="form-control" required name="cargo">
+                                            <option value="gerente" ${funcionario.cargo == 'gerente' ? 'selected' : ''}>Gerente</option>
+                                            <option value="atendente" ${funcionario.cargo == 'atendente' ? 'selected' : ''}>Atendente</option>
+                                            <option value="caixa" ${funcionario.cargo == 'caixa' ? 'selected' : ''}>Caixa</option>
+                                            <option value="entregador" ${funcionario.cargo == 'entregador' ? 'selected' : ''}>Entregador</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Loja *</label>
+                                        <select class="form-control" required name="loja_id">
+                                            ${lojas.map(l => `<option value="${l.id}" ${l.id == funcionario.loja_id ? 'selected' : ''}>${l.nome}</option>`).join('')}
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label class="form-label">Salário (R$) *</label>
+                                        <input type="number" step="0.01" class="form-control" required name="salario" value="${funcionario.salario}">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Status</label>
+                                        <select class="form-control" name="ativo">
+                                            <option value="1" ${funcionario.ativo ? 'selected' : ''}>Ativo</option>
+                                            <option value="0" ${!funcionario.ativo ? 'selected' : ''}>Inativo</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                                    <button type="submit" class="btn btn-success">💾 Salvar</button>
+                                    <button type="button" class="btn btn-secondary" onclick="fecharModal('modalEditarFuncionario')">Cancelar</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Erro:', error);
+                alert('Erro ao carregar dados do funcionário');
+            }
+        }
+
+        async function salvarEdicaoFuncionario(event, id) {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+            const data = Object.fromEntries(formData);
+            
+            try {
+                const response = await fetch(`${API_URL}/funcionarios/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                if (result.success) {
+                    alert('Funcionário atualizado com sucesso!');
+                    fecharModal('modalEditarFuncionario');
+                    loadFuncionarios();
+                } else {
+                    alert(result.error || 'Erro ao atualizar funcionário');
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+                alert('Erro ao atualizar funcionário');
+            }
+        }
+
+        async function excluirFuncionario(id) {
+            if (!confirm('Tem certeza que deseja excluir este funcionário?')) return;
+            
+            try {
+                const response = await fetch(`${API_URL}/funcionarios/${id}`, {
+                    method: 'DELETE'
+                });
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert('Funcionário removido com sucesso!');
+                    loadFuncionarios();
+                } else {
+                    alert(result.error || 'Erro ao excluir');
+                }
+            } catch (error) {
+                alert('Erro ao excluir funcionário');
+            }
+        }
+
+        // ========== LOJAS ==========
+        async function loadLojas() {
+            try {
+                const response = await fetch(`${API_URL}/lojas`);
+                const lojas = await response.json();
+                
+                document.getElementById('lojasContent').innerHTML = `
+                    <div class="content-card">
+                        <div class="card-header">
+                            <h2 class="card-title">Gestão de Lojas/Franquias</h2>
+                            <button class="btn btn-primary" onclick="abrirModalLoja()">➕ Nova Loja</button>
+                        </div>
+
+                        <div class="dashboard-grid">
+                            ${lojas && lojas.length > 0 ? 
+                                lojas.map(l => `
+                                    <div class="metric-card" style="cursor: pointer;" onclick="editarLoja(${l.id})">
+                                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                                            <div class="metric-icon">🏪</div>
+                                            <span class="status-badge ${l.ativo ? 'status-active' : 'status-inactive'}">
+                                                ${l.ativo ? 'Ativo' : 'Inativo'}
+                                            </span>
+                                        </div>
+                                        <div style="font-size: 18px; font-weight: 700; margin: 10px 0;">${l.nome}</div>
+                                        <div style="font-size: 12px; color: #7F8C8D; margin-bottom: 10px;">${l.endereco}</div>
+                                        <div style="font-size: 12px; color: #666;">${l.cidade} - ${l.estado}</div>
+                                        <div style="font-size: 12px; color: #666; margin-top: 5px;">📞 ${l.telefone || 'N/A'}</div>
+                                    </div>
+                                `).join('') :
+                                '<div class="empty-state"><div class="empty-state-icon">🏪</div><p>Nenhuma loja cadastrada</p></div>'
+                            }
+                        </div>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Erro:', error);
+                document.getElementById('lojasContent').innerHTML = '<div class="alert alert-danger">Erro ao carregar lojas</div>';
+            }
+        }
+
+        async function abrirModalLoja() {
+            document.getElementById('modals').innerHTML = `
+                <div class="modal active" id="modalLoja">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h3 class="modal-title">Cadastrar Loja/Franquia</h3>
+                            <button class="close-modal" onclick="fecharModal('modalLoja')">×</button>
+                        </div>
+
+                        <form id="formLoja" onsubmit="salvarLoja(event)">
+                            <div class="form-group">
+                                <label class="form-label">Nome da Loja *</label>
+                                <input type="text" class="form-control" required name="nome">
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Endereço *</label>
+                                <input type="text" class="form-control" required name="endereco">
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Cidade *</label>
+                                    <input type="text" class="form-control" required name="cidade">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Estado *</label>
+                                    <select class="form-control" required name="estado">
+                                        <option value="GO">Goiás</option>
+                                        <option value="SP">São Paulo</option>
+                                        <option value="RJ">Rio de Janeiro</option>
+                                        <option value="MG">Minas Gerais</option>
+                                        <option value="DF">Distrito Federal</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">CEP *</label>
+                                    <input type="text" class="form-control" required name="cep" placeholder="00000-000">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Telefone *</label>
+                                    <input type="tel" class="form-control" required name="telefone">
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Email *</label>
+                                <input type="email" class="form-control" required name="email">
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Data de Abertura *</label>
+                                <input type="date" class="form-control" required name="data_abertura">
+                            </div>
+
+                            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                                <button type="submit" class="btn btn-success">💾 Salvar</button>
+                                <button type="button" class="btn btn-secondary" onclick="fecharModal('modalLoja')">Cancelar</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            `;
+        }
+
+        async function salvarLoja(event) {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+            const data = Object.fromEntries(formData);
+            
+            try {
+                const response = await fetch(`${API_URL}/lojas`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                if (result.success) {
+                    alert('Loja cadastrada com sucesso!');
+                    fecharModal('modalLoja');
+                    loadLojas();
+                } else {
+                    alert(result.error || 'Erro ao cadastrar loja');
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+                alert('Erro ao cadastrar loja');
+            }
+        }
+
+        async function editarLoja(id) {
+            try {
+                const response = await fetch(`${API_URL}/lojas/${id}`);
+                const loja = await response.json();
+                
+                document.getElementById('modals').innerHTML = `
+                    <div class="modal active" id="modalEditarLoja">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h3 class="modal-title">Editar Loja</h3>
+                                <button class="close-modal" onclick="fecharModal('modalEditarLoja')">×</button>
+                            </div>
+
+                            <form id="formEditarLoja" onsubmit="salvarEdicaoLoja(event, ${id})">
+                                <div class="form-group">
+                                    <label class="form-label">Nome da Loja *</label>
+                                    <input type="text" class="form-control" required name="nome" value="${loja.nome}">
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label">Endereço *</label>
+                                    <input type="text" class="form-control" required name="endereco" value="${loja.endereco}">
+                                </div>
+
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label class="form-label">Cidade *</label>
+                                        <input type="text" class="form-control" required name="cidade" value="${loja.cidade}">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Estado *</label>
+                                        <select class="form-control" required name="estado">
+                                            <option value="GO" ${loja.estado == 'GO' ? 'selected' : ''}>Goiás</option>
+                                            <option value="SP" ${loja.estado == 'SP' ? 'selected' : ''}>São Paulo</option>
+                                            <option value="RJ" ${loja.estado == 'RJ' ? 'selected' : ''}>Rio de Janeiro</option>
+                                            <option value="MG" ${loja.estado == 'MG' ? 'selected' : ''}>Minas Gerais</option>
+                                            <option value="DF" ${loja.estado == 'DF' ? 'selected' : ''}>Distrito Federal</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label class="form-label">CEP *</label>
+                                        <input type="text" class="form-control" required name="cep" value="${loja.cep}">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Telefone *</label>
+                                        <input type="tel" class="form-control" required name="telefone" value="${loja.telefone}">
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label">Email *</label>
+                                    <input type="email" class="form-control" required name="email" value="${loja.email || ''}">
+                                </div>
+
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label class="form-label">Data de Abertura *</label>
+                                        <input type="date" class="form-control" required name="data_abertura" value="${loja.data_abertura}">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="label">Categoria *</label>
+                                        <select class="form-control" required name="categoria_id">
+                                            ${categorias.map(c => `<option value="${c.id}" ${c.id == produto.categoria_id ? 'selected' : ''}>${c.nome}</option>`).join('')}
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Tamanho *</label>
+                                        <select class="form-control" required name="tamanho">
+                                            <option value="P" ${produto.tamanho == 'P' ? 'selected' : ''}>Pequeno</option>
+                                            <option value="M" ${produto.tamanho == 'M' ? 'selected' : ''}>Médio</option>
+                                            <option value="G" ${produto.tamanho == 'G' ? 'selected' : ''}>Grande</option>
+                                            <option value="ÚNICO" ${produto.tamanho == 'ÚNICO' ? 'selected' : ''}>Único</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label">Descrição</label>
+                                    <textarea class="form-control" rows="3" name="descricao">${produto.descricao || ''}</textarea>
+                                </div>
+
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label class="form-label">Preço de Venda (R$) *</label>
+                                        <input type="number" step="0.01" class="form-control" required name="preco" value="${produto.preco}">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Custo (R$)</label>
+                                        <input type="number" step="0.01" class="form-control" name="custo" value="${produto.custo || 0}">
+                                    </div>
+                                </div>
+
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label class="form-
