@@ -105,6 +105,28 @@
             transform: translateY(0);
         }
 
+        .btn-cadastro {
+            background: linear-gradient(135deg, #4A90E2, #357ABD);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            width: 100%;
+            justify-content: center;
+        }
+
+        .btn-cadastro:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(74, 144, 226, 0.4);
+        }
+
         .alert {
             padding: 12px;
             border-radius: 8px;
@@ -169,6 +191,98 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.active {
+            display: flex;
+            animation: fadeIn 0.3s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            max-width: 400px;
+            width: 90%;
+            position: relative;
+            animation: slideUp 0.3s ease-out;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #ECF0F1;
+        }
+
+        .modal-header h3 {
+            color: #2C3E50;
+            font-size: 20px;
+            margin: 0;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            color: #95a5a6;
+            transition: color 0.3s;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .close-modal:hover {
+            color: #E74C3C;
+        }
+
+        .divider {
+            text-align: center;
+            margin: 20px 0;
+            position: relative;
+        }
+
+        .divider::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            width: 100%;
+            height: 1px;
+            background: #ECF0F1;
+        }
+
+        .divider span {
+            background: white;
+            padding: 0 15px;
+            color: #7F8C8D;
+            font-size: 12px;
+            position: relative;
+            z-index: 1;
+        }
     </style>
 </head>
 <body>
@@ -204,14 +318,137 @@
             </div>
         </form>
 
+        <div class="divider">
+            <span>ou</span>
+        </div>
+
+        <button type="button" class="btn-cadastro" onclick="irParaCadastroFuncionario()">
+            👤 Cadastrar Novo Funcionário
+        </button>
+
         <div class="demo-info">
             <h4>🔑 Credenciais de Teste:</h4>
-            <p><strong>Email:</strong> admin@paraisogelado.com</p>
-            <p><strong>Senha:</strong> admin123</p>
+            <p><strong>Admin:</strong> admin@paraisogelado.com / admin123</p>
+            <p><strong>Gerente Geral:</strong> eliel@paraisogelado.com / eliel</p>
+        </div>
+    </div>
+
+    <!-- Modal de Autenticação Gerente Geral -->
+    <div class="modal" id="modalGerenteGeral">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>🔐 Autenticação Necessária</h3>
+                <button class="close-modal" onclick="fecharModal()">×</button>
+            </div>
+            
+            <div class="alert alert-danger" id="alertErrorModal"></div>
+            
+            <p style="color: #7F8C8D; margin-bottom: 20px; text-align: center;">
+                Apenas o <strong>Gerente Geral</strong> pode cadastrar funcionários
+            </p>
+            
+            <form id="formGerenteGeral" onsubmit="autenticarGerenteGeral(event)">
+                <div class="form-group">
+                    <label class="form-label">Email do Gerente Geral</label>
+                    <input type="email" class="form-control" id="emailGerente" required 
+                           placeholder="eliel@paraisogelado.com">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Senha</label>
+                    <input type="password" class="form-control" id="senhaGerente" required 
+                           placeholder="Digite a senha">
+                </div>
+                
+                <button type="submit" class="btn-login">
+                    🔓 Autenticar e Continuar
+                </button>
+                
+                <div class="loading" id="loadingModal" style="display: none;">
+                    <div class="spinner"></div>
+                    <p style="margin-top: 10px; color: #7F8C8D; font-size: 14px;">Verificando...</p>
+                </div>
+            </form>
         </div>
     </div>
 
     <script>
+        function irParaCadastroFuncionario() {
+            document.getElementById('modalGerenteGeral').classList.add('active');
+            document.getElementById('emailGerente').focus();
+        }
+
+        function fecharModal() {
+            document.getElementById('modalGerenteGeral').classList.remove('active');
+            document.getElementById('formGerenteGeral').reset();
+            document.getElementById('alertErrorModal').classList.remove('show');
+        }
+
+        async function autenticarGerenteGeral(event) {
+            event.preventDefault();
+            
+            const email = document.getElementById('emailGerente').value;
+            const senha = document.getElementById('senhaGerente').value;
+            const alertDiv = document.getElementById('alertErrorModal');
+            const loading = document.getElementById('loadingModal');
+            const form = document.getElementById('formGerenteGeral');
+            
+            alertDiv.classList.remove('show');
+            loading.style.display = 'block';
+            form.style.opacity = '0.5';
+            
+            try {
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: email, password: senha })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    if (data.user.cargo === 'gerente_geral') {
+                        // Autenticado como gerente geral, redirecionar
+                        window.location.href = '/cadastro-funcionario';
+                    } else {
+                        mostrarErroModal('⛔ Apenas o Gerente Geral pode acessar esta área');
+                    }
+                } else {
+                    mostrarErroModal(data.message || 'Email ou senha incorretos');
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+                mostrarErroModal('Erro ao autenticar. Tente novamente.');
+            } finally {
+                loading.style.display = 'none';
+                form.style.opacity = '1';
+            }
+        }
+
+        function mostrarErroModal(mensagem) {
+            const alertDiv = document.getElementById('alertErrorModal');
+            alertDiv.textContent = '❌ ' + mensagem;
+            alertDiv.classList.add('show');
+            
+            setTimeout(() => {
+                alertDiv.classList.remove('show');
+            }, 5000);
+        }
+
+        // Fechar modal ao clicar fora
+        document.getElementById('modalGerenteGeral')?.addEventListener('click', function(e) {
+            if (e.target === this) {
+                fecharModal();
+            }
+        });
+
+        // Fechar modal com ESC
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                fecharModal();
+            }
+        });
+
         async function fazerLogin(event) {
             event.preventDefault();
             
