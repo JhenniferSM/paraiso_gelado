@@ -11,20 +11,9 @@
             box-sizing: border-box;
         }
 
-        /* Variáveis de cor replicadas para consistência */
-        :root {
-            --primary: #FF8FAB; /* Novo Rosa Morango Suave */
-            --primary-dark: #E07997; /* Variação para hover */
-            --secondary: #7FB5E3; /* Novo Azul Gelo Suave */
-            --dark: #2D3A44; /* Azul Escuro Sutil */
-            --light: #F7F7F7; /* Cinza/Branco Nata */
-            --white: #FFFFFF;
-            --danger: #E74C3C;
-        }
-
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #87CEFA 0%, #FFC0CB 100%); /* Azul Céu e Rosa Bebê */
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             display: flex;
             justify-content: center;
@@ -57,7 +46,7 @@
         }
 
         .logo h1 {
-            color: var(--primary); /* Usando variável */
+            color: #FF6B9D;
             font-size: 28px;
             margin-bottom: 5px;
         }
@@ -74,7 +63,7 @@
         .form-label {
             display: block;
             margin-bottom: 8px;
-            color: var(--dark); /* Usando variável */
+            color: #2C3E50;
             font-weight: 600;
             font-size: 14px;
         }
@@ -82,7 +71,7 @@
         .form-control {
             width: 100%;
             padding: 12px 15px;
-            border: 2px solid var(--light); /* Usando variável */
+            border: 2px solid #ECF0F1;
             border-radius: 10px;
             font-size: 14px;
             transition: all 0.3s;
@@ -90,14 +79,14 @@
 
         .form-control:focus {
             outline: none;
-            border-color: var(--primary); /* Usando variável */
-            box-shadow: 0 0 0 3px rgba(255,143,171,0.1); /* Cor ajustada */
+            border-color: #FF6B9D;
+            box-shadow: 0 0 0 3px rgba(255,107,157,0.1);
         }
 
         .btn-login {
             width: 100%;
             padding: 14px;
-            background: linear-gradient(135deg, var(--primary), var(--primary-dark)); /* Usando variáveis */
+            background: linear-gradient(135deg, #FF6B9D, #C44569);
             color: white;
             border: none;
             border-radius: 10px;
@@ -109,7 +98,7 @@
 
         .btn-login:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(255,143,171,0.4); /* Cor ajustada */
+            box-shadow: 0 6px 20px rgba(255,107,157,0.4);
         }
 
         .btn-login:active {
@@ -117,7 +106,7 @@
         }
 
         .btn-cadastro {
-            background: linear-gradient(135deg, var(--secondary), #69A3D6); 
+            background: linear-gradient(135deg, #4A90E2, #357ABD);
             color: white;
             border: none;
             padding: 12px 24px;
@@ -135,7 +124,7 @@
 
         .btn-cadastro:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(127,181,227,0.4); /* Cor ajustada */
+            box-shadow: 0 6px 20px rgba(74, 144, 226, 0.4);
         }
 
         .alert {
@@ -148,7 +137,7 @@
         .alert-danger {
             background: #F8D7DA;
             color: #721C24;
-            border-left: 4px solid var(--danger); /* Usando variável */
+            border-left: 4px solid #E74C3C;
         }
 
         .alert.show {
@@ -168,18 +157,29 @@
             background: #FFF3CD;
             border-radius: 8px;
             border-left: 4px solid #F39C12;
+        }
+
+        .demo-info h4 {
+            color: #856404;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .demo-info p {
             color: #856404;
             font-size: 12px;
+            margin: 3px 0;
         }
 
         .loading {
+            display: none;
             text-align: center;
-            padding: 10px 0;
+            margin-top: 10px;
         }
 
         .spinner {
-            border: 3px solid var(--light);
-            border-top: 3px solid var(--primary);
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #FF6B9D;
             border-radius: 50%;
             width: 30px;
             height: 30px;
@@ -192,7 +192,6 @@
             100% { transform: rotate(360deg); }
         }
 
-        /* MODAL */
         .modal {
             display: none;
             position: fixed;
@@ -232,11 +231,11 @@
             align-items: center;
             margin-bottom: 20px;
             padding-bottom: 15px;
-            border-bottom: 2px solid var(--light);
+            border-bottom: 2px solid #ECF0F1;
         }
 
         .modal-header h3 {
-            color: var(--dark);
+            color: #2C3E50;
             font-size: 20px;
             margin: 0;
         }
@@ -257,72 +256,108 @@
         }
 
         .close-modal:hover {
-            color: var(--danger);
+            color: #E74C3C;
+        }
+
+        .divider {
+            text-align: center;
+            margin: 20px 0;
+            position: relative;
+        }
+
+        .divider::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            width: 100%;
+            height: 1px;
+            background: #ECF0F1;
+        }
+
+        .divider span {
+            background: white;
+            padding: 0 15px;
+            color: #7F8C8D;
+            font-size: 12px;
+            position: relative;
+            z-index: 1;
         }
     </style>
 </head>
 <body>
-    
     <div class="login-container">
         <div class="logo">
             <div class="logo-icon">🍦</div>
             <h1>Paraíso Gelado</h1>
-            <p>Acesso Administrativo</p>
+            <p>Painel Administrativo</p>
         </div>
 
-        <div class="alert alert-danger" id="alertError">
-            Email/CPF ou senha incorretos.
-        </div>
-        
-        <form id="loginForm" onsubmit="handleLogin(event)">
+        <div class="alert alert-danger" id="alertError"></div>
+
+        <form id="loginForm" onsubmit="fazerLogin(event)">
             <div class="form-group">
-                <label for="username" class="form-label">Email ou CPF</label>
-                <input type="text" class="form-control" id="username" name="username" required placeholder="Digite seu email ou CPF">
+                <label class="form-label">Email ou CPF</label>
+                <input type="text" class="form-control" id="username" required 
+                       placeholder="Digite seu email ou CPF" autocomplete="username">
             </div>
-            
+
             <div class="form-group">
-                <label for="password" class="form-label">Senha</label>
-                <input type="password" class="form-control" id="password" name="password" required placeholder="Digite sua senha">
+                <label class="form-label">Senha</label>
+                <input type="password" class="form-control" id="password" required 
+                       placeholder="Digite sua senha" autocomplete="current-password">
             </div>
-            
-            <button type="submit" class="btn-login" id="submitButton">
-                Entrar
+
+            <button type="submit" class="btn-login">
+                🔐 Entrar no Sistema
             </button>
-            
-            <div class="loading" id="loading" style="display: none;">
+
+            <div class="loading" id="loading">
                 <div class="spinner"></div>
                 <p style="margin-top: 10px; color: #7F8C8D; font-size: 14px;">Autenticando...</p>
             </div>
         </form>
 
-        <div class="demo-info">
-            Para fins de demonstração/teste, clique em "Cadastrar Funcionário" para criar o primeiro usuário e acessar o painel.
+        <div class="divider">
+            <span>ou</span>
         </div>
-        
-        <div style="margin-top: 15px; text-align: center;">
-            <button class="btn-cadastro" onclick="irParaCadastroFuncionario()">
-                👥 Cadastrar Funcionário
-            </button>
+
+        <button type="button" class="btn-cadastro" onclick="irParaCadastroFuncionario()">
+            👤 Cadastrar Novo Funcionário
+        </button>
+
+        <div class="demo-info">
+            <h4>🔑 Credenciais de Teste:</h4>
+            <p><strong>Admin:</strong> admin@paraisogelado.com / admin123</p>
+            <p><strong>Gerente Geral:</strong> eliel@paraisogelado.com / eliel</p>
         </div>
     </div>
 
+    <!-- Modal de Autenticação Gerente Geral -->
     <div class="modal" id="modalGerenteGeral">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>Cadastro Inicial (Gerente Geral)</h3>
+                <h3>🔐 Autenticação Necessária</h3>
                 <button class="close-modal" onclick="fecharModal()">×</button>
             </div>
-            <p style="font-size: 14px; margin-bottom: 20px; color: #7F8C8D;">
-                O primeiro cadastro cria o usuário com permissão de Gerente Geral.
+            
+            <div class="alert alert-danger" id="alertErrorModal"></div>
+            
+            <p style="color: #7F8C8D; margin-bottom: 20px; text-align: center;">
+                Apenas o <strong>Gerente Geral</strong> pode cadastrar funcionários
             </p>
-            <form id="cadastroGerenteForm" onsubmit="handleCadastroGerente(event)">
+            
+            <form id="formGerenteGeral" onsubmit="autenticarGerenteGeral(event)">
                 <div class="form-group">
-                    <label class="form-label">Email Gerente Geral</label>
-                    <input type="email" class="form-control" id="emailGerente" required placeholder="eliel@paraisogelado.com">
+                    <label class="form-label">Email do Gerente Geral</label>
+                    <input type="email" class="form-control" id="emailGerente" required 
+                           placeholder="eliel@paraisogelado.com">
                 </div>
+                
                 <div class="form-group">
                     <label class="form-label">Senha</label>
-                    <input type="password" class="form-control" id="senhaGerente" required placeholder="Digite a senha">
+                    <input type="password" class="form-control" id="senhaGerente" required 
+                           placeholder="Digite a senha">
                 </div>
                 
                 <button type="submit" class="btn-login">
@@ -339,33 +374,97 @@
 
     <script>
         function irParaCadastroFuncionario() {
-            // Simula o redirecionamento para o cadastro de funcionário
-            window.location.href = 'cadastro_funcionario.html';
-
-            // Com o modal:
-            // document.getElementById('modalGerenteGeral').classList.add('active');
-            // document.getElementById('emailGerente').focus();
+            document.getElementById('modalGerenteGeral').classList.add('active');
+            document.getElementById('emailGerente').focus();
         }
 
         function fecharModal() {
             document.getElementById('modalGerenteGeral').classList.remove('active');
-            document.getElementById('cadastroGerenteForm').reset();
-            document.getElementById('loadingModal').style.display = 'none';
+            document.getElementById('formGerenteGeral').reset();
+            document.getElementById('alertErrorModal').classList.remove('show');
         }
 
-        async function handleLogin(event) {
+        async function autenticarGerenteGeral(event) {
+            event.preventDefault();
+            
+            const email = document.getElementById('emailGerente').value;
+            const senha = document.getElementById('senhaGerente').value;
+            const alertDiv = document.getElementById('alertErrorModal');
+            const loading = document.getElementById('loadingModal');
+            const form = document.getElementById('formGerenteGeral');
+            
+            alertDiv.classList.remove('show');
+            loading.style.display = 'block';
+            form.style.opacity = '0.5';
+            
+            try {
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: email, password: senha })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    if (data.user.cargo === 'gerente_geral') {
+                        // Autenticado como gerente geral, redirecionar
+                        window.location.href = '/cadastro-funcionario';
+                    } else {
+                        mostrarErroModal('⛔ Apenas o Gerente Geral pode acessar esta área');
+                    }
+                } else {
+                    mostrarErroModal(data.message || 'Ops, a senha derreteu! 😥 Email/CPF ou senha incorretos.');
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+                mostrarErroModal('Erro ao autenticar. Tente novamente.');
+            } finally {
+                loading.style.display = 'none';
+                form.style.opacity = '1';
+            }
+        }
+
+        function mostrarErroModal(mensagem) {
+            const alertDiv = document.getElementById('alertErrorModal');
+            alertDiv.textContent = '❌ ' + mensagem;
+            alertDiv.classList.add('show');
+            
+            setTimeout(() => {
+                alertDiv.classList.remove('show');
+            }, 5000);
+        }
+
+        // Fechar modal ao clicar fora
+        document.getElementById('modalGerenteGeral')?.addEventListener('click', function(e) {
+            if (e.target === this) {
+                fecharModal();
+            }
+        });
+
+        // Fechar modal com ESC
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                fecharModal();
+            }
+        });
+
+        async function fazerLogin(event) {
             event.preventDefault();
             
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
+            const alertDiv = document.getElementById('alertError');
             const loading = document.getElementById('loading');
             const form = document.getElementById('loginForm');
-            const submitButton = document.getElementById('submitButton');
             
+            // Esconder erro anterior
+            alertDiv.classList.remove('show');
+            
+            // Mostrar loading
             loading.style.display = 'block';
             form.style.opacity = '0.5';
-            submitButton.disabled = true;
-
+            
             try {
                 const response = await fetch('/api/login', {
                     method: 'POST',
@@ -379,10 +478,10 @@
                 
                 if (data.success) {
                     // Login bem-sucedido
-                    window.location.href = 'admin.html';
+                    window.location.href = '/admin';
                 } else {
                     // Erro no login
-                    mostrarErro(data.message || 'Email/CPF ou senha incorretos');
+                    mostrarErro(data.message || 'Ops, a senha derreteu! 😥 Email/CPF ou senha incorretos.');
                 }
             } catch (error) {
                 console.error('Erro:', error);
@@ -390,7 +489,6 @@
             } finally {
                 loading.style.display = 'none';
                 form.style.opacity = '1';
-                submitButton.disabled = false;
             }
         }
         
@@ -402,27 +500,6 @@
             setTimeout(() => {
                 alertDiv.classList.remove('show');
             }, 5000);
-        }
-
-        // Simulação de cadastro de Gerente Geral (para fins de demonstração)
-        async function handleCadastroGerente(event) {
-             event.preventDefault();
-             // Esta função deve ser implementada no backend.
-             // Para a demonstração, ela apenas simula o sucesso e fecha.
-             const form = event.target;
-             const loading = document.getElementById('loadingModal');
-
-             loading.style.display = 'block';
-             form.style.opacity = '0.5';
-
-             await new Promise(resolve => setTimeout(resolve, 1500)); // Simula delay do servidor
-
-             loading.style.display = 'none';
-             form.style.opacity = '1';
-             fecharModal();
-             mostrarErro('Função de cadastro de Gerente desabilitada. Por favor, acesse a página de cadastro de funcionário.'); // Mudando para a URL direta
-
-             // window.location.href = 'cadastro_funcionario.html'; // Redireciona para o cadastro
         }
 
         // Auto-focus no campo de email

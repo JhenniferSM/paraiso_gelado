@@ -12,20 +12,20 @@
         }
 
         :root {
-            --primary: #FF8FAB; /* Novo Rosa Morango Suave */
-            --primary-dark: #E07997; /* Variação para hover */
-            --secondary: #7FB5E3; /* Novo Azul Gelo Suave */
+            --primary: #FF6B9D;
+            --primary-dark: #E85A8A;
+            --secondary: #4A90E2;
             --success: #27AE60;
             --warning: #F39C12;
             --danger: #E74C3C;
-            --dark: #2D3A44; /* Azul Escuro Sutil */
-            --light: #F7F7F7; /* Cinza/Branco Nata */
+            --dark: #2C3E50;
+            --light: #ECF0F1;
             --white: #FFFFFF;
         }
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #87CEFA 0%, #FFC0CB 100%); /* Azul Céu e Rosa Bebê */
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             padding: 20px;
         }
@@ -88,7 +88,7 @@
 
         .btn-primary:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(255,143,171,0.3); /* Cor ajustada */
+            box-shadow: 0 6px 20px rgba(255,107,157,0.3);
         }
 
         .btn-secondary {
@@ -162,7 +162,7 @@
         .form-control:focus {
             outline: none;
             border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(255,143,171,0.1); /* Cor ajustada */
+            box-shadow: 0 0 0 3px rgba(255,107,157,0.1);
         }
 
         .form-control:disabled {
@@ -275,50 +275,112 @@
             text-align: center;
         }
 
-        .stat-box.secondary {
-            background: linear-gradient(135deg, var(--secondary), #69A3D6); /* Cor ajustada */
-        }
-
         .stat-value {
             font-size: 28px;
             font-weight: 700;
+            margin-bottom: 5px;
         }
 
         .stat-label {
-            font-size: 14px;
+            font-size: 12px;
             opacity: 0.9;
+        }
+
+        .cargo-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin: 5px 5px 5px 0;
+        }
+
+        .cargo-gerente {
+            background: linear-gradient(135deg, #FFD700, #FFA500);
+            color: white;
+        }
+
+        .cargo-atendente {
+            background: linear-gradient(135deg, #4A90E2, #357ABD);
+            color: white;
+        }
+
+        .cargo-caixa {
+            background: linear-gradient(135deg, #27AE60, #1E8449);
+            color: white;
+        }
+
+        .cargo-entregador {
+            background: linear-gradient(135deg, #E74C3C, #CB4335);
+            color: white;
+        }
+
+        .helper-text {
+            font-size: 12px;
+            color: #7F8C8D;
             margin-top: 5px;
         }
 
-        /* ÍCONES NOS CAMPOS */
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .spinner {
+            border: 3px solid var(--light);
+            border-top: 3px solid var(--primary);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
         .input-icon {
             position: relative;
+        }
+
+        .input-icon input {
+            padding-left: 40px;
         }
 
         .input-icon::before {
             content: attr(data-icon);
             position: absolute;
-            left: 15px;
+            left: 12px;
             top: 50%;
             transform: translateY(-50%);
-            color: var(--secondary);
             font-size: 18px;
-            pointer-events: none;
-            z-index: 2;
         }
 
-        .input-icon .form-control {
-            padding-left: 45px;
-        }
-
-        .helper-text {
-            color: #95a5a6;
-            font-size: 12px;
-            margin-top: 5px;
-        }
-
-        @media (max-width: 900px) {
+        @media (max-width: 1024px) {
             .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .header {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+
+            .stats-grid {
                 grid-template-columns: 1fr;
             }
         }
@@ -326,20 +388,23 @@
 </head>
 <body>
     <div class="container">
+        <!-- HEADER -->
         <div class="header">
             <div class="header-title">
-                <span class="header-icon">👥</span>
+                <div class="header-icon">👥</div>
                 <div>
                     <h1>Cadastro de Funcionários</h1>
-                    <p>Adicione novos sabores (membros) à nossa equipe!</p>
+                    <p>Gerencie sua equipe e organize os cargos</p>
                 </div>
             </div>
-            <a href="admin.html" class="btn btn-secondary">
+            <a href="/admin" class="btn btn-secondary">
                 ← Voltar ao Painel
             </a>
         </div>
 
+        <!-- CONTEÚDO PRINCIPAL -->
         <div class="main-content">
+            <!-- FORMULÁRIO -->
             <div class="form-card">
                 <h2 class="card-title">📝 Dados do Funcionário</h2>
 
@@ -354,13 +419,14 @@
                 </div>
 
                 <form id="formFuncionario" onsubmit="salvarFuncionario(event)">
-
+                    <!-- INFORMAÇÕES PESSOAIS -->
                     <div class="form-group">
                         <label class="form-label">
                             Nome Completo <span class="required">*</span>
                         </label>
                         <div class="input-icon" data-icon="👤">
-                            <input type="text" class="form-control" name="nome" required placeholder="Digite o nome completo">
+                            <input type="text" class="form-control" name="nome" required 
+                                   placeholder="Digite o nome completo">
                         </div>
                     </div>
 
@@ -370,128 +436,123 @@
                                 CPF <span class="required">*</span>
                             </label>
                             <div class="input-icon" data-icon="🆔">
-                                <input type="text" class="form-control" name="cpf" required placeholder="000.000.000-00" maxlength="14" id="cpfInput">
+                                <input type="text" class="form-control" name="cpf" required 
+                                       placeholder="000.000.000-00" maxlength="14" id="cpfInput">
                             </div>
-                            <div class="helper-text">Apenas números, será formatado automaticamente.</div>
+                            <div class="helper-text">Apenas números</div>
                         </div>
+
                         <div class="form-group">
                             <label class="form-label">
                                 Data de Admissão <span class="required">*</span>
                             </label>
                             <div class="input-icon" data-icon="📅">
-                                <input type="date" class="form-control" name="data_admissao" required id="dataAdmissao">
+                                <input type="date" class="form-control" name="data_admissao" required 
+                                       id="dataAdmissao">
                             </div>
                         </div>
                     </div>
 
+                    <!-- CARGO E LOJA -->
                     <div class="form-row">
                         <div class="form-group">
                             <label class="form-label">
                                 Cargo <span class="required">*</span>
                             </label>
-                            <div class="input-icon" data-icon="💼">
-                                <select class="form-control" name="cargo" required id="cargoSelect">
-                                    <option value="">Selecione o cargo...</option>
-                                    <option value="gerente_geral">Gerente Geral</option>
-                                    <option value="gerente">Gerente</option>
-                                    <option value="atendente">Atendente</option>
-                                    <option value="caixa">Caixa</option>
-                                    <option value="entregador">Entregador</option>
-                                </select>
-                            </div>
+                            <select class="form-control" name="cargo" required id="cargoSelect">
+                                <option value="">Selecione o cargo...</option>
+                                <option value="gerente">🏆 Gerente</option>
+                                <option value="atendente">👋 Atendente</option>
+                                <option value="caixa">💰 Caixa</option>
+                                <option value="entregador">🚗 Entregador</option>
+                            </select>
                         </div>
+
                         <div class="form-group">
                             <label class="form-label">
                                 Loja <span class="required">*</span>
                             </label>
-                            <div class="input-icon" data-icon="🏪">
-                                <select class="form-control" name="loja_id" required id="lojaSelect">
-                                    <option value="">Carregando lojas...</option>
-                                </select>
-                            </div>
+                            <select class="form-control" name="loja_id" required id="lojaSelect">
+                                <option value="">Carregando lojas...</option>
+                            </select>
                         </div>
                     </div>
 
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label class="form-label">Email <span class="required">*</span></label>
-                            <div class="input-icon" data-icon="📧">
-                                <input type="email" class="form-control" name="email" required placeholder="exemplo@paraisogelado.com">
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Telefone</label>
-                            <div class="input-icon" data-icon="📱">
-                                <input type="text" class="form-control" name="telefone" placeholder="(99) 99999-9999">
-                            </div>
-                        </div>
-                    </div>
-
+                    <!-- SALÁRIO -->
                     <div class="form-group">
                         <label class="form-label">
                             Salário (R$) <span class="required">*</span>
                         </label>
-                        <div class="input-icon" data-icon="💰">
-                            <input type="number" step="0.01" class="form-control" name="salario" required placeholder="Ex: 2500.00" id="salarioInput">
+                        <div class="input-icon" data-icon="💵">
+                            <input type="number" step="0.01" class="form-control" name="salario" required 
+                                   placeholder="0.00" id="salarioInput">
                         </div>
-                        <div class="helper-text" id="sugestaoSalario"></div>
+                        <div class="helper-text" id="salarioSugestao"></div>
                     </div>
 
+                    <!-- STATUS -->
                     <div class="form-group">
-                        <label class="form-label">
-                            Senha Inicial (Opcional, mas recomendada)
-                        </label>
-                        <div class="input-icon" data-icon="🔑">
-                            <input type="password" class="form-control" name="senha" placeholder="Deixe em branco para gerar uma temporária">
-                        </div>
+                        <label class="form-label">Status</label>
+                        <select class="form-control" name="ativo">
+                            <option value="1">✅ Ativo</option>
+                            <option value="0">❌ Inativo</option>
+                        </select>
                     </div>
 
+                    <!-- AÇÕES -->
                     <div class="form-actions">
-                        <button type="submit" class="btn btn-primary">
-                            💾 Salvar Funcionário
+                        <button type="submit" class="btn btn-success" style="flex: 1;">
+                            💾 Cadastrar Funcionário
                         </button>
                         <button type="button" class="btn btn-secondary" onclick="limparFormulario()">
-                            Limpar Campos
+                            🔄 Limpar
                         </button>
                     </div>
                 </form>
+
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                    <p style="color: #7F8C8D;">Salvando funcionário...</p>
+                </div>
             </div>
 
-            <div class="info-card">
-                <div class="info-section">
-                    <h3 class="info-title">
-                        ✅ Dicas de Cadastro
-                    </h3>
-                    <ul class="info-list">
-                        <li>Certifique-se de que o CPF é válido.</li>
-                        <li>A Data de Admissão não pode ser futura.</li>
-                        <li>A senha inicial é importante para o primeiro acesso.</li>
-                    </ul>
-                </div>
+            <!-- PAINEL LATERAL -->
+            <div>
+                <div class="info-card">
+                    <div class="info-section">
+                        <div class="info-title">ℹ️ Informações Importantes</div>
+                        <ul class="info-list">
+                            <li>O CPF será usado como login do funcionário</li>
+                            <li>Cada funcionário deve estar vinculado a uma loja</li>
+                            <li>O salário pode ser ajustado posteriormente</li>
+                            <li>Gerentes têm acesso completo ao sistema</li>
+                            <li>Funcionários inativos não podem fazer login</li>
+                        </ul>
+                    </div>
 
-                <div class="info-section">
-                    <h3 class="info-title">
-                        📊 Estatísticas da Equipe
-                    </h3>
-                    <div class="stats-grid">
-                        <div class="stat-box">
-                            <div class="stat-value" id="totalFuncionarios">0</div>
-                            <div class="stat-label">Total Registrado</div>
-                        </div>
-                        <div class="stat-box secondary">
-                            <div class="stat-value" id="funcionariosAtivos">0</div>
-                            <div class="stat-label">Funcionários Ativos</div>
+                    <div class="info-section">
+                        <div class="info-title">🎯 Cargos Disponíveis</div>
+                        <div>
+                            <span class="cargo-badge cargo-gerente">Gerente</span>
+                            <span class="cargo-badge cargo-atendente">Atendente</span>
+                            <span class="cargo-badge cargo-caixa">Caixa</span>
+                            <span class="cargo-badge cargo-entregador">Entregador</span>
                         </div>
                     </div>
-                </div>
 
-                <div class="info-section">
-                    <h3 class="info-title">
-                        📝 Política de Cargos
-                    </h3>
-                    <p style="font-size: 13px; color: #7F8C8D;">
-                        O salário sugerido é apenas um ponto de partida baseado em nossa política interna. Gerentes Gerais podem criar lojas, Gerentes administram vendas e a equipe, enquanto Atendentes e Caixas focam na operação diária.
-                    </p>
+                    <div class="info-section">
+                        <div class="info-title">📊 Estatísticas</div>
+                        <div class="stats-grid">
+                            <div class="stat-box">
+                                <div class="stat-value" id="totalFuncionarios">0</div>
+                                <div class="stat-label">Total de Funcionários</div>
+                            </div>
+                            <div class="stat-box" style="background: linear-gradient(135deg, #4A90E2, #357ABD);">
+                                <div class="stat-value" id="funcionariosAtivos">0</div>
+                                <div class="stat-label">Funcionários Ativos</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -500,47 +561,20 @@
     <script>
         const API_URL = '/api';
 
-        // ============= UTILIDADES =============
-
-        // MOSTRAR ALERTA
-        function showAlert(message, type) {
-            const successAlert = document.getElementById('alertSuccess');
-            const errorAlert = document.getElementById('alertError');
-            
-            successAlert.classList.remove('show');
-            errorAlert.classList.remove('show');
-
-            if (type === 'success') {
-                document.getElementById('successMessage').textContent = message;
-                successAlert.classList.add('show');
-            } else if (type === 'danger') {
-                document.getElementById('errorMessage').textContent = message;
-                errorAlert.classList.add('show');
-            }
-
-            setTimeout(() => {
-                successAlert.classList.remove('show');
-                errorAlert.classList.remove('show');
-            }, 5000);
-        }
-
-        // ============= CARREGAR DADOS =============
-
         // CARREGAR LOJAS
         async function carregarLojas() {
             try {
                 const response = await fetch(`${API_URL}/lojas`);
                 const lojas = await response.json();
-                const select = document.getElementById('lojaSelect');
                 
+                const select = document.getElementById('lojaSelect');
                 if (lojas && lojas.length > 0) {
-                    select.innerHTML = '<option value="">Selecione a loja...</option>' + lojas
-                        .filter(l => l.ativo)
-                        .map(l => `<option value="${l.id}">${l.nome}</option>`)
-                        .join('');
+                    select.innerHTML = '<option value="">Selecione a loja...</option>' +
+                        lojas.filter(l => l.ativo).map(l => 
+                            `<option value="${l.id}">${l.nome}</option>`
+                        ).join('');
                 } else {
                     select.innerHTML = '<option value="">Nenhuma loja disponível</option>';
-                    showAlert('Nenhuma loja ativa para cadastro. Cadastre uma loja no painel admin primeiro.', 'danger');
                 }
             } catch (error) {
                 console.error('Erro ao carregar lojas:', error);
@@ -556,70 +590,84 @@
                 
                 if (funcionarios && Array.isArray(funcionarios)) {
                     document.getElementById('totalFuncionarios').textContent = funcionarios.length;
-                    document.getElementById('funcionariosAtivos').textContent = funcionarios.filter(f => f.ativo).length;
+                    document.getElementById('funcionariosAtivos').textContent = 
+                        funcionarios.filter(f => f.ativo).length;
                 }
             } catch (error) {
                 console.error('Erro ao carregar estatísticas:', error);
             }
         }
 
-        // ============= SALVAR FUNCIONÁRIO =============
-
+        // SALVAR FUNCIONÁRIO
         async function salvarFuncionario(event) {
             event.preventDefault();
             
-            const form = event.target;
-            const formData = new FormData(form);
+            const formData = new FormData(event.target);
             const data = Object.fromEntries(formData);
-
-            // Validação de CPF (simples)
-            if (data.cpf && !validarCPF(data.cpf)) {
-                showAlert('❌ CPF inválido. Por favor, verifique o número.', 'danger');
+            
+            // Validar CPF
+            if (!validarCPF(data.cpf)) {
+                showAlert('CPF inválido! Verifique o número digitado.', 'danger');
                 return;
             }
-
+            
+            const loading = document.getElementById('loading');
+            const form = document.getElementById('formFuncionario');
+            
+            loading.classList.add('show');
+            form.style.opacity = '0.5';
+            
             try {
                 const response = await fetch(`${API_URL}/funcionarios`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(data)
                 });
-
+                
                 const result = await response.json();
                 
                 if (result.success) {
-                    showAlert('✅ Funcionário cadastrado com sucesso! Bem-vindo(a) à equipe.', 'success');
+                    showAlert('Funcionário cadastrado com sucesso! 🎉', 'success');
                     limparFormulario();
                     carregarEstatisticas();
+                    
+                    // Scroll para o topo
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
                 } else {
-                    showAlert(result.error || '❌ Erro ao cadastrar funcionário. Verifique os dados.', 'danger');
+                    showAlert(result.error || 'Erro ao cadastrar funcionário', 'danger');
                 }
-
             } catch (error) {
                 console.error('Erro:', error);
-                showAlert('❌ Erro ao tentar se conectar com o servidor.', 'danger');
+                showAlert('Erro ao cadastrar funcionário. Tente novamente.', 'danger');
+            } finally {
+                loading.classList.remove('show');
+                form.style.opacity = '1';
             }
         }
 
-        // ============= VALIDAÇÕES E FORMATOS =============
-        
-        // VALIDAÇÃO DE CPF (algoritmo básico)
+        // VALIDAR CPF
         function validarCPF(cpf) {
-            cpf = cpf.replace(/[^\d]+/g, '');
-            if (cpf.length !== 11 || /^(\d)\1{10}$/.test(cpf)) return false;
-            let soma = 0, resto;
-
-            for (let i = 1; i <= 9; i++) soma = soma + parseInt(cpf.substring(i - 1, i)) * (11 - i);
+            cpf = cpf.replace(/[^\d]/g, '');
+            
+            if (cpf.length !== 11) return false;
+            if (/^(\d)\1+$/.test(cpf)) return false;
+            
+            let soma = 0;
+            let resto;
+            
+            for (let i = 1; i <= 9; i++) {
+                soma += parseInt(cpf.substring(i-1, i)) * (11 - i);
+            }
             resto = (soma * 10) % 11;
-            if ((resto === 10) || (resto === 11)) resto = 0;
+            if (resto === 10 || resto === 11) resto = 0;
             if (resto !== parseInt(cpf.substring(9, 10))) return false;
-
+            
             soma = 0;
-            for (let i = 1; i <= 10; i++) soma = soma + parseInt(cpf.substring(i - 1, i)) * (12 - i);
+            for (let i = 1; i <= 10; i++) {
+                soma += parseInt(cpf.substring(i-1, i)) * (12 - i);
+            }
             resto = (soma * 10) % 11;
-            if ((resto === 10) || (resto === 11)) resto = 0;
+            if (resto === 10 || resto === 11) resto = 0;
             if (resto !== parseInt(cpf.substring(10, 11))) return false;
             
             return true;
@@ -637,21 +685,41 @@
         // LIMPAR FORMULÁRIO
         function limparFormulario() {
             document.getElementById('formFuncionario').reset();
-            document.getElementById('sugestaoSalario').textContent = '';
-            document.getElementById('alertSuccess').classList.remove('show');
-            document.getElementById('alertError').classList.remove('show');
+            document.getElementById('salarioSugestao').textContent = '';
         }
 
-        // ============= EVENT LISTENERS =============
+        // MOSTRAR ALERT
+        function showAlert(message, type) {
+            const alertSuccess = document.getElementById('alertSuccess');
+            const alertError = document.getElementById('alertError');
+            
+            alertSuccess.classList.remove('show');
+            alertError.classList.remove('show');
+            
+            if (type === 'success') {
+                document.getElementById('successMessage').textContent = message;
+                alertSuccess.classList.add('show');
+                
+                setTimeout(() => {
+                    alertSuccess.classList.remove('show');
+                }, 5000);
+            } else {
+                document.getElementById('errorMessage').textContent = message;
+                alertError.classList.add('show');
+                
+                setTimeout(() => {
+                    alertError.classList.remove('show');
+                }, 5000);
+            }
+        }
 
         // SUGESTÃO DE SALÁRIO POR CARGO
         document.getElementById('cargoSelect').addEventListener('change', function() {
             const cargo = this.value;
-            const sugestaoDiv = document.getElementById('sugestaoSalario');
+            const sugestaoDiv = document.getElementById('salarioSugestao');
             const salarioInput = document.getElementById('salarioInput');
             
             const salarios = {
-                'gerente_geral': { valor: 5000, texto: 'Sugestão: R$ 5.000,00' },
                 'gerente': { valor: 3500, texto: 'Sugestão: R$ 3.500,00' },
                 'atendente': { valor: 1800, texto: 'Sugestão: R$ 1.800,00' },
                 'caixa': { valor: 2000, texto: 'Sugestão: R$ 2.000,00' },
@@ -660,6 +728,7 @@
             
             if (salarios[cargo]) {
                 sugestaoDiv.textContent = salarios[cargo].texto;
+                // CORREÇÃO: Usar a cor diretamente em vez da variável CSS
                 sugestaoDiv.style.color = '#27AE60'; // Cor verde do success
                 if (!salarioInput.value) {
                     salarioInput.value = salarios[cargo].valor;
@@ -681,7 +750,7 @@
         window.addEventListener('DOMContentLoaded', function() {
             carregarLojas();
             carregarEstatisticas();
-            console.log('🍦 Página de Cadastro de Funcionário - Carregada!');
+            console.log('📝 Sistema de Cadastro de Funcionários - Carregado!');
         });
     </script>
 </body>
