@@ -14,21 +14,24 @@ Sistema completo de gerenciamento de franquia de sorveteria desenvolvido como pr
 
 ## 🎯 Sobre o Projeto
 
-O Paraíso Gelado é um sistema de gestão completo desenvolvido para demonstrar a aplicação prática de estruturas de dados em cenários reais de Big Data. O projeto foi criado como trabalho acadêmico da disciplina de Estruturas de Dados e apresenta:
+O Paraíso Gelado é um sistema de gestão empresarial desenvolvido para demonstrar a aplicação prática de estruturas de dados complexas em ambientes de produção real. O projeto simula o gerenciamento completo de uma rede de franquias de sorveteria, abordando desde o controle de estoque até análise de dados de vendas.
+🎓 Contexto Acadêmico
+Este projeto foi desenvolvido como trabalho final da disciplina de Estruturas de Dados no Centro Universitário de Goiatuba, com os seguintes objetivos:
 
-- **Painel Administrativo Completo** - Gestão de produtos, funcionários, lojas e clientes
-- **Estruturas de Dados Otimizadas** - AVL Tree, Hash Table, Grafo, Filas FIFO e de Prioridade
-- **Sistema de Recomendações** - Baseado em análise de co-compras usando grafos
-- **Controle de Estoque Inteligente** - Com alertas automáticos
-- **Dashboard em Tempo Real** - Métricas e análises de performance
-- **API RESTful** - Backend Flask com operações CRUD completas
+✅ Implementar e comparar diferentes estruturas de dados (AVL, Hash, Grafos, Filas)
+✅ Demonstrar aplicações práticas em cenários de Big Data
+✅ Desenvolver sistema full-stack funcional com arquitetura escalável
+✅ Aplicar boas práticas de engenharia de software
+✅ Criar interface intuitiva e responsiva
 
-### 🎓 Objetivos do Projeto
+🌟 Por que este projeto é diferente?
+Ao contrário de muitos projetos acadêmicos que ficam apenas na teoria, o Paraíso Gelado é um sistema funcional e deployado, com:
 
-1. Explorar estruturas de dados eficientes para gerenciamento de grandes volumes de dados
-2. Implementar protótipo funcional com operações reais de inserção, busca, remoção e agregação
-3. Analisar performance comparando diferentes estruturas de dados
-4. Demonstrar escalabilidade do sistema em cenários de carga real
+🔴 Aplicação em produção acessível via web
+🔴 Banco de dados real com dados consistentes
+🔴 Interface profissional desenvolvida do zero
+🔴 Múltiplos níveis de acesso (Gerente Geral, Gerente, Atendente, Caixa, Entregador)
+🔴 Métricas em tempo real e dashboards interativos
 
 ## 🗃️ Estruturas de Dados Implementadas
 
@@ -143,21 +146,10 @@ class PriorityOrderQueue:
 
 ## 🛠 Tecnologias Utilizadas
 
-### Backend
-- **Python 3.9+** - Linguagem principal
-- **Flask 3.0.0** - Framework web
-- **Flask-CORS** - Suporte a CORS
-- **MySQL Connector** - Conexão com banco de dados
-- **python-dotenv** - Gerenciamento de variáveis de ambiente
-
-### Frontend
-- **HTML5** - Estrutura
-- **CSS3** - Estilização moderna com gradientes e animações
-- **JavaScript (Vanilla)** - Interatividade e requisições AJAX
-
-### Banco de Dados
-- **MySQL 8.0** - Banco de dados relacional
-- **Triggers** - Para automatizações
+## Backend: Python 3.9+ | Flask 3.0.0 | MySQL 8.0 | Gunicorn
+## Frontend: HTML5 | CSS3 | JavaScript (Vanilla)
+## Deploy: Render | FreeSQLDatabase
+## Segurança: SHA-256 | Flask Sessions | CORS
 
 O servidor estará disponível em: **https://paraiso-gelado.onrender.com/**
 
@@ -177,7 +169,34 @@ O sistema possui um menu lateral com as seguintes opções:
 - 📦 **Estoque** - Controle de ingredientes
 - 📈 **Relatórios** - Análises detalhadas
 
----
+🚀 Instalação
+
+# 1. Clone o repositório
+git clone https://github.com/seu-usuario/paraiso-gelado.git
+cd paraiso-gelado
+
+# 2. Crie o ambiente virtual
+python -m venv venv
+source venv/bin/activate  # Linux/Mac
+# venv\Scripts\activate   # Windows
+
+# 3. Instale as dependências
+pip install -r requirements.txt
+
+# 4. Configure o .env
+DB_HOST=localhost
+DB_USER=root
+DB_PASSWORD=sua_senha
+DB_NAME=sql10805055
+SECRET_KEY=sua_chave_secreta
+
+# 5. Importe o banco de dados
+mysql -u root -p < paraiso_database.sql
+
+# 6. Execute o sistema
+python main.py
+
+Acesse: http://localhost:5000
 
 ## 📁 Estrutura do Projeto
 
@@ -218,12 +237,6 @@ paraiso_gelado/
 
 Este projeto é de uso acadêmico.  
 © 2025 Centro Universitário de Goiatuba
-
-## 🐛 Problemas Conhecidos
-
-- O sistema requer conexão ativa com o banco de dados
-- Testes de performance podem demorar em máquinas mais lentas
-- O navegador Internet Explorer não é suportado
 
 ### 🍦 Desenvolvido com dedicação para o aprendizado de Estruturas de Dados
 
