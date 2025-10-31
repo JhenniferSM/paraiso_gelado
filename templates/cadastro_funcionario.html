@@ -12,20 +12,20 @@
         }
 
         :root {
-            --primary: #FF6B9D;
-            --primary-dark: #E85A8A;
-            --secondary: #4A90E2;
+            --primary: #FF8FAB;
+            --primary-dark: #E07997;
+            --secondary: #7FB5E3;
             --success: #27AE60;
             --warning: #F39C12;
             --danger: #E74C3C;
-            --dark: #2C3E50;
-            --light: #ECF0F1;
+            --dark: #2D3A44;
+            --light: #F7F7F7;
             --white: #FFFFFF;
         }
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #7FB5E3 0%, #5A8FC4 100%);
             min-height: 100vh;
             padding: 20px;
         }
@@ -88,7 +88,7 @@
 
         .btn-primary:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(255,107,157,0.3);
+            box-shadow: 0 6px 20px rgba(255,143,171,0.3);
         }
 
         .btn-secondary {
@@ -97,7 +97,7 @@
         }
 
         .btn-secondary:hover {
-            background: #BDC3C7;
+            background: #E0E0E0;
         }
 
         .btn-success {
@@ -162,7 +162,7 @@
         .form-control:focus {
             outline: none;
             border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(255,107,157,0.1);
+            box-shadow: 0 0 0 3px rgba(255,143,171,0.1);
         }
 
         .form-control:disabled {
@@ -301,7 +301,7 @@
         }
 
         .cargo-atendente {
-            background: linear-gradient(135deg, #4A90E2, #357ABD);
+            background: linear-gradient(135deg, #7FB5E3, #5A8FC4);
             color: white;
         }
 
@@ -350,7 +350,8 @@
             position: relative;
         }
 
-        .input-icon input {
+        .input-icon input,
+        .input-icon select {
             padding-left: 40px;
         }
 
@@ -361,6 +362,7 @@
             top: 50%;
             transform: translateY(-50%);
             font-size: 18px;
+            z-index: 1;
         }
 
         @media (max-width: 1024px) {
@@ -459,22 +461,26 @@
                             <label class="form-label">
                                 Cargo <span class="required">*</span>
                             </label>
-                            <select class="form-control" name="cargo" required id="cargoSelect">
-                                <option value="">Selecione o cargo...</option>
-                                <option value="gerente">🏆 Gerente</option>
-                                <option value="atendente">👋 Atendente</option>
-                                <option value="caixa">💰 Caixa</option>
-                                <option value="entregador">🚗 Entregador</option>
-                            </select>
+                            <div class="input-icon" data-icon="🏆">
+                                <select class="form-control" name="cargo" required id="cargoSelect">
+                                    <option value="">Selecione o cargo...</option>
+                                    <option value="gerente">Gerente</option>
+                                    <option value="atendente">Atendente</option>
+                                    <option value="caixa">Caixa</option>
+                                    <option value="entregador">Entregador</option>
+                                </select>
+                            </div>
                         </div>
 
                         <div class="form-group">
                             <label class="form-label">
                                 Loja <span class="required">*</span>
                             </label>
-                            <select class="form-control" name="loja_id" required id="lojaSelect">
-                                <option value="">Carregando lojas...</option>
-                            </select>
+                            <div class="input-icon" data-icon="🏪">
+                                <select class="form-control" name="loja_id" required id="lojaSelect">
+                                    <option value="">Carregando lojas...</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
 
@@ -547,7 +553,7 @@
                                 <div class="stat-value" id="totalFuncionarios">0</div>
                                 <div class="stat-label">Total de Funcionários</div>
                             </div>
-                            <div class="stat-box" style="background: linear-gradient(135deg, #4A90E2, #357ABD);">
+                            <div class="stat-box" style="background: linear-gradient(135deg, #7FB5E3, #5A8FC4);">
                                 <div class="stat-value" id="funcionariosAtivos">0</div>
                                 <div class="stat-label">Funcionários Ativos</div>
                             </div>
@@ -561,7 +567,6 @@
     <script>
         const API_URL = '/api';
 
-        // CARREGAR LOJAS
         async function carregarLojas() {
             try {
                 const response = await fetch(`${API_URL}/lojas`);
@@ -582,7 +587,6 @@
             }
         }
 
-        // CARREGAR ESTATÍSTICAS
         async function carregarEstatisticas() {
             try {
                 const response = await fetch(`${API_URL}/funcionarios`);
@@ -598,14 +602,12 @@
             }
         }
 
-        // SALVAR FUNCIONÁRIO
         async function salvarFuncionario(event) {
             event.preventDefault();
             
             const formData = new FormData(event.target);
             const data = Object.fromEntries(formData);
             
-            // Validar CPF
             if (!validarCPF(data.cpf)) {
                 showAlert('CPF inválido! Verifique o número digitado.', 'danger');
                 return;
@@ -630,8 +632,6 @@
                     showAlert('Funcionário cadastrado com sucesso! 🎉', 'success');
                     limparFormulario();
                     carregarEstatisticas();
-                    
-                    // Scroll para o topo
                     window.scrollTo({ top: 0, behavior: 'smooth' });
                 } else {
                     showAlert(result.error || 'Erro ao cadastrar funcionário', 'danger');
@@ -645,7 +645,6 @@
             }
         }
 
-        // VALIDAR CPF
         function validarCPF(cpf) {
             cpf = cpf.replace(/[^\d]/g, '');
             
@@ -673,7 +672,6 @@
             return true;
         }
 
-        // FORMATAR CPF
         function formatarCPF(valor) {
             valor = valor.replace(/\D/g, '');
             valor = valor.replace(/(\d{3})(\d)/, '$1.$2');
@@ -682,13 +680,11 @@
             return valor;
         }
 
-        // LIMPAR FORMULÁRIO
         function limparFormulario() {
             document.getElementById('formFuncionario').reset();
             document.getElementById('salarioSugestao').textContent = '';
         }
 
-        // MOSTRAR ALERT
         function showAlert(message, type) {
             const alertSuccess = document.getElementById('alertSuccess');
             const alertError = document.getElementById('alertError');
@@ -713,7 +709,6 @@
             }
         }
 
-        // SUGESTÃO DE SALÁRIO POR CARGO
         document.getElementById('cargoSelect').addEventListener('change', function() {
             const cargo = this.value;
             const sugestaoDiv = document.getElementById('salarioSugestao');
@@ -728,8 +723,7 @@
             
             if (salarios[cargo]) {
                 sugestaoDiv.textContent = salarios[cargo].texto;
-                // CORREÇÃO: Usar a cor diretamente em vez da variável CSS
-                sugestaoDiv.style.color = '#27AE60'; // Cor verde do success
+                sugestaoDiv.style.color = '#27AE60';
                 if (!salarioInput.value) {
                     salarioInput.value = salarios[cargo].valor;
                 }
@@ -738,15 +732,12 @@
             }
         });
 
-        // FORMATAÇÃO AUTOMÁTICA DE CPF
         document.getElementById('cpfInput').addEventListener('input', function(e) {
             e.target.value = formatarCPF(e.target.value);
         });
 
-        // DATA MÁXIMA (hoje)
         document.getElementById('dataAdmissao').max = new Date().toISOString().split('T')[0];
 
-        // INICIALIZAÇÃO
         window.addEventListener('DOMContentLoaded', function() {
             carregarLojas();
             carregarEstatisticas();
