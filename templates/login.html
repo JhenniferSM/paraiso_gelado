@@ -13,7 +13,7 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #7FB5E3 0%, #5A8FC4 100%);
             min-height: 100vh;
             display: flex;
             justify-content: center;
@@ -46,7 +46,7 @@
         }
 
         .logo h1 {
-            color: #FF6B9D;
+            color: #FF8FAB;
             font-size: 28px;
             margin-bottom: 5px;
         }
@@ -63,7 +63,7 @@
         .form-label {
             display: block;
             margin-bottom: 8px;
-            color: #2C3E50;
+            color: #2D3A44;
             font-weight: 600;
             font-size: 14px;
         }
@@ -71,7 +71,7 @@
         .form-control {
             width: 100%;
             padding: 12px 15px;
-            border: 2px solid #ECF0F1;
+            border: 2px solid #F7F7F7;
             border-radius: 10px;
             font-size: 14px;
             transition: all 0.3s;
@@ -79,14 +79,14 @@
 
         .form-control:focus {
             outline: none;
-            border-color: #FF6B9D;
-            box-shadow: 0 0 0 3px rgba(255,107,157,0.1);
+            border-color: #FF8FAB;
+            box-shadow: 0 0 0 3px rgba(255,143,171,0.1);
         }
 
         .btn-login {
             width: 100%;
             padding: 14px;
-            background: linear-gradient(135deg, #FF6B9D, #C44569);
+            background: linear-gradient(135deg, #FF8FAB, #E07997);
             color: white;
             border: none;
             border-radius: 10px;
@@ -98,7 +98,7 @@
 
         .btn-login:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(255,107,157,0.4);
+            box-shadow: 0 6px 20px rgba(255,143,171,0.4);
         }
 
         .btn-login:active {
@@ -106,7 +106,7 @@
         }
 
         .btn-cadastro {
-            background: linear-gradient(135deg, #4A90E2, #357ABD);
+            background: linear-gradient(135deg, #7FB5E3, #5A8FC4);
             color: white;
             border: none;
             padding: 12px 24px;
@@ -124,7 +124,7 @@
 
         .btn-cadastro:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(74, 144, 226, 0.4);
+            box-shadow: 0 6px 20px rgba(127, 181, 227, 0.4);
         }
 
         .alert {
@@ -179,7 +179,7 @@
 
         .spinner {
             border: 3px solid #f3f3f3;
-            border-top: 3px solid #FF6B9D;
+            border-top: 3px solid #FF8FAB;
             border-radius: 50%;
             width: 30px;
             height: 30px;
@@ -231,11 +231,11 @@
             align-items: center;
             margin-bottom: 20px;
             padding-bottom: 15px;
-            border-bottom: 2px solid #ECF0F1;
+            border-bottom: 2px solid #F7F7F7;
         }
 
         .modal-header h3 {
-            color: #2C3E50;
+            color: #2D3A44;
             font-size: 20px;
             margin: 0;
         }
@@ -272,7 +272,7 @@
             top: 50%;
             width: 100%;
             height: 1px;
-            background: #ECF0F1;
+            background: #F7F7F7;
         }
 
         .divider span {
@@ -309,7 +309,7 @@
             </div>
 
             <button type="submit" class="btn-login">
-                🔐 Entrar no Sistema
+                🔓 Entrar no Sistema
             </button>
 
             <div class="loading" id="loading">
@@ -337,7 +337,7 @@
     <div class="modal" id="modalGerenteGeral">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>🔐 Autenticação Necessária</h3>
+                <h3>🔒 Autenticação Necessária</h3>
                 <button class="close-modal" onclick="fecharModal()">×</button>
             </div>
             
@@ -408,7 +408,6 @@
                 
                 if (data.success) {
                     if (data.user.cargo === 'gerente_geral') {
-                        // Autenticado como gerente geral, redirecionar
                         window.location.href = '/cadastro-funcionario';
                     } else {
                         mostrarErroModal('⛔ Apenas o Gerente Geral pode acessar esta área');
@@ -435,14 +434,12 @@
             }, 5000);
         }
 
-        // Fechar modal ao clicar fora
         document.getElementById('modalGerenteGeral')?.addEventListener('click', function(e) {
             if (e.target === this) {
                 fecharModal();
             }
         });
 
-        // Fechar modal com ESC
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
                 fecharModal();
@@ -458,10 +455,7 @@
             const loading = document.getElementById('loading');
             const form = document.getElementById('loginForm');
             
-            // Esconder erro anterior
             alertDiv.classList.remove('show');
-            
-            // Mostrar loading
             loading.style.display = 'block';
             form.style.opacity = '0.5';
             
@@ -477,10 +471,8 @@
                 const data = await response.json();
                 
                 if (data.success) {
-                    // Login bem-sucedido
                     window.location.href = '/admin';
                 } else {
-                    // Erro no login
                     mostrarErro(data.message || 'Ops, a senha derreteu! 😥 Email/CPF ou senha incorretos.');
                 }
             } catch (error) {
@@ -502,7 +494,6 @@
             }, 5000);
         }
 
-        // Auto-focus no campo de email
         document.getElementById('username').focus();
     </script>
 </body>

@@ -12,14 +12,14 @@
         }
 
         :root {
-            --primary: #FF6B9D;
-            --primary-dark: #E85A8A;
-            --secondary: #4A90E2;
+            --primary: #FF8FAB;
+            --primary-dark: #E07997;
+            --secondary: #7FB5E3;
             --success: #27AE60;
             --warning: #F39C12;
             --danger: #E74C3C;
-            --dark: #2C3E50;
-            --light: #ECF0F1;
+            --dark: #2D3A44;
+            --light: #F7F7F7;
             --white: #FFFFFF;
             --sidebar-width: 280px;
             --sidebar-collapsed: 70px;
@@ -27,7 +27,7 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #7FB5E3 0%, #5A8FC4 100%);
             min-height: 100vh;
             overflow-x: hidden;
         }
@@ -39,7 +39,7 @@
             top: 0;
             height: 100vh;
             width: var(--sidebar-width);
-            background: linear-gradient(180deg, #2C3E50 0%, #1a252f 100%);
+            background: linear-gradient(180deg, #2D3A44 0%, #1F2830 100%);
             transition: all 0.3s ease;
             z-index: 1000;
             box-shadow: 4px 0 20px rgba(0,0,0,0.3);
@@ -51,8 +51,8 @@
 
         .sidebar-header {
             padding: 25px 20px;
-            background: rgba(255,107,157,0.1);
-            border-bottom: 2px solid rgba(255,107,157,0.3);
+            background: rgba(255,143,171,0.1);
+            border-bottom: 2px solid rgba(255,143,171,0.3);
             display: flex;
             align-items: center;
             gap: 15px;
@@ -97,7 +97,7 @@
         }
 
         .menu-item.active {
-            background: rgba(255,107,157,0.1);
+            background: rgba(255,143,171,0.1);
             color: var(--white);
             border-left-color: var(--primary);
         }
@@ -130,7 +130,7 @@
             cursor: pointer;
             font-size: 20px;
             transition: all 0.3s;
-            box-shadow: 0 4px 15px rgba(255,107,157,0.3);
+            box-shadow: 0 4px 15px rgba(255,143,171,0.3);
         }
 
         .toggle-sidebar:hover {
@@ -215,7 +215,7 @@
             right: 0;
             width: 100px;
             height: 100px;
-            background: linear-gradient(135deg, rgba(255,107,157,0.1), rgba(74,144,226,0.1));
+            background: linear-gradient(135deg, rgba(255,143,171,0.1), rgba(127,181,227,0.1));
             border-radius: 50%;
             transform: translate(30px, -30px);
         }
@@ -319,7 +319,7 @@
 
         .btn-primary:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(255,107,157,0.3);
+            box-shadow: 0 6px 20px rgba(255,143,171,0.3);
         }
 
         .btn-warning {
@@ -331,6 +331,11 @@
             background: #E67E22;
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(243, 156, 18, 0.3);
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
         }
 
         .btn-danger:hover {
@@ -348,19 +353,18 @@
             color: white;
         }
 
-        .btn-warning {
-            background: var(--warning);
-            color: white;
-        }
-
-        .btn-danger {
-            background: var(--danger);
-            color: white;
+        .btn-success:hover {
+            background: #229954;
+            transform: translateY(-2px);
         }
 
         .btn-secondary {
             background: var(--light);
             color: var(--dark);
+        }
+
+        .btn-secondary:hover {
+            background: #E0E0E0;
         }
 
         .btn-sm {
@@ -710,7 +714,7 @@
     <!-- SIDEBAR -->
     <div class="sidebar" id="sidebar">
         <div class="sidebar-header">
-            <div class="sidebar-logo">🍦</div>
+            <div class="sidebar-logo">🦢</div>
             <div class="sidebar-title">Paraíso Gelado</div>
         </div>
 
@@ -1227,23 +1231,19 @@
     <script>
         // ============= FUNÇÕES BÁSICAS DE NAVEGAÇÃO =============
         
-        // Função para mostrar seções
         function showSection(sectionId) {
             console.log('Tentando mostrar seção:', sectionId);
             
-            // Oculta todas as seções
             const sections = document.querySelectorAll('.content-section');
             sections.forEach(section => {
                 section.classList.remove('active');
             });
             
-            // Mostra a seção selecionada
             const targetSection = document.getElementById(sectionId);
             if (targetSection) {
                 targetSection.classList.add('active');
             }
             
-            // Atualiza o título da página
             const pageTitle = document.getElementById('pageTitle');
             const titles = {
                 'dashboard': 'Dashboard Gerencial',
@@ -1259,29 +1259,24 @@
                 pageTitle.textContent = titles[sectionId];
             }
             
-            // Atualiza o menu ativo
             const menuItems = document.querySelectorAll('.menu-item');
             menuItems.forEach(item => {
                 item.classList.remove('active');
             });
             
-            // Ativa o item do menu correspondente
             const activeMenuItem = document.querySelector(`.menu-item[data-section="${sectionId}"]`);
             if (activeMenuItem) {
                 activeMenuItem.classList.add('active');
             }
             
-            // Carrega os dados da seção
             loadSectionData(sectionId);
         }
 
-        // Função para abrir modais
         function openModal(modalId) {
             console.log('Abrindo modal:', modalId);
             document.getElementById(modalId).classList.add('active');
         }
 
-        // Função para fechar modais
         function closeModal(modalId) {
             document.getElementById(modalId).classList.remove('active');
             
@@ -1329,7 +1324,6 @@
                     <div style="font-size: 12px; color: #7F8C8D;">${formatarCargo(usuarioLogado.cargo)}</div>
                 `;
                 
-                // Inicial das letras do nome para o avatar
                 const iniciais = usuarioLogado.nome.split(' ').map(n => n[0]).join('').toUpperCase();
                 document.getElementById('userAvatar').textContent = iniciais.substring(0, 2);
                 
@@ -1488,7 +1482,7 @@
                         const margem = p.margem_percentual ? parseFloat(p.margem_percentual).toFixed(1) : '0.0';
                         return `
                             <div class="product-card" data-nome="${p.nome.toLowerCase()}">
-                                <div class="product-image">🍦</div>
+                                <div class="product-image">🦢</div>
                                 <div class="product-info">
                                     <div class="product-name">${p.nome}</div>
                                     <div class="product-price">R$ ${parseFloat(p.preco).toFixed(2)}</div>
@@ -1573,51 +1567,49 @@
         }
 
         // ============= FUNCIONÁRIOS =============
-let funcionarioEditando = null;
-let listaFuncionarios = []; // Array para cache dos funcionários
+        let funcionarioEditando = null;
+        let listaFuncionarios = [];
 
-async function loadFuncionarios() {
-    try {
-        const response = await fetch(`${API_URL}/funcionarios`);
-        const funcionarios = await response.json();
-        listaFuncionarios = funcionarios; // Salva no cache
-        
-        const tbody = document.getElementById('funcionariosTable');
-        if (funcionarios && funcionarios.length > 0) {
-            tbody.innerHTML = funcionarios.map(f => `
-                <tr>
-                    <td><strong>${f.nome}</strong></td>
-                    <td>${f.cpf}</td>
-                    <td>${f.cargo.charAt(0).toUpperCase() + f.cargo.slice(1)}</td>
-                    <td>${f.loja_nome || 'N/A'}</td>
-                    <td>R$ ${parseFloat(f.salario).toFixed(2)}</td>
-                    <td><span class="status-badge ${f.ativo ? 'status-active' : 'status-inactive'}">
-                        ${f.ativo ? 'Ativo' : 'Inativo'}</span></td>
-                    <td style="display: flex; gap: 5px;">
-                        <button class="btn btn-warning btn-sm" onclick="editarFuncionario(${f.id})" title="Editar">
-                            ✏️
-                        </button>
-                        <button class="btn btn-danger btn-sm" onclick="excluirFuncionario(${f.id})" title="Excluir">
-                            🗑️
-                        </button>
-                    </td>
-                </tr>
-            `).join('');
-        } else {
-            tbody.innerHTML = '<tr><td colspan="7" class="empty-state">Nenhum funcionário cadastrado</td></tr>';
+        async function loadFuncionarios() {
+            try {
+                const response = await fetch(`${API_URL}/funcionarios`);
+                const funcionarios = await response.json();
+                listaFuncionarios = funcionarios;
+                
+                const tbody = document.getElementById('funcionariosTable');
+                if (funcionarios && funcionarios.length > 0) {
+                    tbody.innerHTML = funcionarios.map(f => `
+                        <tr>
+                            <td><strong>${f.nome}</strong></td>
+                            <td>${f.cpf}</td>
+                            <td>${f.cargo.charAt(0).toUpperCase() + f.cargo.slice(1)}</td>
+                            <td>${f.loja_nome || 'N/A'}</td>
+                            <td>R$ ${parseFloat(f.salario).toFixed(2)}</td>
+                            <td><span class="status-badge ${f.ativo ? 'status-active' : 'status-inactive'}">
+                                ${f.ativo ? 'Ativo' : 'Inativo'}</span></td>
+                            <td style="display: flex; gap: 5px;">
+                                <button class="btn btn-warning btn-sm" onclick="editarFuncionario(${f.id})" title="Editar">
+                                    ✏️
+                                </button>
+                                <button class="btn btn-danger btn-sm" onclick="excluirFuncionario(${f.id})" title="Excluir">
+                                    🗑️
+                                </button>
+                            </td>
+                        </tr>
+                    `).join('');
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="7" class="empty-state">Nenhum funcionário cadastrado</td></tr>';
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+                showAlert('Erro ao carregar funcionários', 'danger');
+            }
         }
-    } catch (error) {
-        console.error('Erro:', error);
-        showAlert('Erro ao carregar funcionários', 'danger');
-    }
-}
 
         async function editarFuncionario(id) {
             try {
-                // Tenta buscar do cache primeiro (evita erro 405)
                 let funcionario = listaFuncionarios.find(f => f.id == id);
                 
-                // Se não encontrou no cache, tenta buscar da API
                 if (!funcionario) {
                     console.log('Funcionário não encontrado no cache, tentando API...');
                     try {
@@ -1629,7 +1621,6 @@ async function loadFuncionarios() {
                     } catch (apiError) {
                         console.warn('Erro ao buscar funcionário da API:', apiError);
                         showAlert('Não foi possível carregar os dados do funcionário. Preencha manualmente.', 'warning');
-                        // Abre o modal mesmo sem dados para edição manual
                         funcionarioEditando = id;
                         document.querySelector('#modalFuncionario .modal-title').textContent = 'Editar Funcionário';
                         openModal('modalFuncionario');
@@ -1645,14 +1636,12 @@ async function loadFuncionarios() {
                 funcionarioEditando = id;
                 await carregarLojasSelect();
                 
-                // Preenche o formulário com os dados
                 document.querySelector('#formFuncionario [name="nome"]').value = funcionario.nome || '';
                 document.querySelector('#formFuncionario [name="cpf"]').value = funcionario.cpf || '';
                 document.querySelector('#formFuncionario [name="cargo"]').value = funcionario.cargo || '';
                 document.querySelector('#formFuncionario [name="data_admissao"]').value = funcionario.data_admissao || '';
                 document.querySelector('#formFuncionario [name="salario"]').value = funcionario.salario || '';
                 document.querySelector('#formFuncionario [name="loja_id"]').value = funcionario.loja_id || '';
-                document.querySelector('#formFuncionario [name="ativo"]').value = funcionario.ativo ? '1' : '0';
                 
                 document.querySelector('#modalFuncionario .modal-title').textContent = 'Editar Funcionário';
                 openModal('modalFuncionario');
@@ -1662,6 +1651,7 @@ async function loadFuncionarios() {
                 showAlert('Erro ao carregar dados do funcionário', 'danger');
             }
         }
+
         async function salvarFuncionario(event) {
             event.preventDefault();
             const formData = new FormData(event.target);
@@ -1776,7 +1766,7 @@ async function loadFuncionarios() {
                     closeModal('modalLoja');
                     event.target.reset();
                     loadLojas();
-                    carregarLojasSelect(); // Atualizar select de lojas
+                    carregarLojasSelect();
                 } else {
                     showAlert(result.error || 'Erro ao cadastrar loja', 'danger');
                 }
@@ -1823,7 +1813,6 @@ async function loadFuncionarios() {
 
         function exportarClientes() {
             showAlert('Gerando relatório de clientes...', 'info');
-            // Implementar export se necessário
         }
 
         // ============= ESTOQUE =============
@@ -1835,7 +1824,6 @@ async function loadFuncionarios() {
                 const tbody = document.getElementById('estoqueTable');
                 if (estoque && estoque.length > 0) {
                     tbody.innerHTML = estoque.map(e => {
-                        // CORREÇÃO: usar e.status em vez de e.status_alerta
                         const statusClass = e.status === 'CRÍTICO' ? 'critico' : 
                                         e.status === 'BAIXO' ? 'baixo' : 
                                         e.status === 'ATENÇÃO' ? 'baixo' : 'ok';
@@ -1967,13 +1955,13 @@ async function loadFuncionarios() {
                     
                     if (estoque && estoque.length > 0) {
                         estoque.forEach(e => {
-                            const statusClass = e.status_alerta === 'CRÍTICO' ? 'critico' : 
-                                               e.status_alerta === 'BAIXO' ? 'baixo' : 'ok';
+                            const statusClass = e.status === 'CRÍTICO' ? 'critico' : 
+                                               e.status === 'BAIXO' ? 'baixo' : 'ok';
                             html += `<tr>
                                 <td>${e.ingrediente_nome}</td>
                                 <td>${e.loja_nome}</td>
                                 <td>${parseFloat(e.quantidade_atual).toFixed(1)} ${e.unidade_medida}</td>
-                                <td><span class="status-badge status-${statusClass}">${e.status_alerta}</span></td>
+                                <td><span class="status-badge status-${statusClass}">${e.status}</span></td>
                             </tr>`;
                         });
                     } else {
@@ -2079,7 +2067,6 @@ async function loadFuncionarios() {
 
         // ============= EVENT LISTENERS PARA NAVEGAÇÃO =============
         document.addEventListener('DOMContentLoaded', function() {
-            // Adicionar event listeners para os itens do menu
             document.querySelectorAll('.menu-item[data-section]').forEach(item => {
                 item.addEventListener('click', function() {
                     const sectionId = this.getAttribute('data-section');
@@ -2087,7 +2074,6 @@ async function loadFuncionarios() {
                 });
             });
             
-            // Adicionar event listeners para os cards de relatório
             document.querySelectorAll('.metric-card[onclick*="gerarRelatorio"]').forEach(card => {
                 card.addEventListener('click', function() {
                     const onclickAttr = this.getAttribute('onclick');
@@ -2099,7 +2085,7 @@ async function loadFuncionarios() {
             });
         });
 
-        // ============= INICIALIZATION =============
+        // ============= INITIALIZATION =============
         window.addEventListener('DOMContentLoaded', async function() {
             await verificarPermissoes();
             aplicarRestricoesUI();
@@ -2107,9 +2093,8 @@ async function loadFuncionarios() {
             carregarCategorias();
             carregarLojasSelect();
             mostrarBoasVindas();
-            console.log('🍦 Painel Administrativo Paraíso Gelado - Carregado!');
+            console.log('🦢 Painel Administrativo Paraíso Gelado - Carregado!');
             
-            // Verificar se o usuário está carregado
             if (usuarioLogado.nome) {
                 console.log('👤 Usuário:', usuarioLogado.nome, '| Cargo:', usuarioLogado.cargo);
             }
