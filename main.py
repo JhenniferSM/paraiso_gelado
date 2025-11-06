@@ -50,129 +50,80 @@ def get_db_connection():
             'port': int(os.getenv('DB_PORT', 3306)),
             'charset': 'utf8mb4',
             'collation': 'utf8mb4_unicode_ci',
-            'autocommit': True
+            'autocommit': True,
+            'connect_timeout': 10
         }
+        
         base_dir = os.path.dirname(os.path.abspath(__file__))
         ssl_ca_path = os.path.join(base_dir, os.getenv('DB_SSL_CA', 'ca-certificate.crt'))
+        
         if os.path.exists(ssl_ca_path):
-            print(f"✅ Usando SSL com certificado: {ssl_ca_path}")
+            print(f"✅ Usando certificado SSL: {ssl_ca_path}")
             config['ssl_ca'] = ssl_ca_path
             config['ssl_verify_cert'] = True
-            config['ssl_verify_identity'] = False
+            config['ssl_verify_identity'] = True 
         else:
-            print(f"⚠️ Certificado não encontrado em {ssl_ca_path}, tentando conexão SSL sem verificação...")
+            print(f"⚠️ Certificado não encontrado: {ssl_ca_path}")
+            print("   Tentando conexão SSL sem verificação...")
             config['ssl_disabled'] = False
-            config['ssl_verify_cert'] = False
+            
+        print(f"🔄 Conectando: {config['host']}:{config['port']}/{config['database']}")
         
-        print(f"🔄 Conectando ao banco: {config['host']}:{config['port']}")
         conn = mysql.connector.connect(**config)
         
         if conn.is_connected():
             db_info = conn.get_server_info()
-            print(f"✅ Conectado ao MySQL Server versão {db_info}")
+            print(f"✅ Conectado ao MySQL {db_info}")
+            
+            cursor = conn.cursor()
+            cursor.execute("SHOW STATUS LIKE 'Ssl_cipher'")
+            ssl_status = cursor.fetchone()
+            if ssl_status and ssl_status[1]:
+                print(f"🔒 Conexão SSL ativa: {ssl_status[1]}")
+            cursor.close()
+            
             return conn
         else:
-            print("❌ Falha na conexão - is_connected() retornou False")
+            print("❌ Conexão falhou - is_connected() retornou False")
             return None
             
-    except Error as err:
-        print(f"❌ Erro ao conectar ao banco de dados:")
+    except mysql.connector.Error as err:
+        print(f"\n❌ ERRO MYSQL:")
         print(f"   Código: {err.errno}")
         print(f"   Mensagem: {err.msg}")
         
         if err.errno == 2003:
-            print("\n💡 Dica: Erro de conexão (2003)")
-            print("   - Verifique se o host e porta estão corretos no .env")
-            print("   - Verifique sua conexão com internet")
-            print("   - Certifique-se que o serviço Aiven está 'Running'")
+            print("\n💡 Erro de Conexão:")
+            print("   - Verifique host e porta no .env")
+            print("   - Teste ping: ping seu-host.aivencloud.com")
+            print("   - Verifique firewall/rede")
+            
         elif err.errno == 1045:
-            print("\n💡 Dica: Acesso negado (1045)")
-            print("   - Verifique usuário e senha no .env")
-            print("   - Confirme as credenciais no painel do Aiven")
+            print("\n💡 Acesso Negado:")
+            print("   - Usuário ou senha incorretos")
+            print("   - Verifique credenciais no Aiven Console")
+            
         elif err.errno == 2026 or 'SSL' in str(err):
-            print("\n💡 Dica: Erro SSL")
-            print("   - Baixe o certificado CA do Aiven")
+            print("\n💡 Erro SSL:")
+            print("   - Baixe o CA Certificate do Aiven Console")
             print("   - Salve como 'ca-certificate.crt' na raiz do projeto")
-            print("   - Adicione 'DB_SSL_CA=ca-certificate.crt' no .env")
+            print("   - Adicione DB_SSL_CA=ca-certificate.crt no .env")
+            
+        elif err.errno == 1049:
+            print("\n💡 Database não existe:")
+            print(f"   - Database '{config['database']}' não encontrado")
+            print("   - Verifique DB_NAME no .env")
         
         return None
+        
     except Exception as e:
-        print(f"❌ Erro inesperado ao conectar: {type(e).__name__}")
-        print(f"   {str(e)}")
+        print(f"\n❌ ERRO INESPERADO:")
+        print(f"   Tipo: {type(e).__name__}")
+        print(f"   Mensagem: {str(e)}")
+        import traceback
+        print("\n📋 Traceback completo:")
+        print(traceback.format_exc())
         return None
-
-def test_connection():
-    """
-    Testa a conexão e mostra informações detalhadas
-    """
-    print("\n" + "="*60)
-    print("🧪 TESTE DE CONEXÃO COM BANCO DE DADOS")
-    print("="*60)
-    print("\n📋 Configurações:")
-    print(f"   Host: {os.getenv('DB_HOST')}")
-    print(f"   Port: {os.getenv('DB_PORT')}")
-    print(f"   User: {os.getenv('DB_USER')}")
-    print(f"   Database: {os.getenv('DB_NAME')}")
-    print(f"   SSL CA: {os.getenv('DB_SSL_CA', 'ca-certificate.crt')}")
-    print(f"   Senha configurada: {'Sim' if os.getenv('DB_PASSWORD') else 'Não'}")
-    
-    base_dir = os.path.dirname(os.path.abspath(__file__))
-    ssl_ca_name = os.getenv('DB_SSL_CA', 'ca-certificate.crt')
-    ssl_ca_path = os.path.join(base_dir, ssl_ca_name)
-    
-    print(f"   SSL CA Esperado: {ssl_ca_path}")
-    
-    if os.path.exists(ssl_ca_path):
-        print(f"\n✅ Certificado SSL encontrado: {ssl_ca_path}")
-    else:
-        print(f"\n⚠️ Certificado SSL não encontrado: {ssl_ca_path}")
-        print("   Baixe do painel Aiven e salve na raiz do projeto")
-    
-    print("\n🔄 Tentando conectar...")
-    conn = get_db_connection()
-
-    if conn:
-        try:
-            cursor = conn.cursor(dictionary=True)
-            cursor.execute("SELECT VERSION() as version")
-            version = cursor.fetchone()
-            print(f"\n✅ MySQL Version: {version['version']}")
-            cursor.execute("SELECT DATABASE() as db")
-            current_db = cursor.fetchone()
-            print(f"✅ Database atual: {current_db['db']}")
-            cursor.execute("SHOW TABLES")
-            tables = cursor.fetchall()
-            print(f"\n📊 Tabelas encontradas ({len(tables)}):")
-            for table in tables:
-                table_name = list(table.values())[0]
-                cursor.execute(f"SELECT COUNT(*) as count FROM {table_name}")
-                count = cursor.fetchone()['count']
-                print(f"   - {table_name}: {count} registros")
-
-            cursor.execute("SHOW STATUS LIKE 'Ssl_cipher'")
-            ssl_status = cursor.fetchone()
-            if ssl_status and ssl_status.get('Value'):
-                print(f"\n🔒 Conexão SSL ativa: {ssl_status['Value']}")
-            else:
-                print("\n⚠️ Conexão SSL não está ativa (pode ser problema)")
-            
-            cursor.close()
-            conn.close()
-            
-            print("\n" + "="*60)
-            print("✅ TESTE CONCLUÍDO COM SUCESSO!")
-            print("="*60)
-            return True
-            
-        except Exception as e:
-            print(f"\n❌ Erro durante os testes: {e}")
-            conn.close()
-            return False
-    else:
-        print("\n" + "="*60)
-        print("❌ FALHA NA CONEXÃO")
-        print("="*60)
-        return False
 
 # ============= ESTRUTURAS DE DADOS =============
 
@@ -1371,5 +1322,5 @@ if __name__ == '__main__':
     
     test_connection()
 
-    port = int(os.environ.get('PORT', 24757))
-    app.run(debug=Config.DEBUG, host='0.0.0.0', port=port)
+    port = int(os.getenv("PORT", 5000))
+    app.run(debug=Config.DEBUG, host='0.0.0.0', port=port, use_dotenv=False)
