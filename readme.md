@@ -26,7 +26,7 @@ O **Paraíso Gelado** é um sistema completo de gestão empresarial desenvolvido
 - **URL**: https://paraiso-gelado.onrender.com/
 - **Status**: Online e funcional
 - **Ambiente**: Produção
-- **Última Atualização**: Dezembro 2024
+- **Última Atualização**: Novembro 2025
 
 ## ✨ Funcionalidades
 
