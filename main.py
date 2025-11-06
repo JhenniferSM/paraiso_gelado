@@ -52,8 +52,8 @@ def get_db_connection():
             'collation': 'utf8mb4_unicode_ci',
             'autocommit': True
         }
-        ssl_ca_path = os.getenv('DB_SSL_CA', 'ca-certificate.crt')
-        
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        ssl_ca_path = os.path.join(base_dir, os.getenv('DB_SSL_CA', 'ca-certificate.crt'))
         if os.path.exists(ssl_ca_path):
             print(f"✅ Usando SSL com certificado: {ssl_ca_path}")
             config['ssl_ca'] = ssl_ca_path
@@ -116,16 +116,21 @@ def test_connection():
     print(f"   SSL CA: {os.getenv('DB_SSL_CA', 'ca-certificate.crt')}")
     print(f"   Senha configurada: {'Sim' if os.getenv('DB_PASSWORD') else 'Não'}")
     
-    ssl_ca = os.getenv('DB_SSL_CA', 'ca-certificate.crt')
-    if os.path.exists(ssl_ca):
-        print(f"\n✅ Certificado SSL encontrado: {ssl_ca}")
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    ssl_ca_name = os.getenv('DB_SSL_CA', 'ca-certificate.crt')
+    ssl_ca_path = os.path.join(base_dir, ssl_ca_name)
+    
+    print(f"   SSL CA Esperado: {ssl_ca_path}")
+    
+    if os.path.exists(ssl_ca_path):
+        print(f"\n✅ Certificado SSL encontrado: {ssl_ca_path}")
     else:
-        print(f"\n⚠️ Certificado SSL não encontrado: {ssl_ca}")
+        print(f"\n⚠️ Certificado SSL não encontrado: {ssl_ca_path}")
         print("   Baixe do painel Aiven e salve na raiz do projeto")
     
     print("\n🔄 Tentando conectar...")
     conn = get_db_connection()
-    
+
     if conn:
         try:
             cursor = conn.cursor(dictionary=True)
