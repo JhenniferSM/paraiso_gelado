@@ -1,4 +1,3 @@
-
 import os
 from functools import wraps
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for
@@ -12,12 +11,13 @@ from paraiso_config import Config
 
 try:
     from dotenv import load_dotenv
-    load_dotenv()
+    load_dotenv(override=True, encoding='cp1252')
     print("✓ Variáveis de ambiente carregadas do .env")
 except Exception as e:
     print(f"⚠️ Usando configurações padrão (erro ao carregar .env: {e})")
 try:
     import mysql.connector
+    from mysql.connector import Error
 except ImportError:
     print("❌ ERRO: mysql-connector-python não instalado!")
     print("Execute: pip install mysql-connector-python")
@@ -38,13 +38,136 @@ DB_CONFIG = {
 }
 
 def get_db_connection():
-    """Retorna uma conexão com o banco de dados"""
+    """
+    Retorna uma conexão com o banco de dados com suporte SSL para Aiven
+    """
     try:
-        conn = mysql.connector.connect(**DB_CONFIG)
-        return conn
-    except mysql.connector.Error as err:
-        print(f"❌ Erro ao conectar ao banco de dados: {err}")
+        config = {
+            'host': os.getenv('DB_HOST'),
+            'user': os.getenv('DB_USER'),
+            'password': os.getenv('DB_PASSWORD'),
+            'database': os.getenv('DB_NAME'),
+            'port': int(os.getenv('DB_PORT', 3306)),
+            'charset': 'utf8mb4',
+            'collation': 'utf8mb4_unicode_ci',
+            'autocommit': True
+        }
+        ssl_ca_path = os.getenv('DB_SSL_CA', 'ca-certificate.crt')
+        
+        if os.path.exists(ssl_ca_path):
+            print(f"✅ Usando SSL com certificado: {ssl_ca_path}")
+            config['ssl_ca'] = ssl_ca_path
+            config['ssl_verify_cert'] = True
+            config['ssl_verify_identity'] = False
+        else:
+            print(f"⚠️ Certificado não encontrado em {ssl_ca_path}, tentando conexão SSL sem verificação...")
+            config['ssl_disabled'] = False
+            config['ssl_verify_cert'] = False
+        
+        print(f"🔄 Conectando ao banco: {config['host']}:{config['port']}")
+        conn = mysql.connector.connect(**config)
+        
+        if conn.is_connected():
+            db_info = conn.get_server_info()
+            print(f"✅ Conectado ao MySQL Server versão {db_info}")
+            return conn
+        else:
+            print("❌ Falha na conexão - is_connected() retornou False")
+            return None
+            
+    except Error as err:
+        print(f"❌ Erro ao conectar ao banco de dados:")
+        print(f"   Código: {err.errno}")
+        print(f"   Mensagem: {err.msg}")
+        
+        if err.errno == 2003:
+            print("\n💡 Dica: Erro de conexão (2003)")
+            print("   - Verifique se o host e porta estão corretos no .env")
+            print("   - Verifique sua conexão com internet")
+            print("   - Certifique-se que o serviço Aiven está 'Running'")
+        elif err.errno == 1045:
+            print("\n💡 Dica: Acesso negado (1045)")
+            print("   - Verifique usuário e senha no .env")
+            print("   - Confirme as credenciais no painel do Aiven")
+        elif err.errno == 2026 or 'SSL' in str(err):
+            print("\n💡 Dica: Erro SSL")
+            print("   - Baixe o certificado CA do Aiven")
+            print("   - Salve como 'ca-certificate.crt' na raiz do projeto")
+            print("   - Adicione 'DB_SSL_CA=ca-certificate.crt' no .env")
+        
         return None
+    except Exception as e:
+        print(f"❌ Erro inesperado ao conectar: {type(e).__name__}")
+        print(f"   {str(e)}")
+        return None
+
+def test_connection():
+    """
+    Testa a conexão e mostra informações detalhadas
+    """
+    print("\n" + "="*60)
+    print("🧪 TESTE DE CONEXÃO COM BANCO DE DADOS")
+    print("="*60)
+    print("\n📋 Configurações:")
+    print(f"   Host: {os.getenv('DB_HOST')}")
+    print(f"   Port: {os.getenv('DB_PORT')}")
+    print(f"   User: {os.getenv('DB_USER')}")
+    print(f"   Database: {os.getenv('DB_NAME')}")
+    print(f"   SSL CA: {os.getenv('DB_SSL_CA', 'ca-certificate.crt')}")
+    print(f"   Senha configurada: {'Sim' if os.getenv('DB_PASSWORD') else 'Não'}")
+    
+    ssl_ca = os.getenv('DB_SSL_CA', 'ca-certificate.crt')
+    if os.path.exists(ssl_ca):
+        print(f"\n✅ Certificado SSL encontrado: {ssl_ca}")
+    else:
+        print(f"\n⚠️ Certificado SSL não encontrado: {ssl_ca}")
+        print("   Baixe do painel Aiven e salve na raiz do projeto")
+    
+    print("\n🔄 Tentando conectar...")
+    conn = get_db_connection()
+    
+    if conn:
+        try:
+            cursor = conn.cursor(dictionary=True)
+            cursor.execute("SELECT VERSION() as version")
+            version = cursor.fetchone()
+            print(f"\n✅ MySQL Version: {version['version']}")
+            cursor.execute("SELECT DATABASE() as db")
+            current_db = cursor.fetchone()
+            print(f"✅ Database atual: {current_db['db']}")
+            cursor.execute("SHOW TABLES")
+            tables = cursor.fetchall()
+            print(f"\n📊 Tabelas encontradas ({len(tables)}):")
+            for table in tables:
+                table_name = list(table.values())[0]
+                cursor.execute(f"SELECT COUNT(*) as count FROM {table_name}")
+                count = cursor.fetchone()['count']
+                print(f"   - {table_name}: {count} registros")
+
+            cursor.execute("SHOW STATUS LIKE 'Ssl_cipher'")
+            ssl_status = cursor.fetchone()
+            if ssl_status and ssl_status.get('Value'):
+                print(f"\n🔒 Conexão SSL ativa: {ssl_status['Value']}")
+            else:
+                print("\n⚠️ Conexão SSL não está ativa (pode ser problema)")
+            
+            cursor.close()
+            conn.close()
+            
+            print("\n" + "="*60)
+            print("✅ TESTE CONCLUÍDO COM SUCESSO!")
+            print("="*60)
+            return True
+            
+        except Exception as e:
+            print(f"\n❌ Erro durante os testes: {e}")
+            conn.close()
+            return False
+    else:
+        print("\n" + "="*60)
+        print("❌ FALHA NA CONEXÃO")
+        print("="*60)
+        return False
 
 # ============= ESTRUTURAS DE DADOS =============
 
@@ -247,11 +370,8 @@ def test_db():
         
         cursor = conn.cursor(dictionary=True)
         
-        # Testa conexão básica
         cursor.execute("SELECT 1")
         result = cursor.fetchone()
-        
-        # Mostra estrutura de tabelas importantes
         tabelas_info = {}
         
         for tabela in ['funcionarios', 'lojas', 'estoque', 'ingredientes', 'produtos', 'categorias']:
@@ -259,8 +379,6 @@ def test_db():
                 cursor.execute(f"DESCRIBE {tabela}")
                 colunas = cursor.fetchall()
                 tabelas_info[tabela] = [col['Field'] for col in colunas]
-                
-                # Conta registros
                 cursor.execute(f"SELECT COUNT(*) as total FROM {tabela}")
                 total = cursor.fetchone()
                 tabelas_info[f"{tabela}_count"] = total['total']
@@ -629,14 +747,12 @@ def criar_funcionario():
         
         cursor = conn.cursor()
         
-        # Verificar se CPF já existe
         cursor.execute("SELECT id FROM funcionarios WHERE cpf = %s", (dados.get('cpf'),))
         if cursor.fetchone():
             cursor.close()
             conn.close()
             return jsonify({'success': False, 'error': 'CPF já cadastrado'}), 400
         
-        # Inserir novo funcionário (CORRIGIDO - indentação)
         cursor.execute("""
             INSERT INTO funcionarios (nome, cpf, cargo, loja_id, salario, data_admissao, ativo)
             VALUES (%s, %s, %s, %s, %s, %s, 1)
@@ -851,7 +967,6 @@ def get_clientes():
         cursor.execute("SELECT * FROM clientes ORDER BY nome")
         clientes = cursor.fetchall()
         
-        # Garantir campos
         for cliente in clientes:
             if 'nivel' not in cliente or not cliente['nivel']:
                 cliente['nivel'] = 'Regular'
@@ -1229,12 +1344,11 @@ def requires_access_level(required_level_key):
 
 if __name__ == '__main__':
     print("\n🍦 Paraíso Gelado - Sistema Iniciando...")
-    print(f"🌐 Servidor rodando em: http://0.0.0.0:5000")
+    print(f"🌐 Servidor rodando em: https://paraiso-gelado.onrender.com")
     print(f"🗄️  Banco de dados: {DB_CONFIG['database']}")
     print(f"🔧 Debug mode: {Config.DEBUG}")
     print(f"👤 Login padrão: admin@paraisogelado.com / admin123\n")
     
-    # Testa conexão com banco
     test_conn = get_db_connection()
     if test_conn:
         print("✅ Conexão com banco de dados: OK")
@@ -1243,5 +1357,14 @@ if __name__ == '__main__':
         print("❌ Conexão com banco de dados: FALHOU")
         print("⚠️  Verifique as configurações em paraiso_config.py")
     
-    port = int(os.environ.get('PORT', 5000))
+    try:
+        from dotenv import load_dotenv
+        load_dotenv(override=True, encoding='cp1252')
+        print("✓ Variáveis de ambiente carregadas do .env")
+    except ImportError:
+        print("⚠️ python-dotenv não instalado")
+    
+    test_connection()
+
+    port = int(os.environ.get('PORT', 24757))
     app.run(debug=Config.DEBUG, host='0.0.0.0', port=port)
